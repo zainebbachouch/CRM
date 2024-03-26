@@ -6,7 +6,7 @@
 }
 .loginForm
 {
-    width: 30vw;
+    width: 40vw;
     height: 80vh;
     background-color: #fff;
     border-radius: 15px;
@@ -35,8 +35,8 @@
     background-color: #fff;
     font-size: 14px;
     position: absolute;
-    top: 322px;
-    right: 700px;
+    top: 300px;
+    right:42%;
     height: fit-content;
 }
 .loginButton
