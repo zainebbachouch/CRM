@@ -1,0 +1,65 @@
+.loginContainer
+{
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--backgroundColor);
+}
+.loginForm
+{
+    width: 30vw;
+    height: 80vh;
+    background-color: #fff;
+    border-radius: 15px;
+}
+.icon
+{
+    border: 1px solid var(--backgroundColor);
+    border-radius: 5px;
+    width: 100px;
+    display: flex;
+    justify-content: center;
+}
+.socialMediaIcon
+{
+    width: 25px;
+    height: 25px;
+}
+.horiazontalLine
+{
+    height: 2px;
+    width: 100%;
+    background-color: var(--backgroundColor);
+}
+.loginMessage 
+{
+    background-color: #fff;
+    font-size: 14px;
+    position: absolute;
+    top: 322px;
+    right: 700px;
+    height: fit-content;
+}
+.loginButton
+{
+    background-color: var(--blueColor);
+    color: #fff;
+}
+.loginButton:hover
+{
+    background-color: #0f87d2;
+    color: #FFF;
+}
+.forgotMessage
+{
+    color: var(--blueColor);
+}
+.signupMessage
+{
+    color: var(--blueColor);
+}
+.logo
+{
+    width: 30px;
+    height: 30px;
+
+}
