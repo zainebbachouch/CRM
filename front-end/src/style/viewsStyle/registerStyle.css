@@ -1,27 +1,16 @@
-.registerContainer {
+.registerContainer
+{
+    background-color: var(--backgroundColor);
+    height: 100vh;
     width: 100vw;
-    height: 100vh;
-    background-color: var(--backgroundColor);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
-
-.registerForm {
-    width: 40vw;
-    height: 80vh;
-    background-color: #fff;
-    border-radius: 15px;
-}
-
-.horiazontalLine {
-    height: 2px;
-    width: 100%;
-    background-color: var(--backgroundColor);
-}
-
-.register-container {
-    width: 100%;
-    height: 100vh;
-}
-
-.container {
-    width: 85%;
+.submitButton
+{
+    background-color: var(--blueColor);
+    outline: none;
+    border: none;
 }

@@ -34,10 +34,6 @@
 {
     background-color: #fff;
     font-size: 14px;
-    position: absolute;
-    top: 300px;
-    right:42%;
-    height: fit-content;
 }
 .loginButton
 {
@@ -62,4 +58,10 @@
     width: 30px;
     height: 30px;
 
+}
+.hr
+{
+    width: 80px;
+    height: 2px;
+    background-color: var(--backgroundColor);
 }

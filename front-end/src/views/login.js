@@ -30,8 +30,11 @@ export default function Login() {
                             </button>
                         </div>
                         <div className="loginInput mt-4">
-                            <div className='horiazontalLine'></div>
+                            <div className="horizontalLinesContainer d-flex align-items-baseline column-gap-1">
+                            <div className="hr"></div>
                             <p className='loginMessage text-center text-center'>or login using your email</p>
+                            <div className="hr"></div>
+                            </div>
                             <div className="form-group mt-3">
                                 <label htmlFor="emailInput" className='text-muted' >Email address</label>
                                 <input type="email" className="form-control" id="emailInput" aria-describedby="emailHelp" placeholder="Enter email" />
@@ -50,7 +53,7 @@ export default function Login() {
                                 </button>
                             </div>
                             <span className="text-center mt-2">You don't have an account? </span>
-                            <Link to="/register"> <button className="signupMessage">Sign up</button>
+                            <Link to="/register"> <button className="btn signupMessage">Sign up</button>
 
                             </Link>
                         </div>
