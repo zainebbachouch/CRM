@@ -31,9 +31,9 @@ export default function Login() {
                         </div>
                         <div className="loginInput mt-4">
                             <div className="horizontalLinesContainer d-flex align-items-baseline column-gap-1">
-                            <div className="hr"></div>
-                            <p className='loginMessage text-center text-center'>or login using your email</p>
-                            <div className="hr"></div>
+                                <div className="hr"></div>
+                                <p className='loginMessage text-center text-center'>or login using your email</p>
+                                <div className="hr"></div>
                             </div>
                             <div className="form-group mt-3">
                                 <label htmlFor="emailInput" className='text-muted' >Email address</label>
