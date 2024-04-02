@@ -1,16 +1,14 @@
-
-
 const db = require("../config/dbConnection");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = 'your_jwt_secret_key';
-
+const { creatToken } = require('../services/createTokenService.js');
 
 
 const login = async (req, res) => {
     const { email, password } = req.body;
 
-    try {
+    try {/// tous qui est requete modifier 
         const query = 'SELECT * FROM admin WHERE email_admin = ? LIMIT 1';
         db.query(query, [email], async (err, result) => {
             if (err) {
@@ -23,6 +21,7 @@ const login = async (req, res) => {
                 return res.status(404).json({ message: "User not found" });
             }
 
+
             const user = result[0];
             console.log("User data:", user);
             const isPasswordValid = await bcrypt.compare(password, user.mdp);
@@ -30,9 +29,8 @@ const login = async (req, res) => {
                 return res.status(401).json({ message: "Invalid password" });
             }
 
-            const token = jwt.sign({ id: user.idadmin, email: user.email_admin }, JWT_SECRET, { expiresIn: '1h' });
+            const token = await creatToken(user.idadmin, user.email_admin, JWT_SECRET, '1h');
 
-            // You had a typo here, it should be db.query, not dbquery
             db.query(`UPDATE admin SET date_inscription_admin = now() WHERE idadmin = ?`, [user.idadmin], (err, result) => {
                 if (err) {
                     console.error(err);
@@ -96,7 +94,7 @@ const register = async (req, res) => {
 
 const getUserById = async (req, res) => {
     const id = req.params.id;
-  
+
     try {
         const query = 'SELECT email_admin, mdp FROM admin WHERE idadmin = ?';
         db.query(query, [req.user.id], (err, results) => {
