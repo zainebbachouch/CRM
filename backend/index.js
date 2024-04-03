@@ -1,12 +1,12 @@
 const express = require("express");
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const connection = require("./config/dbConnection");
 const userRoute = require("./routes/userRoute");
-const app = express();
 
+const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(
     cors({
@@ -22,8 +22,5 @@ app.use('/api', userRoute);
 
 app.listen(5000, () => {
     console.log('Server running on https://localhost:5000');
-    connection.connect(function (err) {
-        if (err) throw err;
-        console.log("database connect");
-    })
+
 });

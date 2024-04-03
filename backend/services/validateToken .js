@@ -1,27 +1,34 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'your_jwt_secret_key';
+require("dotenv").config();
+const isAuthorize = async (req, res) => {
+    //   console.log('Request headerssssssssssssssssssss:', req.headers);
 
-const isAuthorize = async (req, res, next) => {
     try {
-        if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')
-            || !req.headers.authorization.split(' ')[1]) {
-            return res.status(422).json({ message: 'Please provide a valid token' });
+        if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
+            return ({ message: 'Unauthorized' })
         }
 
         const authToken = req.headers.authorization.split(' ')[1];
-        const decode = jwt.verify(authToken, JWT_SECRET);
+        const decode = jwt.verify(authToken, process.env.JWT_SECRET);
 
         if (!decode) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            return ({ message: 'Unauthorized' })
         }
+        // console.log(decode);
+        /*console.log('hhhhhhhhhhhh:', decode.type);
+          if (!decode.type || (decode.type !== 'admin' && decode.type !== 'client' && decode.type !== 'employe')) {
+              return res.status(401).json({ message: 'Unauthorized: User type not found or invalid' });
+          }
+          console.log('User type:', decode.type);*/
 
-        req.user = decode;
 
-        next();
+        //  req.user = decode;
+
+        return ({ message: 'authorized', decode })
 
     } catch (error) {
         console.log(error.message);
-        res.status(500).json({ message: 'Server error' });
+        return ({ message: 'Server erroooooooooooor' });
     }
 };
 

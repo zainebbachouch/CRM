@@ -1,15 +1,19 @@
 const express = require("express");
 const userController = require("../controllers/userContoller");
 const router = express.Router();
-const validateToken= require('../services/validateToken ');
+const validateToken = require('../services/validateToken ');
 
+/*
+router.post('/loginAdmin', userController.loginAdmin);
+router.post('/loginEmploye', userController.loginEmploye);
+router.post('/loginClient', userController.loginClient);*/
+router.post('/login', userController.loginUser);
 
+router.post('/registerA', userController.registerA);
+router.post('/registerE', userController.registerE);
+router.post('/registerC', userController.registerC);
 
-router.post('/login', userController.login);
-
-router.post('/register', userController.register);
-
-router.get('/getUserById/:id',validateToken.isAuthorize, userController.getUserById);
+router.get('/getUserById/:id', userController.getUserById);
 
 
 module.exports = router;

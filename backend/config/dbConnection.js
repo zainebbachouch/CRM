@@ -1,10 +1,16 @@
 const mysql = require("mysql");
-
+require("dotenv").config();
+const { DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME } = process.env;
 const connection = mysql.createConnection({
-    host: "localhost",
-    database: 'crm_db',
-    user: 'root',
-    password: 'root123'
+
+    host: DB_HOST,
+    database: DB_NAME,
+    user: DB_USERNAME,
+    password: DB_PASSWORD
 });
 
+connection.connect(function (err) {
+    if (err) throw err;
+    console.log(DB_NAME + " database connect");
+});
 module.exports = connection;
