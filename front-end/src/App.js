@@ -25,7 +25,7 @@ function App() {
               <Route index element={<Register />} />
             </Route>
             
-            <Route path="Dashbord">
+            <Route path="Dashboard">
             <Route index element={<Dashbord />} />
             </Route>
            

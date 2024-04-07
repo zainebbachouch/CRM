@@ -1,20 +1,64 @@
+:root
+{
+  --textColor:#7D9EB5;
+}
 .Sidebar {
     flex: 1;
     background-color: #0C2556;
     min-height: 100vh;
-    padding-left: 20px;
+    row-gap: 20px;
+    padding: 10px;
+    width: fit-content;
 }
-.top {
-    height: 50px; 
-}
+
 .logo {
     font-size: 20px;
     font-weight: bold;
     color: white;
   }
-  .dashbored {
-    height: 50px; 
-  }
-  .center{
-    
-  }
+.navLink
+{
+  text-decoration: none;
+  font-size: 1.2rem;
+}
+.navIcon
+{
+  font-size: 1.5rem;
+  color: var(--textColor);
+}
+.dashNotifcation
+{
+  background-color: #5A75F9;
+  color: white;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5px;
+  border-radius: 50%;
+}
+.link_text
+{
+  text-transform: capitalize;
+}
+.activeNavLink 
+{
+  background-color: #0F2F6B;
+  border-radius:15px ;
+  color: #FFF;
+}
+.activeNavLink .navIcon
+{
+ 
+  color: #FFF;
+}
+.dashNotifcation2
+{
+  background-color:#07C180 ;
+  padding: 3px;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
