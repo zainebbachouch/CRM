@@ -54,7 +54,7 @@ function SideBar() {
    
   ]
   return (
-    <div className="Sidebar d-flex flex-column ">
+    <div className="Sidebar d-flex flex-column col-4">
       <div className="top d-flex " >
         <img src={crmIcon} alt="" className="logo" />
         <p className='logo w-100 text-center'>CRM APP</p>

@@ -3,7 +3,7 @@
   --textColor:#7D9EB5;
 }
 .Sidebar {
-    flex: 1;
+    
     background-color: #0C2556;
     min-height: 100vh;
     row-gap: 20px;

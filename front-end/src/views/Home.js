@@ -1,6 +1,6 @@
 import React from 'react'
 import SideBar from '../components/sidebar/SideBar'
-import SideNav from '../components/sidenav/SideNav'
+import TopNav from '../components/sidenav/TopNav'
 import "../style/viewsStyle/home.css"
 
 function Home() {
@@ -8,7 +8,7 @@ function Home() {
     <div className='home'>
       <SideBar />
       <div className="homeContainer">
-        <SideNav />
+        <TopNav />
        
      
     
