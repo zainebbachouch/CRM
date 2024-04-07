@@ -1,0 +1,20 @@
+.Sidebar {
+    flex: 1;
+    background-color: #0C2556;
+    min-height: 100vh;
+    padding-left: 20px;
+}
+.top {
+    height: 50px; 
+}
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+  }
+  .dashbored {
+    height: 50px; 
+  }
+  .center{
+    
+  }

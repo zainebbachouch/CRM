@@ -1,0 +1,8 @@
+.navbar {
+    background-color: white;
+    min-height: 7vh;
+}
+
+.items {
+    display: flex;
+}
