@@ -4,19 +4,18 @@ const bodyParser = require('body-parser');
 const userRoute = require("./routes/userRoute");
 
 const app = express();
-app.use(cors());
+///app.use(cors()); 
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
 app.use(
     cors({
-        origin: '*',
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-
+      origin: "http://localhost:3000",
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
     })
-
 );
+
 
 app.use('/api', userRoute);
 

@@ -10,8 +10,9 @@ router.post('/loginClient', userController.loginClient);*/
 router.post('/login', userController.loginUser);
 
 router.post('/registerA', userController.registerA);
-router.post('/registerE', userController.registerE);
-router.post('/registerC', userController.registerC);
+//router.post('/registerE', userController.registerE);
+//router.post('/registerC', userController.registerC);
+router.post('/registerC', userController.registerUser);
 
 router.get('/getUserById/:id', userController.getUserById);
 

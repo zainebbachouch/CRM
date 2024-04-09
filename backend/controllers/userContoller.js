@@ -260,7 +260,7 @@ const registerC = async (req, res) => {
 
         if (result) {
             console.log("User registered successfully");
-            res.json({ message: "Inscription réussie" });
+            res.json({ message: "Inscription réussieeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" });
         } else {
             console.error("Error registering user");
             res.status(500).json({ message: "Erreur lors de l'inscription" });
@@ -271,6 +271,19 @@ const registerC = async (req, res) => {
         return res.status(500).json({ message: "Erreur interne du serveur" });
     }
 };
+
+const registerUser = async (req, res) => {
+    const { typeUtilisateur } = req.body;
+
+    if (typeUtilisateur === 'employe') {
+        return registerE(req, res);
+    } else if (typeUtilisateur === 'client') {
+        return registerC(req, res);
+    } else {
+        return res.status(422).json({ message: "Invalid user type" });
+    }
+};
+
 
 const getUserById = async (req, res) => {
 
@@ -328,4 +341,4 @@ const getUserById = async (req, res) => {
 
 
 
-module.exports = { loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, getUserById };
+module.exports = { loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, registerUser, getUserById };
