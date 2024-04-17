@@ -5,6 +5,8 @@ require("dotenv").config();
 const { isAuthorize } = require('../services/validateToken ')
 const { creatToken } = require('../services/createTokenService.js');
 
+
+
 const loginAdmin = async (email, password) => {
     try {
         const query = 'SELECT * FROM admin WHERE email_admin = ? LIMIT 1';
@@ -94,16 +96,6 @@ const loginClient = async (email, password) => {
         if (!isPasswordValid) {
             return { success: false, message: "Invaliddddddddddddddd password" };
         }
-
-
-        /*const payload = {
-            idclient: user.idclient,
-            type: 'client' email_client: user.email_client,
-           
-        };*/
-
-
-        // const token = await creatToken(payload, process.env.JWT_SECRET, '1h');
         const token = await creatToken("client", user.idclient, user.email_client, process.env.JWT_SECRET, '1h');
 
         await db.query(`UPDATE client SET date_inscription_client = NOW() WHERE idclient = ?`, [user.idclient]);
@@ -149,7 +141,6 @@ const registerA = async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Validation du genre
         if (genre && !["femme", "homme"].includes(genre)) {
             return res.status(422).json({ message: "Genre must be 'femme' or 'homme'" });
         }
@@ -196,7 +187,7 @@ const registerE = async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Validation du genre
+
         if (genre && !["femme", "homme"].includes(genre)) {
             return res.status(422).json({ message: "Genre must be 'femme' or 'homme'" });
         }
@@ -206,20 +197,23 @@ const registerE = async (req, res) => {
             prenom_employe: prenom,
             email_employe: email,
             mdp: hashedPassword,
-            photo_employe: null, // Adjust as needed
+            photo_employe: null,
             telephone_employe: telephone,
             adresse_employe: adresse,
+            //datede_naissance_employe: dateDeNaissance , 
             datede_naissance_employe: dateDeNaissance,
             date_inscription_employe: new Date(),
-            genre_employe: genre,
+            genre_employe: genre || "femme",
             etat_compte: 'active'
         };
+        //ENUM('femme', 'homm')
 
         const result = await db.query('INSERT INTO employe SET ?', userData);
 
         if (result) {
             console.log("Employee registered successfully");
             res.json({ message: "Inscription réussie" });
+            console.log(result);
         } else {
             console.error("Error registering employee");
             res.status(500).json({ message: "Erreur lors de l'inscription" });
@@ -237,7 +231,6 @@ const registerC = async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Validation du genre
         if (genre && !["femme", "homme"].includes(genre)) {
             return res.status(422).json({ message: "Genre must be 'femme' or 'homme'" });
         }
@@ -247,12 +240,12 @@ const registerC = async (req, res) => {
             prenom_client: prenom,
             email_client: email,
             mdp: hashedPassword,
-            photo_client: null, // Adjust as needed
+            photo_client: null,
             telephone_client: telephone,
             adresse_client: adresse,
             datede_naissance_client: dateDeNaissance,
             date_inscription_client: new Date(),
-            genre_client: genre,
+            genre_client: genre || "femme",
             etat_compte: 'active'
         };
 
@@ -260,6 +253,7 @@ const registerC = async (req, res) => {
 
         if (result) {
             console.log("User registered successfully");
+            console.log(result);
             res.json({ message: "Inscription réussieeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" });
         } else {
             console.error("Error registering user");
@@ -275,7 +269,7 @@ const registerC = async (req, res) => {
 const registerUser = async (req, res) => {
     const { typeUtilisateur } = req.body;
 
-    if (typeUtilisateur === 'employe') {
+    if (typeUtilisateur === 'employee') {
         return registerE(req, res);
     } else if (typeUtilisateur === 'client') {
         return registerC(req, res);

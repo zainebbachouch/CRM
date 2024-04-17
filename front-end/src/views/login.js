@@ -1,11 +1,37 @@
-import React from 'react'
-import "../style/viewsStyle/loginStyle.css"
-import facebook from "../images/facebook.png"
-import google from "../images/google.png"
-import twitter from "../images/twitter.png"
-import crmIcon from "../images/crm.png"
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import axios from 'axios';
+import "../style/viewsStyle/loginStyle.css";
+import facebook from "../images/facebook.png";
+import google from "../images/google.png";
+import twitter from "../images/twitter.png";
+import crmIcon from "../images/crm.png";
+import { Link ,  useNavigate } from 'react-router-dom';
+
 export default function Login() {
+    const [formData, setFormData] = useState({
+        email: "",
+        password: ""
+    });
+    const navigate = useNavigate()
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post("http://localhost:5000/api/login", formData);
+            navigate("/")
+            console.log("Response from server:", response.data);
+            // Faites quelque chose avec la réponse, comme rediriger l'utilisateur
+        } catch (err) {
+            console.error("Error object:", err);
+            // Gérez les erreurs en cas de problème avec la requête
+        }
+    };
+
     return (
         <>
             <div className="loginContainer d-flex justify-content-center align-items-center">
@@ -30,36 +56,48 @@ export default function Login() {
                             </button>
                         </div>
                         <div className="loginInput mt-4">
-                            <div className="horizontalLinesContainer d-flex align-items-baseline column-gap-1">
-                                <div className="hr"></div>
-                                <p className='loginMessage text-center text-center'>or login using your email</p>
-                                <div className="hr"></div>
-                            </div>
-                            <div className="form-group mt-3">
-                                <label htmlFor="emailInput" className='text-muted' >Email address</label>
-                                <input type="email" className="form-control" id="emailInput" aria-describedby="emailHelp" placeholder="Enter email" />
-                                <small id="emailHelp" className="form-text text-muted">We'll never share your email with anyone else.</small>
-                            </div>
-                            <div className="form-group mt-1">
-                                <div className='d-flex justify-content-between'>
-                                    <label htmlFor="passwordInput" className='text-muted'>Password</label>
-                                    <label className='forgotMessage'>Forgot Password</label>
+                            <form onSubmit={handleSubmit}>
+                                <div className="form-group mt-3">
+                                    <label htmlFor="emailInput" className='text-muted' >Email address</label>
+                                    <input
+                                        type="email"
+                                        className="form-control"
+                                        id="emailInput"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        placeholder="Enter email"
+                                        required
+                                    />
                                 </div>
-                                <input type="password" className="form-control" id="passwordInput" placeholder="Password" />
-                            </div>
-                            <div className="form-group mt-3">
-                                <button type="submit" className='btn loginButton w-100' >
-                                    Login
-                                </button>
-                            </div>
+                                <div className="form-group mt-1">
+                                    <div className='d-flex justify-content-between'>
+                                        <label htmlFor="passwordInput" className='text-muted'>Password</label>
+                                        <label className='forgotMessage'>Forgot Password</label>
+                                    </div>
+                                    <input
+                                        type="password"
+                                        className="form-control"
+                                        id="passwordInput"
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        placeholder="Password"
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group mt-3">
+                                    <button type="submit" className='btn loginButton w-100' >
+                                        Login
+                                    </button>
+                                </div>
+                            </form>
                             <span className="text-center mt-2">You don't have an account? </span>
-                            <Link to="/register"> <button className="btn signupMessage">Sign up</button>
-
-                            </Link>
+                            <Link to="/register"> <button className="btn signupMessage">Sign up</button></Link>
                         </div>
                     </div>
                 </div>
             </div>
         </>
-    )
+    );
 }

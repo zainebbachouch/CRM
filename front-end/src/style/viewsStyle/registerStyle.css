@@ -1,16 +1,45 @@
-.registerContainer
-{
+.registerContainer {
     background-color: var(--backgroundColor);
-    height: 100vh;
-    width: 100vw;
+   
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 }
-.submitButton
-{
+
+.submitButton {
     background-color: var(--blueColor);
     outline: none;
     border: none;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-control {
+    padding: 15px;
+    margin: 10px 0px;
+    border-radius: 5px;
+    border: 1px solid gray;
+}
+
+label {
+    font-size: 12px;
+    color: gray;
+}
+
+.errorMsg {
+    font-size: 12px;
+    padding: 3px;
+    color: red;
+    display: none;
+}
+
+.invalid {
+    border: 1px solid red;
+}
+
+.invalid + .errorMsg {
+    display: block;
 }
