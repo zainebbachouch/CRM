@@ -8,11 +8,13 @@ import Categories from './views/Categories';
 import Login from './views/login';
 import Register from './views/register';
 import Home from './views/Home';
+import { AuthProvider } from './views/context/authContext';
 
 function App() {
   return (
     <>
       <Router>
+      <AuthProvider>
       
         <Routes>
           <Route path="/">
@@ -54,6 +56,7 @@ function App() {
 
           </Route>
         </Routes>
+        </AuthProvider>
       </Router>
     </>
   );

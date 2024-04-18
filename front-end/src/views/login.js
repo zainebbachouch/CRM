@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import "../style/viewsStyle/loginStyle.css";
+
 import facebook from "../images/facebook.png";
 import google from "../images/google.png";
 import twitter from "../images/twitter.png";
 import crmIcon from "../images/crm.png";
 import { Link ,  useNavigate } from 'react-router-dom';
+import { useAuth } from './context/authContext';
 
+import "../style/viewsStyle/loginStyle.css";
 export default function Login() {
     const [formData, setFormData] = useState({
         email: "",
         password: ""
     });
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const { handleLogin } = useAuth(); // Access the handleLogin function from useAuth
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -22,13 +24,10 @@ export default function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post("http://localhost:5000/api/login", formData);
-            navigate("/")
-            console.log("Response from server:", response.data);
-            // Faites quelque chose avec la réponse, comme rediriger l'utilisateur
+            await handleLogin(formData); // Call handleLogin from useAuth
+            navigate("/");
         } catch (err) {
             console.error("Error object:", err);
-            // Gérez les erreurs en cas de problème avec la requête
         }
     };
 

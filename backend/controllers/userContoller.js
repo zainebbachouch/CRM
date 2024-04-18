@@ -5,7 +5,58 @@ require("dotenv").config();
 const { isAuthorize } = require('../services/validateToken ')
 const { creatToken } = require('../services/createTokenService.js');
 
+const getUserById = async (req, res) => {
 
+    const id = req.params.id;
+    console.log(id);
+    try {
+        let query, userType;
+        const response = await isAuthorize(req, res)
+        if (response.message != 'authorized') {
+            res.send(response)
+        }
+        else {
+            console.log(response)
+        }
+        //  res.send(response);
+
+        if (response.decode.role === 'admin') {
+            console.log('req.user.type req.user.type :', req.user.type);
+            query = 'SELECT email_admin, mdp FROM admin WHERE idadmin = ?';
+            userType = 'admin';
+        } else if (response.decode.role === 'employe') {
+            query = 'SELECT email_employe, mdp FROM employe WHERE idemploye = ?';
+            userType = 'employe';
+        } else if (response.decode.role === 'client') {
+            query = 'SELECT email_client, mdp FROM client WHERE idclient = ?';
+            userType = 'client';
+        } else {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+
+        db.query(query, [id], (err, results) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: 'Server error' });
+            }
+
+            console.log("Query results:", results);
+
+            if (!results || results.length === 0) {
+                return res.status(404).json({ message: `User not found with id ${id}` });
+            }
+
+            const user = results[0];
+            const email = user[`email_${userType}`];
+            const password = user.mdp;
+            res.status(200).json({ email, password });
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
 const loginAdmin = async (email, password) => {
     try {
@@ -33,16 +84,18 @@ const loginAdmin = async (email, password) => {
         const token = await creatToken("admin", user.idadmin, user.email_admin, process.env.JWT_SECRET, '1h');
         await db.query(`UPDATE admin SET date_inscription_admin = NOW() WHERE idadmin = ?`, [user.idadmin]);
 
-        return { success: true, message: "Login successful", token: token, role: 'admin' };
+        return { success: true, message: "Login successful", token: token, role: 'admin', user: { username: user.nom_admin } };
     } catch (error) {
         console.error(error);
         return { success: false, message: "Internal server error" };
     }
 };
 
+
+
 const loginEmploye = async (email, password) => {
     try {
-        const query = 'SELECT * FROM employe WHERE email_employe = ? LIMIT 1';
+        const query = 'SELECT * FROM employe WHERE email_employe = ? AND etat_compte = "active" LIMIT 1 ';
         const result = await new Promise((resolve, reject) => {
             db.query(query, [email], (err, result) => {
                 if (err) {
@@ -67,7 +120,7 @@ const loginEmploye = async (email, password) => {
 
         await db.query(`UPDATE employe SET date_inscription_employe = NOW() WHERE idemploye = ?`, [user.idemploye]);
 
-        return { success: true, message: "Login successful", token: token, role: 'employe' };
+        return { success: true, message: "Login successful", token: token, role: 'employe', user: { username: user.nom_employe } };
     } catch (error) {
         console.error(error);
         return { success: false, message: "Internal server error" };
@@ -76,7 +129,7 @@ const loginEmploye = async (email, password) => {
 ;
 const loginClient = async (email, password) => {
     try {
-        const query = 'SELECT * FROM client WHERE email_client = ? LIMIT 1';
+        const query = 'SELECT * FROM client WHERE email_client = ? AND etat_compte = "active" LIMIT 1';
         const result = await new Promise((resolve, reject) => {
             db.query(query, [email], (err, result) => {
                 if (err) {
@@ -100,16 +153,12 @@ const loginClient = async (email, password) => {
 
         await db.query(`UPDATE client SET date_inscription_client = NOW() WHERE idclient = ?`, [user.idclient]);
 
-        return { success: true, message: "Login successful", token: token, role: 'client' };
+        return { success: true, message: "Login successful", token: token, role: 'client', user: { username: user.nom_client } };
     } catch (error) {
         console.error(error);
         return { success: false, message: "Internal llllllllllllllllserver error" };
     }
 };
-
-
-
-
 
 
 const loginUser = async (req, res) => {
@@ -204,7 +253,7 @@ const registerE = async (req, res) => {
             datede_naissance_employe: dateDeNaissance,
             date_inscription_employe: new Date(),
             genre_employe: genre || "femme",
-            etat_compte: 'active'
+            etat_compte: 'inactive'
         };
         //ENUM('femme', 'homm')
 
@@ -246,7 +295,7 @@ const registerC = async (req, res) => {
             datede_naissance_client: dateDeNaissance,
             date_inscription_client: new Date(),
             genre_client: genre || "femme",
-            etat_compte: 'active'
+            etat_compte: 'inactive'
         };
 
         const result = await db.query('INSERT INTO client SET ?', userData);
@@ -278,59 +327,6 @@ const registerUser = async (req, res) => {
     }
 };
 
-
-const getUserById = async (req, res) => {
-
-    const id = req.params.id;
-    console.log(id);
-    try {
-        let query, userType;
-        const response = await isAuthorize(req, res)
-        if (response.message != 'authorized') {
-            res.send(response)
-        }
-        else {
-            console.log(response)
-        }
-        //  res.send(response);
-
-        if (response.decode.role === 'admin') {
-            console.log('req.user.type req.user.type :', req.user.type);
-            query = 'SELECT email_admin, mdp FROM admin WHERE idadmin = ?';
-            userType = 'admin';
-        } else if (response.decode.role === 'employe') {
-            query = 'SELECT email_employe, mdp FROM employe WHERE idemploye = ?';
-            userType = 'employe';
-        } else if (response.decode.role === 'client') {
-            query = 'SELECT email_client, mdp FROM client WHERE idclient = ?';
-            userType = 'client';
-        } else {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-
-        db.query(query, [id], (err, results) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ message: 'Server error' });
-            }
-
-            console.log("Query results:", results);
-
-            if (!results || results.length === 0) {
-                return res.status(404).json({ message: `User not found with id ${id}` });
-            }
-
-            const user = results[0];
-            const email = user[`email_${userType}`];
-            const password = user.mdp;
-            res.status(200).json({ email, password });
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
 
 
 

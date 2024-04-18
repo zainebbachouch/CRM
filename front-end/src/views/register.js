@@ -4,7 +4,7 @@ import "../style/viewsStyle/registerStyle.css";
 
 const emailValidator = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const passwordValidator = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/;
-
+//? . presente carectere * existe  ou pas ou exite plusueur fois + existe ou existe plus
 export default function Register() {
     const [formData, setFormData] = useState({
         nom: "",
@@ -85,7 +85,7 @@ export default function Register() {
             try {
 
                 const response = await axios.post("http://127.0.0.1:5000/api/registerUser", formData);
-               
+
                 console.log("Response from server:", response.data);
             } catch (err) {
                 console.error("Error object:", err);
@@ -279,7 +279,7 @@ export default function Register() {
                             <button type="submit" className="btn submitButton" onClick={handleSubmit}>S'inscrire</button>
                         </form>
                     </div>
-                    
+
                 </div>
             </div>
         </div>

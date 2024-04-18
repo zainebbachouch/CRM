@@ -2,24 +2,27 @@ const express = require("express");
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const userRoute = require("./routes/userRoute");
-
+const categorieRoute = require("./routes/categorieRoute");
+const productRoute = require("./routes/productRoute");
 const app = express();
 ///app.use(cors()); 
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
-    cors({
-      origin: "http://localhost:3000",
-      methods: ['GET', 'POST', 'PUT', 'DELETE'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    })
+  cors({
+    origin: "http://localhost:3000",
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
 );
 
 
 app.use('/api', userRoute);
+app.use('/api', categorieRoute);
+app.use('/api', productRoute);
 
 app.listen(5000, () => {
-    console.log('Server running on https://localhost:5000');
+  console.log('Server running on https://localhost:5000');
 
 });
