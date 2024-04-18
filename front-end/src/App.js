@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Dashbord from './views/Dashbord';
-import Products from './views/Products';
+import Products from './views/product/Products';
 import Commands from './views/Commands';
 import Invoices from './views/invoices';
-import Categories from './views/Categories';
+import Categories from './views/categorie/Categories';
 import Login from './views/login';
 import Register from './views/register';
 import Home from './views/Home';
