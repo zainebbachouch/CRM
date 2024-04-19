@@ -116,7 +116,7 @@ const loginEmploye = async (email, password) => {
             return { success: false, message: "Invalid password" };
         }
 
-        const token = await creatToken("employe", user.idemploye, user.email_employe, process.env.JWT_SECRET, '1h');
+        const token = await creatToken("employe", user.idemploye, user.email_employe, process.env.JWT_SECRET);
 
         await db.query(`UPDATE employe SET date_inscription_employe = NOW() WHERE idemploye = ?`, [user.idemploye]);
 

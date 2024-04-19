@@ -1,24 +1,35 @@
+// DisplayCategories.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-export function DisplayCategories() {
-    const [categorieList, setCategorieList] = useState([]);
-
-    async function fetchCategories() {
-        try {
-            const response = await axios.get("http://127.0.0.1:5000/api/getAllCategories");
-            setCategorieList(response.data);
-            console.log('Response:', response.data);
-        } catch (error) {
-            console.error("Error fetching categories:", error);
-        }
-    }
+function DisplayCategories({ categories, setCategories }) {
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchCategories();
-    }, []);
+        const fetchCategories = async () => {
+            setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            };
+            const response = await axios.get('http://127.0.0.1:5000/api/getAllCategories', config);
 
-    async function handleDelete(id) {
+            
+              setCategories(response.data);
+            } catch (err) {
+                console.error('Error fetching categories:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, [setCategories]);
+
+    const handleDelete = async (id) => {
         try {
             const token = localStorage.getItem("token");
             const config = {
@@ -26,37 +37,61 @@ export function DisplayCategories() {
                     Authorization: `Bearer ${token}`
                 }
             };
-            await axios.delete(`http://127.0.0.1:5000/api/categories/${id}`, config);
-            setCategorieList(categorieList.filter((categorie) => categorie.idcategorie !== id));
+            await axios.delete(`http://127.0.0.1:5000/api/deleteCategorie/${id}`, config);
+            setCategories(categories.filter((categorie) => categorie.idcategorie !== id));
         } catch (error) {
             console.error("Error deleting category:", error);
         }
-    }
+    };
+
+    const updateCategorie = async (id, newData) => {
+        try {
+            const token = localStorage.getItem("token");
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            };
+            await axios.put(`http://127.0.0.1:5000/api/updateCategorie/${id}`, newData, config);
+            setCategories(categories.map((categorie) => {
+                if (categorie.idcategorie === id) {
+                    return { ...categorie, ...newData };
+                }
+                return categorie;
+            }));
+        } catch (error) {
+            console.error("Error updating category:", error);
+        }
+    };
 
     return (
         <div>
             <h1>Categories</h1>
-            <table className="table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {categorieList.map((val, key) => (
-                        <tr key={key}>
-                            <td>{val.nom_categorie}</td>
-                            <td>{val.description}</td>
-                            <td>
-                                <button className="btn btn-primary mr-2">Update</button>
-                                <button className="btn btn-danger" onClick={() => handleDelete(val.idcategorie)}>Delete</button>
-                            </td>
+            {loading ? (
+                <p>Loading...</p>
+            ) : (
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Actions</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {categories.map((val, key) => (
+                            <tr key={key}>
+                                <td>{val.nom_categorie}</td>
+                                <td>{val.description}</td>
+                                <td>
+                                    <button className="btn btn-primary mr-2" onClick={() => updateCategorie(val.idcategorie)}>Update</button>
+                                    <button className="btn btn-danger" onClick={() => handleDelete(val.idcategorie)}>Delete</button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
         </div>
     );
 }

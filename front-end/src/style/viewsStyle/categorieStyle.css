@@ -1,3 +1,9 @@
+.main-content {
+    margin-left: 10px;
+    padding: 10px;
+    background-color: #dbe1e4;
+}
+
 .categories-list {
     margin-right: 30%;
     margin-top: 80px; /* Increased margin to accommodate TopBar component */
@@ -96,3 +102,6 @@
       font-size: 0.75rem;
     }
   }
+  
+
+
