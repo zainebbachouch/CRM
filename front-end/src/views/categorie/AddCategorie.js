@@ -1,8 +1,7 @@
-// AddCategorie.js
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import axios from 'axios';
 
-function AddCategorie({ addCategory }) {
+function AddCategorie({ addCategory, selectedCategory, setSelectedCategory }) {
     const [formData, setFormData] = useState({
         nom_categorie: "",
         description: ""
@@ -27,9 +26,13 @@ function AddCategorie({ addCategory }) {
                     Authorization: `Bearer ${token}`
                 }
             };
-            const response = await axios.post("http://127.0.0.1:5000/api/createCategorie", formData, config);
-            console.log("Response from server:", response.data);
-            addCategory(response.data);
+            if (selectedCategory) {
+                const response = await axios.put(`http://127.0.0.1:5000/api/updateCategorie/${selectedCategory.idcategorie}`, formData, config);
+                setSelectedCategory(null); // Reset selectedCategory state
+            } else {
+                const response = await axios.post("http://127.0.0.1:5000/api/createCategorie", formData, config);
+                addCategory(response.data);
+            }
             setFormData({
                 nom_categorie: "",
                 description: ""
@@ -38,7 +41,7 @@ function AddCategorie({ addCategory }) {
             console.error("Error object:", err);
             if (err.response) {
                 if (err.response.status === 403) {
-                    setErrors({ ...errors, nomCategorieError: "Insufficient permissions to create a category." });
+                    setErrors({ ...errors, nomCategorieError: "Insufficient permissions to create/update a category." });
                 } else {
                     setErrors({ ...errors, nomCategorieError: err.response.data });
                 }
@@ -47,6 +50,20 @@ function AddCategorie({ addCategory }) {
             }
         }
     };
+
+    useEffect(() => {
+        if (selectedCategory) {
+            setFormData({
+                nom_categorie: selectedCategory.nom_categorie,
+                description: selectedCategory.description
+            });
+        } else {
+            setFormData({
+                nom_categorie: "",
+                description: ""
+            });
+        }
+    }, [selectedCategory])
 
     return (
         <div className='container-fluid p-0' style={{ backgroundColor: '#dbe1e4' }}>
