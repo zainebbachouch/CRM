@@ -10,52 +10,54 @@ import Register from './views/register';
 import Home from './views/Home';
 import { AuthProvider } from './views/context/authContext';
 
+
 function App() {
   return (
     <>
       <Router>
-      <AuthProvider>
-      
-        <Routes>
-          <Route path="/">
-          <Route index element={<Home />} />
+        <AuthProvider>
 
-          <Route path="login">
-              <Route index element={<Login />} />
-            </Route>
-            <Route path="register">
-              <Route index element={<Register />} />
-            </Route>
-            
-            <Route path="Dashboard">
-            <Route index element={<Dashbord />} />
-            </Route>
-           
-            <Route path="Products">
-              <Route index element={<Products />} />
-              {/*<Route path=":productId" element={<Single />} />
+          <Routes>
+            <Route path="/">
+              <Route index element={<Home />} />
+
+              <Route path="login">
+                <Route index element={<Login />} />
+              </Route>
+              <Route path="register">
+                <Route index element={<Register />} />
+              </Route>
+
+              <Route path="Dashboard">
+                <Route index element={<Dashbord />} />
+              </Route>
+
+              <Route path="Products">
+                <Route index element={<Products />} />
+                {/*<Route path=":productId" element={<Single />} />
                   <Route
                     path="new" element={<New inputs={productInputs} title="Add New Product" />}>*/}
-            </Route>
+              </Route>
 
-            <Route path="Products">
-              <Route index element={<Products />} />
-            </Route>
+              <Route path="Products">
+                <Route index element={<Products />} />
+              </Route>
 
-            <Route path="Commands">
-              <Route index element={<Commands />} />
-            </Route>
+              <Route path="Commands">
+                <Route index element={<Commands />} />
+              </Route>
 
-            <Route path="Invoices">
-              <Route index element={<Invoices />} />
-            </Route>
+              <Route path="Invoices">
+                <Route index element={<Invoices />} />
+              </Route>
 
-            <Route path="Categories">
-              <Route index element={<Categories />} />
-            </Route>
+              <Route path="Categories">
+                <Route index element={<Categories />} />
 
-          </Route>
-        </Routes>
+              </Route>
+
+            </Route>
+          </Routes>
         </AuthProvider>
       </Router>
     </>

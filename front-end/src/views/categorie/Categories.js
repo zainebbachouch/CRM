@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios'; // Import axios for making HTTP requests
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
-
+import "../../style/viewsStyle/categorieStyle.css"
+import DisplayCategories from './DisplayCategories';
 function Categories() {
     const [formData, setFormData] = useState({
         nom_categorie: "",
@@ -54,7 +55,7 @@ function Categories() {
                 <div className="col p-0">
                     <TopBar />
                     <h1>Categories</h1>
-                    <form>
+                    <form className="container">
                     <div className="mb-3">
                         <label htmlFor="nomCategorie" className="form-label">Nom de la catégorie</label>
                              <input
@@ -80,6 +81,7 @@ function Categories() {
                                     value={formData.description}
                                     onChange={handleChange}
                                     placeholder="Enter description"
+                                    rows={4}
                                     required
                                 />
                             {errors.descriptionError && <p className="error-message">{errors.descriptionError}</p>}
@@ -88,6 +90,9 @@ function Categories() {
                         <button type="submit" className="btn btn-primary" onClick={handleSubmit}>Submit</button>
                     </form>
                 </div>
+            </div>
+            <div className="categories-list">               
+                <DisplayCategories />
             </div>
         </div>
     );

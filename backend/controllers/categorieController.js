@@ -62,21 +62,24 @@ const getCategorieById = (req, res) => {
 
 const getAllCategories = async (req, res) => {
     try {
-        const result = await db.query('SELECT * FROM categorie', (err, result) => {
-            if (err) {
-              console.log(err);
-            } else {
-              res.send(result);
-            }
-          });        
-        
-        //console.log("All categories:", result);
-        //res.json(result);
+        const categories = await new Promise((resolve, reject) => {
+            db.query('SELECT * FROM categorie', (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        // Send the categories as JSON
+        res.json(categories);
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Erreur interne du serveur" });
+        console.error("Error fetching categories:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
+
 
 
 
