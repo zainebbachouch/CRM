@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import crmIcon from "../../images/crm.png"
 import './sidebar.css';
 import { FaHome, FaUserAlt, FaRegChartBar, FaCommentAlt } from "react-icons/fa";
@@ -55,7 +55,10 @@ function SideBar() {
 
   ]
   const { currentUser } = useAuth();/// donne directemen valeur c'est que username
-
+  /*
+useEffect(()=>{
+  console.log(localStorage.getItem('role'))
+})*/
   return (
     <div className="Sidebar d-flex flex-column col-4">
       <div className="top d-flex " >

@@ -14,7 +14,7 @@ export default function Login() {
         password: ""
     });
     const navigate = useNavigate();
-    const { handleLogin } = useAuth(); // Access the handleLogin function from useAuth
+    const { handleLogin } = useAuth(); 
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -24,7 +24,7 @@ export default function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await handleLogin(formData); // Call handleLogin from useAuth
+            await handleLogin(formData);
             navigate("/");
         } catch (err) {
             console.error("Error object:", err);

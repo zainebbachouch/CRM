@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
 import "../../style/viewsStyle/categorieStyle.css";
-import AddCategorie from './AddCategorie';
 import DisplayCategories from './DisplayCategories';
 
 function Categories() {

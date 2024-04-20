@@ -55,8 +55,7 @@ export default function Register() {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
-        setTouchedFields({ ...touchedFields, [name]: true });
-        // Effacer les erreurs non pertinentes lors de la modification d'un champ
+        setTouchedFields({ ...touchedFields, [name]: true });        
         setErrors((prevErrors) => ({
             ...prevErrors,
             [`${name}Error`]: "", // Effacer l'erreur du champ modifié
@@ -66,9 +65,7 @@ export default function Register() {
 
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        // Marquer tous les champs comme touchés pour afficher les erreurs
+        e.preventDefault();    
         setTouchedFields({
             nom: true,
             prenom: true,

@@ -58,7 +58,7 @@ const getCategorieById = (req, res) => {
     });
 };
 
-
+/// add authorized 
 
 const getAllCategories = async (req, res) => {
     try {

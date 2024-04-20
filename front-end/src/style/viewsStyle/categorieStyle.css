@@ -6,7 +6,7 @@
 
 .categories-list {
     margin-right: 30%;
-    margin-top: 80px; /* Increased margin to accommodate TopBar component */
+    margin-top: 80px; 
     padding: 20px;
     border: 1px solid #ddd;
     border-radius: 5px;

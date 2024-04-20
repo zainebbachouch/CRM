@@ -1,7 +1,7 @@
-import React, { useState , useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-function AddCategorie({ addCategory, selectedCategory, setSelectedCategory }) {
+function AddCategorie({ addCategory, selectedCategory, setSelectedCategory ,fetchCategories}) {
     const [formData, setFormData] = useState({
         nom_categorie: "",
         description: ""
@@ -28,10 +28,13 @@ function AddCategorie({ addCategory, selectedCategory, setSelectedCategory }) {
             };
             if (selectedCategory) {
                 const response = await axios.put(`http://127.0.0.1:5000/api/updateCategorie/${selectedCategory.idcategorie}`, formData, config);
-                setSelectedCategory(null); // Reset selectedCategory state
+                setSelectedCategory(response);
+                fetchCategories();
             } else {
                 const response = await axios.post("http://127.0.0.1:5000/api/createCategorie", formData, config);
+                //addCategory(response.data);
                 addCategory(response.data);
+                fetchCategories();
             }
             setFormData({
                 nom_categorie: "",
@@ -64,9 +67,14 @@ function AddCategorie({ addCategory, selectedCategory, setSelectedCategory }) {
             });
         }
     }, [selectedCategory])
+    const role = localStorage.getItem('role');
+    console.log(role)
 
     return (
-        <div className='container-fluid p-0' style={{ backgroundColor: '#dbe1e4' }}>
+
+       
+            (role != 'client') &&
+        (<div className='container-fluid p-0' style={{ backgroundColor: '#dbe1e4' }}>
             <div className="p-0 m-0 row col">
                 <div className="col p-0">
                     <h1>Categories</h1>
@@ -104,8 +112,12 @@ function AddCategorie({ addCategory, selectedCategory, setSelectedCategory }) {
                     </form>
                 </div>
             </div>
-        </div>
+        </div>)
+
+
+
     );
 }
+
 
 export default AddCategorie;
