@@ -1,22 +1,27 @@
-import React from 'react'
+import React, { useState } from 'react';
 import SideBar from '../../components/sidebar/SideBar'
 import TopBar from "../../components/sidenav/TopNav"
-import AddProduct from './AddProduct'
-import test from './function'
+import DisplayProducts from './DisplayProducts'
 
 function Products() {
+    const [products, setProducts] = useState([]);
+
+    const addProduct = (newProduct) => {
+        setProducts([...products, newProduct]);
+    }
+
     return (
         <div className='container-fluid p-0 d-flex'  style={{ backgroundColor: '#dbe1e4' }}>
         <SideBar></SideBar>
-        <div className="p-0 m-0 row col">
-            <div className="col  p-0">
-            <TopBar></TopBar> 
+        <div className="col p-0">
+                <TopBar />
+                <div className="main-content">
+                    <DisplayProducts products={products} setProducts={setProducts} addProduct={addProduct}/>
+                </div>
             </div>
-            <AddProduct/>
          
         </div>    
-        
-        </div>
+       
     )
 }
 

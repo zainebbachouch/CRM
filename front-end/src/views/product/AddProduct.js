@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useCallback  } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-function AddProduct() {
-    const [categories, setCategories] = useState([]);
-    const [loading, setLoading] = useState(false);
+function AddProduct({ addProduct, selectedProduct,products,setProducts, setSelectedProduct, fetchProducts, categories, setCategories, loading, setLoading }) {
     const [formData, setFormData] = useState({
         nom_produit: '',
         prix_produit: '',
@@ -21,7 +19,9 @@ function AddProduct() {
         general: ''
     });
     const [successMessage, setSuccessMessage] = useState('');
+
     const fetchCategories = useCallback(async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem("token");
             const config = {
@@ -30,7 +30,7 @@ function AddProduct() {
                 },
             };
             const response = await axios.get("http://127.0.0.1:5000/api/getAllCategories", config);
-    
+
             if (!response) {
                 return;
             }
@@ -39,13 +39,24 @@ function AddProduct() {
         } catch (err) {
             console.error("Error fetching categories:", err.message);
             setErrors({ general: "An error occurred while fetching categories. Please try again later." });
+        } finally {
+            setLoading(false);
         }
-    }, []);
-    
-      
-      useEffect(() => {
+    }, [setCategories, setLoading]);
+
+    useEffect(() => {
         fetchCategories();
-      }, [fetchCategories]);
+        if (selectedProduct) {
+            // Populate form fields with selected product's data
+            setFormData({
+                nom_produit: selectedProduct.nom_produit,
+                prix_produit: selectedProduct.prix_produit,
+                description_produit: selectedProduct.description_produit,
+                categorie_idcategorie: selectedProduct.categorie_idcategorie,
+                photo_produit: selectedProduct.photo_produit
+            });
+        }
+    }, [fetchCategories, selectedProduct]);
 
     const handleChange = (e) => {
         const { name, value, type } = e.target;
@@ -60,7 +71,7 @@ function AddProduct() {
         setLoading(true);
         setErrors({});
         setSuccessMessage('');
-
+    
         try {
             const token = localStorage.getItem('token');
             const config = {
@@ -68,16 +79,31 @@ function AddProduct() {
                     Authorization: `Bearer ${token}`
                 },
             };
-            const response = await axios.post('http://127.0.0.1:5000/api/createProduct', formData, config);
-
-            setSuccessMessage(response.data.message);
-            setFormData({
-                nom_produit: '',
-                prix_produit: '',
-                description_produit: '',
-                categorie_idcategorie: '',
-                photo_produit: ''
-            });
+            if (selectedProduct) {
+                const response = await axios.put(`http://127.0.0.1:5000/api/updateProduct/${selectedProduct.idproduit}`, formData, config);
+                // Update product in the products list
+                const updatedProducts = products.map((product) => {
+                    if (product.idproduit === selectedProduct.idproduit) {
+                        return response.data; // Updated product
+                    }
+                    return product;
+                });
+                setProducts(updatedProducts); // Use setProducts function from props to update products
+                setSuccessMessage('Product updated successfully');
+                fetchProducts();
+            } else {
+                const response = await axios.post('http://127.0.0.1:5000/api/createProduct', formData, config);
+                addProduct(response.data);
+                setSuccessMessage(response.data.message);
+                fetchProducts();
+                setFormData({
+                    nom_produit: '',
+                    prix_produit: '',
+                    description_produit: '',
+                    categorie_idcategorie: '',
+                    photo_produit: ''
+                });
+            }
         } catch (err) {
             console.error('Error:', err);
             if (err.response) {
@@ -89,10 +115,11 @@ function AddProduct() {
             setLoading(false);
         }
     };
+    
 
     return (
         <div>
-            <h1>Add New Product</h1>
+            <h1>{selectedProduct ? 'Update Product' : 'Add New Product'}</h1>
             {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
             {errors.general && <p style={{ color: 'red' }}>{errors.general}</p>}
             <form id="productForm">
@@ -126,21 +153,21 @@ function AddProduct() {
                 /><br /><br />
 
                 <label htmlFor="categorie_idcategorie">Category:</label><br />
-                     <select
-                        id="categorie_idcategorie"
-                        name="categorie_idcategorie"
-                        value={formData.categorie_idcategorie}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Select Category</option>
-                        
-                        {Array.isArray(categories) && categories.map((category, index) => (
-                            <option key={index} value={category.idcategorie}>
-                                {category.nom_categorie}
-                            </option>
-                        ))}
-                    </select>
+                <select
+                    id="categorie_idcategorie"
+                    name="categorie_idcategorie"
+                    value={formData.categorie_idcategorie}
+                    onChange={handleChange}
+                    required
+                >
+                    <option value="">Select Category</option>
+
+                    {Array.isArray(categories) && categories.map((category, index) => (
+                        <option key={index} value={category.idcategorie}>
+                            {category.nom_categorie}
+                        </option>
+                    ))}
+                </select>
 
 
                 <br /><br />
@@ -154,8 +181,9 @@ function AddProduct() {
                     required
                 /><br /><br />
 
-                <button type="submit" onClick={handleSubmit}>Add Product</button>
+                <button type="submit" onClick={handleSubmit}>{selectedProduct ? 'Update Product' : 'Add Product'}</button>
             </form>
+            {loading && <p>Loading...</p>}
         </div>
     );
 }
