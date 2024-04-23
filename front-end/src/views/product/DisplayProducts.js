@@ -97,7 +97,11 @@ function DisplayProducts({ products, setProducts, addProduct }) {
                             <th>Name</th>
                             <th>Price</th>
                             <th>Description</th>
-                            <th>Category</th>
+                            <th>Category</th>                           
+                            <th>remise_produit</th>
+                            <th>photo_produit</th>
+                            <th>date_ajout_produit</th>
+                            <th>date_modification_produit</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -108,6 +112,11 @@ function DisplayProducts({ products, setProducts, addProduct }) {
                                 <td>{val.prix_produit}</td>
                                 <td>{val.description_produit}</td>
                                 <td>{getCategoryName(val.categorie_idcategorie)}</td>
+                                <td>{val.remise_produit}</td>
+                                <td>{val.photo_produit}</td>
+                                <td>{val.date_ajout_produit}</td>
+                                <td>{val.date_modification_produit}</td>
+
                                 {role !== 'client' && (
                                     <td>
                                         <button className="btn btn-primary mr-2" onClick={() => handleUpdate(val)}>

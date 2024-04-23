@@ -7,7 +7,8 @@ function AddProduct({ addProduct, selectedProduct,products,setProducts, setSelec
         prix_produit: '',
         description_produit: '',
         categorie_idcategorie: '',
-        photo_produit: ''
+        photo_produit: '',
+        remise_produit: ''
     });
 
     const [errors, setErrors] = useState({
@@ -16,6 +17,7 @@ function AddProduct({ addProduct, selectedProduct,products,setProducts, setSelec
         productDescriptionError: '',
         productCategoryError: '',
         productImageError: '',
+        productRemiseError:'',
         general: ''
     });
     const [successMessage, setSuccessMessage] = useState('');
@@ -53,6 +55,7 @@ function AddProduct({ addProduct, selectedProduct,products,setProducts, setSelec
                 prix_produit: selectedProduct.prix_produit,
                 description_produit: selectedProduct.description_produit,
                 categorie_idcategorie: selectedProduct.categorie_idcategorie,
+                remise_produit: selectedProduct.remise_produit,
                 photo_produit: selectedProduct.photo_produit
             });
         }
@@ -101,7 +104,8 @@ function AddProduct({ addProduct, selectedProduct,products,setProducts, setSelec
                     prix_produit: '',
                     description_produit: '',
                     categorie_idcategorie: '',
-                    photo_produit: ''
+                    photo_produit: '',
+                    remise_produit: ''
                 });
             }
         } catch (err) {
@@ -171,6 +175,16 @@ function AddProduct({ addProduct, selectedProduct,products,setProducts, setSelec
 
 
                 <br /><br />
+                
+                <label htmlFor="remise_produit">Discount:</label><br />
+                <input
+                    type="number"
+                    id="remise_produit"
+                    name="remise_produit"
+                    value={formData.remise_produit}
+                    onChange={handleChange}
+                    required
+                /><br /><br />
 
                 <label htmlFor="photo_produit">Image:</label><br />
                 <input
