@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    console.log(currentUser);
+    console.log(currentUser); 
   }, [currentUser]);
 
   const handleLogin = async (formData) => {
@@ -30,7 +30,6 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
-
 
   /*
    const handleSubmit = async (e) => {

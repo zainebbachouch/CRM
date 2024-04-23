@@ -102,13 +102,16 @@ export default function Register() {
         let errors = {};
 
         if (!data.nom.trim()) errors.nomError = "Le nom est requis";
+
         if (touchedFields.prenom && !data.prenom.trim()) errors.prenomError = "Le prénom est requis";
+
         if (touchedFields.email && !data.email.trim()) errors.emailAddressError = "L'adresse e-mail est requise";
         else if (touchedFields.email && !emailValidator.test(data.email.trim())) errors.emailAddressError = "L'adresse e-mail n'est pas valide";
+        
         if (touchedFields.password && !data.password.trim()) errors.passwordError = "Le mot de passe est requis";
         else if (touchedFields.password && !passwordValidator.test(data.password)) errors.passwordError = "Le mot de passe doit contenir au moins 8 caractères, 1 chiffre, 1 majuscule et 1 minuscule";
         if (touchedFields.passwordConfirmation && data.password !== data.passwordConfirmation) errors.passwordConfirmationError = "Les mots de passe ne correspondent pas";
-
+       
         if (touchedFields.telephone && !data.telephone.trim()) errors.telephoneError = "Le numéro de téléphone est requis";
         if (touchedFields.adresse && !data.adresse.trim()) errors.adresseError = "L'adresse est requise";
         if (touchedFields.dateDeNaissance && !data.dateDeNaissance) errors.dateDeNaissanceError = "La date de naissance est requise";

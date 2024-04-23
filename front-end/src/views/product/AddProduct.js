@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback  } from 'react';
 import axios from 'axios';
 
 function AddProduct() {
@@ -18,29 +18,34 @@ function AddProduct() {
         productDescriptionError: '',
         productCategoryError: '',
         productImageError: '',
-        general: '' // Changed the duplicate key 'productcategorie' to 'general'
+        general: ''
     });
     const [successMessage, setSuccessMessage] = useState('');
-
-    const fetchCategories = async () => {
+    const fetchCategories = useCallback(async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem("token");
             const config = {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
                 },
             };
-            const response = await axios.get('http://127.0.0.1:5000/api/getAllCategories', config);
+            const response = await axios.get("http://127.0.0.1:5000/api/getAllCategories", config);
+    
+            if (!response) {
+                return;
+            }
+            console.log("Categories response:", response.data); // Log the response data
             setCategories(response.data);
         } catch (err) {
-            console.error('Error fetching categories:', err.message);
-            setErrors({ general: 'An error occurred while fetching categories. Please try again later.' });
+            console.error("Error fetching categories:", err.message);
+            setErrors({ general: "An error occurred while fetching categories. Please try again later." });
         }
-    };
-
-    useEffect(() => {
-        fetchCategories();
     }, []);
+    
+      
+      useEffect(() => {
+        fetchCategories();
+      }, [fetchCategories]);
 
     const handleChange = (e) => {
         const { name, value, type } = e.target;
@@ -121,20 +126,22 @@ function AddProduct() {
                 /><br /><br />
 
                 <label htmlFor="categorie_idcategorie">Category:</label><br />
-                <select
-                    id="categorie_idcategorie"
-                    name="categorie_idcategorie"
-                    value={formData.categorie_idcategorie}
-                    onChange={handleChange}
-                    required
-                >
-                    <option value="">Select Category</option>
-                    {categories.map((category) => (
-                        <option key={category._id} value={category._id}>
-                            {category.nom_categorie}
-                        </option>
-                    ))}
-                </select>
+                     <select
+                        id="categorie_idcategorie"
+                        name="categorie_idcategorie"
+                        value={formData.categorie_idcategorie}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="">Select Category</option>
+                        
+                        {Array.isArray(categories) && categories.map((category, index) => (
+                            <option key={index} value={category.idcategorie}>
+                                {category.nom_categorie}
+                            </option>
+                        ))}
+                    </select>
+
 
                 <br /><br />
 

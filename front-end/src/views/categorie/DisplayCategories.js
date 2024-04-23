@@ -23,7 +23,6 @@ function DisplayCategories({ categories, setCategories, addCategory }) {
         }
     };
     useEffect(() => {  
-
         fetchCategories();
     }, [setCategories]);
 
@@ -91,7 +90,7 @@ function DisplayCategories({ categories, setCategories, addCategory }) {
                             <td>{val.nom_categorie}</td>
                             <td>{val.description}</td>
                             {
-                                role!='client' &&<td>                                
+                                role!=='client' &&<td>                                
                                 <button className="btn btn-primary mr-2" onClick={() => handleUpdate(val)}>Update</button>
                                 <button className="btn btn-danger" onClick={() => handleDelete(val.idcategorie)}>Delete</button>
                             </td>

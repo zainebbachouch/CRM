@@ -2,6 +2,7 @@ import React from 'react'
 import SideBar from '../../components/sidebar/SideBar'
 import TopBar from "../../components/sidenav/TopNav"
 import AddProduct from './AddProduct'
+import test from './function'
 
 function Products() {
     return (

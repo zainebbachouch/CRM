@@ -9,15 +9,29 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(
-  cors({
-    origin: "http://127.0.0.1:3000",
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    //credentials: true
-  })
-);
+app.use(cors({
+  credentials: true,
+  origin: "http://127.0.0.1:3000",
+  debug: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus:200,
 
+}));
+
+
+
+app.use((req, res, next) => {
+  console.log(`Request received: ${req.method} ${req.url}`);
+  next();
+});
+
+app.use((req, res, next) => {
+  res.on('finish', () => {
+    console.log(`Response sent: ${res.statusCode} ${res.statusMessage}`);
+  });
+  next();
+});
 
 app.use('/api', userRoute);
 app.use('/api', categorieRoute);
