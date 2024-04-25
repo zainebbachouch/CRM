@@ -22,6 +22,7 @@ function AddCategorie({ addCategory, selectedCategory, setSelectedCategory ,fetc
         try {
             const token = localStorage.getItem("token");
             const config = {
+                withCredentials: true,
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

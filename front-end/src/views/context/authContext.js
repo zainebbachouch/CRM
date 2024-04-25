@@ -12,18 +12,24 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    console.log(currentUser); 
+    console.log(currentUser);
   }, [currentUser]);
 
   const handleLogin = async (formData) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/login", formData);
+      const response = await axios.post("http://localhost:5000/api/login", formData, {
+        withCredentials: true, // Include credentials (cookies) in the request
+      });
       console.log('Response:', response);
       console.log('User data:', response.data.user);
 
       setCurrentUser(response.data.user);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('role', response.data.role);//value role champ role
+
+      console.log(response.data)
+
+      document.cookie = "cookie:" + response.data.token;
 
     } catch (error) {
       console.error("Login failed:", error);

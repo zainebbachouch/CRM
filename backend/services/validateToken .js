@@ -25,7 +25,7 @@ const isAuthorize = async (req, res) => {
           console.log('User type:', decode.type);*/
 
 
-        //  req.user = decode;
+         // req.user = decode;
 
         return ({ message: 'authorized', decode })
 

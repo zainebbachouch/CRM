@@ -44,6 +44,8 @@ const createCategorie = async (req, res) => {
 
 const getCategorieById = (req, res) => {
     const { id } = req.params;
+   
+
     db.query('SELECT * FROM categorie WHERE idcategorie = ?', [id], (err, result) => {
         if (err) {
             console.error(err);
@@ -62,6 +64,17 @@ const getCategorieById = (req, res) => {
 
 const getAllCategories = async (req, res) => {
     try {
+         // Authorization check
+    const authResult = await isAuthorize(req, res);
+    if (authResult.message !== 'authorized') {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+     // Check role
+     if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe'
+      && authResult.decode.role !== 'client') {
+        return res.status(403).json({ message: "Insufficient permissions" });
+    }
         const categories = await new Promise((resolve, reject) => {
             db.query('SELECT * FROM categorie', (err, result) => {
                 if (err) {

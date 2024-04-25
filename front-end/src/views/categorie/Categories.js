@@ -10,19 +10,20 @@ function Categories() {
     const addCategory = (newCategory) => {
         setCategories([...categories, newCategory]);
     }
+    //key={categories.length}
 
     return (
         <div className='container-fluid p-0'>
-        <div className="row">
-            <SideBar />
-            <div className="col p-0">
-                <TopBar />
-                <div className="main-content">
-                    <DisplayCategories categories={categories} setCategories={setCategories} addCategory={addCategory}/>
+            <div className="row">
+                <SideBar />
+                <div className="col p-0">
+                    <TopBar />
+                    <div className="main-content">
+                        <DisplayCategories categories={categories} setCategories={setCategories} addCategory={addCategory} />
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     );
 }
 

@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const { isAuthorize } = require('../services/validateToken ')
-const { creatToken } = require('../services/createTokenService.js');
+const { createToken } = require('../services/createTokenService.js');
 
 const getUserById = async (req, res) => {
 
@@ -58,6 +58,7 @@ const getUserById = async (req, res) => {
     }
 };
 
+
 const loginAdmin = async (email, password) => {
     try {
         const query = 'SELECT * FROM admin WHERE email_admin = ? LIMIT 1';
@@ -71,6 +72,7 @@ const loginAdmin = async (email, password) => {
             });
         });
 
+
         if (result.length === 0) {
             return { success: false, message: "User not found" };
         }
@@ -81,8 +83,17 @@ const loginAdmin = async (email, password) => {
             return { success: false, message: "Invalid password" };
         }
 
-        const token = await creatToken("admin", user.idadmin, user.email_admin, process.env.JWT_SECRET, '1h');
-        await db.query(`UPDATE admin SET date_inscription_admin = NOW() WHERE idadmin = ?`, [user.idadmin]);
+        const token = await createToken("admin", user.idadmin, user.email_admin, process.env.JWT_SECRET);
+        const { mdp, ...others } = user;
+
+        /*  res.cookie("accessToken", token, {
+              httpOnly: true,
+              sameSite: "none",
+              secure: true,
+          }).status(200).json({ role: 'admin', user: { username: user.nom_admin }, others });*/
+
+
+        db.query(`UPDATE admin SET date_inscription_admin = NOW() WHERE idadmin = ?`, [user.idadmin]);
 
         return { success: true, message: "Login successful", token: token, role: 'admin', user: { username: user.nom_admin } };
     } catch (error) {
@@ -90,7 +101,6 @@ const loginAdmin = async (email, password) => {
         return { success: false, message: "Internal server error" };
     }
 };
-
 
 
 const loginEmploye = async (email, password) => {
@@ -116,9 +126,16 @@ const loginEmploye = async (email, password) => {
             return { success: false, message: "Invalid password" };
         }
 
-        const token = await creatToken("employe", user.idemploye, user.email_employe, process.env.JWT_SECRET);
+        const token = await createToken("employe", user.idemploye, user.email_employe, process.env.JWT_SECRET);
+        const { mdp, ...others } = user;
 
-        await db.query(`UPDATE employe SET date_inscription_employe = NOW() WHERE idemploye = ?`, [user.idemploye]);
+        /*  res.cookie("accessToken", token, {
+              httpOnly: true,
+              sameSite: "none",
+              secure: true,
+          }).status(200).json({ role: 'employe', user: { username: user.nom_employe }, others });*/
+
+        db.query(`UPDATE employe SET date_inscription_employe = NOW() WHERE idemploye = ?`, [user.idemploye]);
 
         return { success: true, message: "Login successful", token: token, role: 'employe', user: { username: user.nom_employe } };
     } catch (error) {
@@ -126,7 +143,7 @@ const loginEmploye = async (email, password) => {
         return { success: false, message: "Internal server error" };
     }
 };
-;
+
 const loginClient = async (email, password) => {
     try {
         const query = 'SELECT * FROM client WHERE email_client = ? AND etat_compte = "active" LIMIT 1';
@@ -147,16 +164,24 @@ const loginClient = async (email, password) => {
         const user = result[0];
         const isPasswordValid = await bcrypt.compare(password, user.mdp);
         if (!isPasswordValid) {
-            return { success: false, message: "Invaliddddddddddddddd password" };
+            return { success: false, message: "Invalid password" };
         }
-        const token = await creatToken("client", user.idclient, user.email_client, process.env.JWT_SECRET, '1h');
 
-        await db.query(`UPDATE client SET date_inscription_client = NOW() WHERE idclient = ?`, [user.idclient]);
+        const token = await createToken("client", user.idclient, user.email_client, process.env.JWT_SECRET);
+        const { mdp, ...others } = user;
+
+        /* res.cookie("accessToken", token, {
+             httpOnly: true,
+             sameSite: "none",
+             secure: true,
+         }).status(200).json({ role: 'client', user: { username: user.nom_client }, others });*/
+
+        db.query(`UPDATE client SET date_inscription_client = NOW() WHERE idclient = ?`, [user.idclient]);
 
         return { success: true, message: "Login successful", token: token, role: 'client', user: { username: user.nom_client } };
     } catch (error) {
         console.error(error);
-        return { success: false, message: "Internal llllllllllllllllserver error" };
+        return { success: false, message: "Internal server error" };
     }
 };
 
@@ -176,11 +201,12 @@ const loginUser = async (req, res) => {
         if (!loginResult.success) {
             return res.status(404).json({ message: loginResult.message });
         }
+     
 
         return res.json(loginResult);
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Internaaaaaaaaaaaal server error" });
+        return res.status(500).json({ message: "Internal server error" });
     }
 };
 
@@ -331,4 +357,5 @@ const registerUser = async (req, res) => {
 
 
 
-module.exports = { loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, registerUser, getUserById };
+
+module.exports = {  loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, registerUser, getUserById };

@@ -12,6 +12,7 @@ function DisplayProducts({ products, setProducts, addProduct }) {
         try {
             const token = localStorage.getItem('token');
             const config = {
+                withCredentials: true,
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -29,6 +30,7 @@ function DisplayProducts({ products, setProducts, addProduct }) {
         try {
             const token = localStorage.getItem('token');
             const config = {
+                withCredentials: true,
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
