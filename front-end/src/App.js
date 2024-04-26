@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Dashbord from './views/Dashbord';
 import Products from './views/product/Products';
+import ProductDetails from './views/product/ProductDetails';
 import Commands from './views/Commands';
 import Invoices from './views/invoices';
 import Categories from './views/categorie/Categories';
@@ -36,7 +37,11 @@ function App() {
                 <Route index element={<Products />} />
                 {/*<Route path=":productId" element={<Single />} />
                   <Route
-                    path="new" element={<New inputs={productInputs} title="Add New Product" />}>*/}
+                    path="new" element={<New inputs={productInputs} title="Add New Product" />}>
+                     
+                    */}
+                  <Route path=":id" element={<ProductDetails />}/>
+                   
               </Route>
 
               <Route path="Products">

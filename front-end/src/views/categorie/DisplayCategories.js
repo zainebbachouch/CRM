@@ -73,42 +73,43 @@ function DisplayCategories({ categories, setCategories, addCategory }) {
     };
     return (
         <div>
-            <AddCategorie
-                addCategory={addCategory}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                fetchCategories={fetchCategories}
-            />
-            {loading ? (
-                <p>Loading...</p>
-            ) : (
-                <table className="table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {categories.map((val, key) => (
-                            <tr key={key}>
-                                <td>{val.nom_categorie}</td>
-                                <td>{val.description}</td>
-                                {
-                                    role !== 'client' && <td>
+        {role !== 'client' && (
+            <div>
+                <AddCategorie
+                    addCategory={addCategory}
+                    selectedCategory={selectedCategory}
+                    setSelectedCategory={setSelectedCategory}
+                    fetchCategories={fetchCategories}
+                />
+                {loading ? (
+                    <p>Loading...</p>
+                ) : (
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {categories.map((val, key) => (
+                                <tr key={key}>
+                                    <td>{val.nom_categorie}</td>
+                                    <td>{val.description}</td>
+                                    <td>
                                         <button className="btn btn-primary mr-2" onClick={() => handleUpdate(val)}>Update</button>
                                         <button className="btn btn-danger" onClick={() => handleDelete(val.idcategorie)}>Delete</button>
                                     </td>
-                                }
-
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
-        </div>
-    );
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        )}
+    </div>
+);
 }
 
 export default DisplayCategories;

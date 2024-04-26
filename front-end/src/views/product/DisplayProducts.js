@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import AddProduct from './AddProduct';
+import { Link } from 'react-router-dom';
 
-function DisplayProducts({ products, setProducts, addProduct }) {
+function DisplayProducts({ products, setProducts, addProduct, setSelectedProductId }) {
     const [loading, setLoading] = useState(true);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [categories, setCategories] = useState([]);
@@ -75,35 +76,37 @@ function DisplayProducts({ products, setProducts, addProduct }) {
         return category ? category.nom_categorie : 'N/A';
     };
 
+
     return (
         <div>
-            <AddProduct
-                addProduct={addProduct}
-                selectedProduct={selectedProduct}
-                setSelectedProduct={setSelectedProduct}
-                fetchProducts={fetchProducts}
-                categories={categories}
-                setCategories={setCategories}
-                loading={loading}
-                setLoading={setLoading}
-                products={products} // Pass the products array as a prop
-                setProducts={setProducts} // Pass the setProducts function as a prop
-            />
-
+            {role !== 'client' && (
+                <AddProduct
+                    addProduct={addProduct}
+                    selectedProduct={selectedProduct}
+                    setSelectedProduct={setSelectedProduct}
+                    fetchProducts={fetchProducts}
+                    categories={categories}
+                    setCategories={setCategories}
+                    loading={loading}
+                    setLoading={setLoading}
+                    products={products}
+                    setProducts={setProducts}
+                />
+            )}
             {loading ? (
                 <p>Loading...</p>
-            ) : (
+            ) : role !== 'client' ? (
                 <table className="table">
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th>Price</th>
                             <th>Description</th>
-                            <th>Category</th>                           
-                            <th>remise_produit</th>
-                            <th>photo_produit</th>
-                            <th>date_ajout_produit</th>
-                            <th>date_modification_produit</th>
+                            <th>Category</th>
+                            <th>Discount</th>
+                            <th>Photo</th>
+                            <th>Added Date</th>
+                            <th>Modified Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -118,21 +121,37 @@ function DisplayProducts({ products, setProducts, addProduct }) {
                                 <td>{val.photo_produit}</td>
                                 <td>{val.date_ajout_produit}</td>
                                 <td>{val.date_modification_produit}</td>
-
-                                {role !== 'client' && (
-                                    <td>
-                                        <button className="btn btn-primary mr-2" onClick={() => handleUpdate(val)}>
-                                            Update
-                                        </button>
-                                        <button className="btn btn-danger" onClick={() => handleDelete(val.idproduit)}>
-                                            Delete
-                                        </button>
-                                    </td>
-                                )}
+                                <td>
+                                    <button className="btn btn-primary mr-2" onClick={() => handleUpdate(val)}>
+                                        Update
+                                    </button>
+                                    <button className="btn btn-danger" onClick={() => handleDelete(val.idproduit)}>
+                                        Delete
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
+            ) : (
+                <div className="d-flex flex-wrap">
+                    {products.map((product, index) => (
+                      <div className="card" style={{ width: '18rem' }} key={index}>
+                        <img className="card-img-top" src={product.photo_produit} alt={product.nom_produit} />
+                        <div className="card-body">
+                          <h5 className="card-title">{product.nom_produit}</h5>
+                          <p>{getCategoryName(product.categorie_idcategorie)}</p>
+                          <p className="card-text">{product.description_produit}</p>
+                          <p className="card-price">{product.prix_produit}</p>
+                          <Link to={`/Products/${product.idproduit}`} className="btn btn-primary">
+                         Show Details
+                          </Link>
+
+                          <button className="btn btn-primary">add to basket</button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
             )}
         </div>
     );

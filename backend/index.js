@@ -18,12 +18,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors({
   origin: "http://127.0.0.1:3000",
   //origin: "*:*",
- /* credentials: true,
+ // credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200,
   // add this line
-  exposeHeaders: ['Set-Cookie'],
+ // exposeHeaders: ['Set-Cookie'],
   //debug: true,*/
 
 }));
