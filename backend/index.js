@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const userRoute = require("./routes/userRoute");
 const categorieRoute = require("./routes/categorieRoute");
 const productRoute = require("./routes/productRoute");
+const baskeRoute = require("./routes/baskeRoute");
 const cookieParser = require("cookie-parser");
 const app = express();
 //app.use(cors()); 
@@ -16,9 +17,9 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors({
-  origin: "http://127.0.0.1:3000",
-  //origin: "*:*",
- // credentials: true,
+  //origin: "http://127.0.0.1:3000",
+  origin: true,
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200,
@@ -46,7 +47,7 @@ app.use((req, res, next) => {
 app.use('/api', userRoute);
 app.use('/api', categorieRoute);
 app.use('/api', productRoute);
-
+app.use('/api', baskeRoute);
 app.listen(5000, () => {
   console.log('Server running on https://localhost:5000');
 

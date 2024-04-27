@@ -32,6 +32,7 @@ function ProductDetails() {
       <p>Discount: {product.remise_produit}</p>
       <p>Added Date: {product.date_ajout_produit}</p>
       <p>Modified Date: {product.date_modification_produit}</p>
+      <button className="btn btn-primary">add to basket</button>
     </div>
   );
 }

@@ -71,8 +71,7 @@ const getAllCategories = async (req, res) => {
     }
 
      // Check role
-     if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe'
-      && authResult.decode.role !== 'client') {
+     if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe' ) {
         return res.status(403).json({ message: "Insufficient permissions" });
     }
         const categories = await new Promise((resolve, reject) => {

@@ -75,7 +75,29 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
         const category = categories.find((cat) => cat.idcategorie === categoryId);
         return category ? category.nom_categorie : 'N/A';
     };
-
+    const handleAddToBasket = async (productId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            };
+    
+            const response = await axios.post('http://127.0.0.1:5000/api/AddtoCart', {
+                produitId: productId,
+                quantite: 1, // You can adjust the quantity as needed
+            }, config);
+    
+            console.log(response.data); // Log the response from the server
+    
+            // You can add logic here to show a success message or update the UI as needed
+        } catch (error) {
+            console.error('Error adding product to basket:', error);
+            // You can add logic here to show an error message or handle the error in other ways
+        }
+    };
+    
 
     return (
         <div>
@@ -147,7 +169,9 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                          Show Details
                           </Link>
 
-                          <button className="btn btn-primary">add to basket</button>
+                          <button className="btn btn-primary" onClick={() => handleAddToBasket(product.idproduit)}>
+                                                 Add to basket
+                                        </button>
                         </div>
                       </div>
                     ))}

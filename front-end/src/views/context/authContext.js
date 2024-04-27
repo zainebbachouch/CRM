@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
   const handleLogin = async (formData) => {
     try {
       const response = await axios.post("http://localhost:5000/api/login", formData, {
-        //withCredentials: true, // Include credentials (cookies) in the request
+        withCredentials: true, // Include credentials (cookies) in the request
       });
       console.log('Response:', response);
       console.log('User data:', response.data.user);

@@ -4,7 +4,7 @@ import facebook from "../images/facebook.png";
 import google from "../images/google.png";
 import twitter from "../images/twitter.png";
 import crmIcon from "../images/crm.png";
-import { Link ,  useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/authContext';
 
 import "../style/viewsStyle/loginStyle.css";
@@ -14,7 +14,7 @@ export default function Login() {
         password: ""
     });
     const navigate = useNavigate();
-    const { handleLogin } = useAuth(); 
+    const { handleLogin } = useAuth();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -23,6 +23,7 @@ export default function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log("eeeeeeeeeeeeeeeee"+e.preventDefault())
         try {
             await handleLogin(formData);
             navigate("/");
