@@ -52,10 +52,10 @@ const getOrCreateCommande = async (clientId) => {
             if (currentCommandeId) {
                 const currentDate = new Date().toISOString();
                 // Fixed query by adding missing placeholder for description_commande
-                 await db.query(
-                      'INSERT INTO commande (idcommande, date_commande, client_idclient, description_commande, statut_commande) VALUES (?, ?, ?, ?, ?)',
-                      [currentCommandeId, currentDate, clientId, 'Some description', 'enattente']
-                  );
+                await db.query(
+                    'INSERT INTO commande (idcommande, date_commande, client_idclient, description_commande, statut_commande) VALUES (?, ?, ?, ?, ?)',
+                    [currentCommandeId, currentDate, clientId, 'Some description', 'enattente']
+                );
                 return currentCommandeId;
             }
         }
@@ -95,8 +95,7 @@ const AddtoCart = async (req, res) => {
 
 
 const getProductsInCart = async (req, res) => {
-    try {        
-
+    try {
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
@@ -105,22 +104,49 @@ const getProductsInCart = async (req, res) => {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
         let client_idclient;
-        if (authResult.decode.id ) {
-            console.log("Client ID found in token:", authResult.decode.id);
+        if (authResult.decode.id) {
+            console.log("Client ID found in token :", authResult.decode.id);
             client_idclient = authResult.decode.id;
         } else {
             console.error("Client ID not found in token");
-            return res.status(401).json({ message: "Client ID not found in token" });
-        }  
-      
-        
-        const cartProducts = await db.query(
-            'SELECT p.* FROM produit p JOIN ligne_de_commande lc ON p.idproduit = lc.produit_idproduit WHERE lc.client_idclient = ? AND lc.commande_idcommande = ?',
-            [client_idclient, client_command_id] // Add client_command_id to filter products based on the command associated with the client
-        );
-        
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        console.log("Client ID:", client_idclient);
 
-        res.json(cartProducts);
+        // Test query to retrieve all products
+        const allProducts = await new Promise((resolve, reject) => {
+            const query = 'SELECT * FROM produit';
+            db.query(query, (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+        console.log("All products:", allProducts);
+
+        // Use the SQL query to retrieve products in the cart
+        const cartProductsResult = await new Promise((resolve, reject) => {
+            const query = "SELECT p.*, lc.quantite_produit FROM produit p JOIN ligne_de_commande lc ON p.idproduit = lc.produit_idproduit JOIN commande c ON lc.commande_idcommande = c.idcommande WHERE c.client_idclient = ?";
+            db.query(query, [client_idclient], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+        console.log("Cart products result:", cartProductsResult);
+
+        // Extract the rows from the query result
+        const cartProducts = cartProductsResult;
+
+        // Log the cartProducts array
+        console.log("Cart products:", cartProducts);
+
+        // Send only the necessary data as the response
+        res.json({  cartProductsResult: cartProducts });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });

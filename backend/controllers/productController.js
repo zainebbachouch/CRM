@@ -17,7 +17,17 @@ const getProductById = (req, res) => {
     });
 };
 
-const getAllProducts = (req, res) => {
+const getAllProducts  = async (req, res) => {
+      // Authorization check
+      const authResult = await isAuthorize(req, res);
+      if (authResult.message !== 'authorized') {
+          return res.status(401).json({ message: "Unauthorized" });
+      }
+  
+       // Check role
+       if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe'&& authResult.decode.role !== 'client' ) {
+          return res.status(403).json({ message: "Insufficient permissions" });
+      }
     db.query('SELECT * FROM produit', (err, result) => {
         if (err) {
             console.error(err);

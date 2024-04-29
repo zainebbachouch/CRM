@@ -10,7 +10,7 @@ import Login from './views/login';
 import Register from './views/register';
 import Home from './views/Home';
 import { AuthProvider } from './views/context/authContext';
-
+import GetCartProducts from './components/sidenav/getCartProducts';
 
 function App() {
   return (
@@ -59,6 +59,10 @@ function App() {
               <Route path="Categories">
                 <Route index element={<Categories />} />
 
+              </Route>
+              
+              <Route path="cart">
+                <Route index element={<GetCartProducts />} />
               </Route>
 
             </Route>

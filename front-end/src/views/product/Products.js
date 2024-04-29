@@ -4,6 +4,8 @@ import TopBar from "../../components/sidenav/TopNav";
 import DisplayProducts from './DisplayProducts';
 import ProductDetails from './ProductDetails'; 
 
+
+
 function Products() {
     const [products, setProducts] = useState([]);
     const [selectedProductId, setSelectedProductId] = useState(null); 
@@ -12,13 +14,12 @@ function Products() {
         setProducts([...products, newProduct]);
     }
 
-  
 
     return (
         <div className='container-fluid p-0 d-flex' style={{ backgroundColor: '#dbe1e4' }}>
             <SideBar />
             <div className="col p-0">
-                <TopBar />
+            <TopBar  />
                 <div className="main-content">
                     {selectedProductId ? (
                         <ProductDetails id={selectedProductId} /> 

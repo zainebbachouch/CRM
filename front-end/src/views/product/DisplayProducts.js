@@ -124,7 +124,7 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                             <th>Name</th>
                             <th>Price</th>
                             <th>Description</th>
-                            <th>Category</th>
+                            <th>Categoryyyyyyyyyyyyyyyyyyy</th>
                             <th>Discount</th>
                             <th>Photo</th>
                             <th>Added Date</th>
