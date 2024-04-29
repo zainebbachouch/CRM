@@ -9,9 +9,6 @@ import { useAuth } from '../../views/context/authContext';
 import { Link } from 'react-router-dom';
 
 
-
-
-
 function TopNav() {
     const { currentUser } = useAuth();
 

@@ -39,33 +39,47 @@ const getCommandID = async () => {
     }
 };
 
+
+
+
 const getOrCreateCommande = async (clientId) => {
     console.log("getOrCreateCommande called with clientId:", clientId);
     try {
-        const result = await db.query("SELECT idcommande FROM commande WHERE client_idclient = ? AND statut_commande='enattente'", [clientId]);
-        // console.log("Result from getOrCreateCommande:", result);
-        if (result.length > 0) {
-            return result[0].idcommande;
-        } else {
+      const existingCommand = await new Promise((resolve, reject) => {
+        db.query("SELECT idcommande FROM commande WHERE client_idclient =? AND statut_commande='enattente'", [clientId], (err, result) => {
+          if (err) {
+            console.error(err);
+            reject(err);
+          }
+          if (result.length === 0) {
             console.log("No commande found for this client");
-            const currentCommandeId = await generateUniqueCommandeId();
-            if (currentCommandeId) {
-                const currentDate = new Date().toISOString();
-                // Fixed query by adding missing placeholder for description_commande
-                await db.query(
-                    'INSERT INTO commande (idcommande, date_commande, client_idclient, description_commande, statut_commande) VALUES (?, ?, ?, ?, ?)',
-                    [currentCommandeId, currentDate, clientId, 'Some description', 'enattente']
-                );
-                return currentCommandeId;
-            }
+            resolve(null);
+          } else {
+            console.log("Existing commande found for this client:", result[0].idcommande);
+            resolve(result[0].idcommande);
+          }
+        });
+      });
+      if (existingCommand) {
+        return existingCommand;
+      } else {
+        const currentCommandeId = await generateUniqueCommandeId();
+        if (currentCommandeId) {
+          const currentDate = new Date().toISOString();
+          await db.query(
+            'INSERT INTO commande (idcommande, date_commande, client_idclient, description_commande, statut_commande) VALUES (?, ?, ?, "Some description", ?)',
+            [currentCommandeId, currentDate, clientId, 'enattente']
+          );
+          return currentCommandeId;
         }
+      }
     } catch (error) {
-        console.error("Error in getOrCreateCommande:", error);
-        throw error;
+      console.error("Error in getOrCreateCommande:", error);
+      throw error;
     }
-};
+  };
 
-const AddtoCart = async (req, res) => {
+  const AddtoCart = async (req, res) => {
     try {
         const { produitId, quantite } = req.body;
         if (!produitId || !quantite || typeof produitId !== 'number' || typeof quantite !== 'number') {
@@ -78,13 +92,38 @@ const AddtoCart = async (req, res) => {
         if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
+
         const currentCommandeId = await getOrCreateCommande(authResult.decode.id);
         if (currentCommandeId) {
-            await db.query(
-                'INSERT INTO ligne_de_commande (produit_idproduit, quantite_produit, commande_idcommande) VALUES (?, ?, ?)',
-                [produitId, quantite, currentCommandeId]
-            );
-            console.log("After query execution");
+            const existingProduct = await new Promise((resolve, reject) => {
+                db.query(
+                    'SELECT * FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                    [produitId, currentCommandeId],
+                    (err, result) => {
+                        if (err) {
+                            console.error(err);
+                            reject(err);
+                        } else {
+                            resolve(result);
+                        }
+                    }
+                );
+            });
+            
+            if (existingProduct.length > 0) {
+                // Update the quantity of the existing product
+                const newQuantite = existingProduct[0].quantite_produit + quantite;
+                await db.query(
+                    'UPDATE ligne_de_commande SET quantite_produit = ? WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                    [newQuantite, produitId, currentCommandeId]
+                );
+            } else {
+                // Insert a new product into the cart
+                await db.query(
+                    'INSERT INTO ligne_de_commande (produit_idproduit, quantite_produit, commande_idcommande) VALUES (?, ?, ?)',
+                    [produitId, quantite, currentCommandeId]
+                );
+            }
             res.json({ message: "Product added to cart successfully" });
         }
     } catch (error) {

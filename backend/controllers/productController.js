@@ -2,19 +2,27 @@ const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ')
 
 const getProductById = (req, res) => {
-    const { id } = req.params;
-    db.query('SELECT * FROM produit WHERE idproduit = ?', [id], (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Erreur interne du serveur" });
+    try {
+        const { produitId } = req.params; // Update parameter name to match the one specified in the route
+        if (!produitId) {
+            return res.status(400).json({ message: 'Product ID is required' });
         }
-        if (result.length === 0) {
-            console.log("Product not found");
-            return res.status(404).json({ message: "Produit non trouvé" });
-        }
-        console.log("Product found:", result[0]);
-        res.json(result[0]);
-    });
+        db.query('SELECT * FROM produit WHERE idproduit = ?', [produitId], (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: "Internal Server Error" });
+            }
+            if (result.length === 0) {
+                console.log("Product not found");
+                return res.status(404).json({ message: "Product not found" });
+            }
+            console.log("Product found:", result[0]);
+            res.json(result[0]);
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
 };
 
 const getAllProducts  = async (req, res) => {
