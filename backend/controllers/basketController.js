@@ -45,41 +45,44 @@ const getCommandID = async () => {
 const getOrCreateCommande = async (clientId) => {
     console.log("getOrCreateCommande called with clientId:", clientId);
     try {
-      const existingCommand = await new Promise((resolve, reject) => {
-        db.query("SELECT idcommande FROM commande WHERE client_idclient =? AND statut_commande='enattente'", [clientId], (err, result) => {
-          if (err) {
-            console.error(err);
-            reject(err);
-          }
-          if (result.length === 0) {
-            console.log("No commande found for this client");
-            resolve(null);
-          } else {
-            console.log("Existing commande found for this client:", result[0].idcommande);
-            resolve(result[0].idcommande);
-          }
+        const existingCommand = await new Promise((resolve, reject) => {
+            db.query("SELECT idcommande FROM commande WHERE client_idclient =? AND statut_commande='enattente'", [clientId], (err, result) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                }
+                if (result.length === 0) {
+                    console.log("No commande found for this client");
+                    resolve(null);
+                } else {
+                    console.log("Existing commande found for this client:", result[0].idcommande);
+                    resolve(result[0].idcommande);
+                }
+            });
         });
-      });
-      if (existingCommand) {
-        return existingCommand;
-      } else {
-        const currentCommandeId = await generateUniqueCommandeId();
-        if (currentCommandeId) {
-          const currentDate = new Date().toISOString();
-          await db.query(
-            'INSERT INTO commande (idcommande, date_commande, client_idclient, description_commande, statut_commande) VALUES (?, ?, ?, "Some description", ?)',
-            [currentCommandeId, currentDate, clientId, 'enattente']
-          );
-          return currentCommandeId;
+        if (existingCommand) {
+            return existingCommand;
+        } else {
+            const currentCommandeId = await generateUniqueCommandeId();
+            if (currentCommandeId) {
+                const currentDate = new Date().toISOString();
+                await db.query(
+                    'INSERT INTO commande (idcommande, date_commande, client_idclient, description_commande, statut_commande) VALUES (?, ?, ?, "Some description", ?)',
+                    [currentCommandeId, currentDate, clientId, 'enattente']
+                );
+                return currentCommandeId;
+            }
         }
-      }
     } catch (error) {
-      console.error("Error in getOrCreateCommande:", error);
-      throw error;
+        console.error("Error in getOrCreateCommande:", error);
+        throw error;
     }
-  };
+};
 
-  const AddtoCart = async (req, res) => {
+
+
+
+const AddtoCart = async (req, res) => {
     try {
         const { produitId, quantite } = req.body;
         if (!produitId || !quantite || typeof produitId !== 'number' || typeof quantite !== 'number') {
@@ -109,7 +112,7 @@ const getOrCreateCommande = async (clientId) => {
                     }
                 );
             });
-            
+
             if (existingProduct.length > 0) {
                 // Update the quantity of the existing product
                 const newQuantite = existingProduct[0].quantite_produit + quantite;
@@ -163,7 +166,8 @@ const getProductsInCart = async (req, res) => {
                 }
             });
         });
-        console.log("All products:", allProducts);
+
+        console.log("Cart products result:", allProducts);
 
         // Use the SQL query to retrieve products in the cart
         const cartProductsResult = await new Promise((resolve, reject) => {
@@ -185,11 +189,206 @@ const getProductsInCart = async (req, res) => {
         console.log("Cart products:", cartProducts);
 
         // Send only the necessary data as the response
-        res.json({  cartProductsResult: cartProducts });
+        res.json({ cartProductsResult: cartProducts });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-module.exports = { getProductsInCart, AddtoCart };
+const increaseProductQuantity = async (req, res) => {
+    try {
+        const { produitId } = req.body;
+        if (!produitId || typeof produitId !== 'number') {
+            return res.status(400).json({ message: 'Invalid request' });
+        }
+
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const currentCommandeId = await getOrCreateCommande(authResult.decode.id);
+        console.log("Current commande id:", currentCommandeId); // Log the current command ID
+
+        if (currentCommandeId) {
+            const existingProduct = await new Promise((resolve, reject) => {
+                db.query(
+                    'SELECT * FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                    [produitId, currentCommandeId],
+                    (err, result) => {
+                        if (err) {
+                            console.error(err);
+                            reject(err);
+                        } else {
+                            resolve(result);
+                        }
+                    }
+                );
+            });
+
+            console.log("Existing product in cart:", existingProduct); // Log the existing product in cart
+
+            if (existingProduct.length > 0) {
+                // Product already exists in the cart, update its quantity
+                const newQuantite = existingProduct[0].quantite_produit + 1;
+                await db.query(
+                    'UPDATE ligne_de_commande SET quantite_produit = ? WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                    [newQuantite, produitId, currentCommandeId]
+                );
+                return res.json({ message: "Product quantity increased successfully" });
+            } else {
+                // If the product does not exist in the cart, return a 404 status code
+                return res.status(404).json({ message: "Product not found in the cart" });
+            }
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+const decreaseProductQuantity = async (req, res) => {
+    try {
+        const { produitId } = req.body;
+        if (!produitId || typeof produitId !== 'number') {
+            return res.status(400).json({ message: 'Invalid request' });
+        }
+
+        // Assuming isAuthorize, getOrCreateCommande, and db.query functions are correctly implemented
+
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const currentCommandeId = await getOrCreateCommande(authResult.decode.id);
+        if (currentCommandeId) {
+            const existingProduct = await new Promise((resolve, reject) => {
+                db.query(
+                    'SELECT * FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                    [produitId, currentCommandeId],
+                    (err, result) => {
+                        if (err) {
+                            console.error(err);
+                            reject(err);
+                        } else {
+                            resolve(result);
+                        }
+                    }
+                );
+            });
+
+            if (existingProduct.length > 0) {
+                // Product exists in the cart, decrease its quantity
+                const currentQuantite = existingProduct[0].quantite_produit;
+                if (currentQuantite > 1) {
+                    const newQuantite = currentQuantite - 1;
+                    await db.query(
+                        'UPDATE ligne_de_commande SET quantite_produit = ? WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                        [newQuantite, produitId, currentCommandeId]
+                    );
+                    return res.json({ message: "Product quantity decreased successfully" });
+                } else {
+                    // If the quantity is already 1, remove the product from the cart
+                    await db.query(
+                        'DELETE FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                        [produitId, currentCommandeId]
+                    );
+                    return res.json({ message: "Product removed from the cart" });
+                }
+            } else {
+                return res.status(404).json({ message: "Product not found in the cart" });
+            }
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const completeCommand = async (req, res) => {
+    const { currentCommandeId } = req.body;
+  
+    // Perform authorization check
+    const authResult = await isAuthorize(req, res);
+    if (authResult.message !== 'authorized') {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+  
+    try {
+      // Retrieve other command details using the command ID
+      const commandDetails = await new Promise((resolve, reject) => {
+        db.query(
+          'SELECT date_commande, description_commande FROM commande WHERE idcommande = ?',
+          [currentCommandeId],
+          (err, result) => {
+            if (err) {
+              console.error(err);
+              reject(err);
+            } else {
+              // Resolve with the fetched command details
+              resolve(result[0]);
+            }
+          }
+        );
+      });
+  
+      // Check if command details are fetched successfully
+      if (commandDetails) {
+        // Calculate the montant_total_commande
+        const montantTotalCommande = await new Promise((resolve, reject) => {
+          db.query(
+            'SELECT SUM(p.prix_produit * l.quantite_produit) AS montant_total_commande FROM ligne_de_commande l JOIN produit p ON l.produit_idproduit = p.idproduit WHERE l.commande_idcommande = ?',
+            [currentCommandeId],
+            (err, result) => {
+              if (err) {
+                console.error(err);
+                reject(err);
+              } else {
+                // Resolve with the calculated montant_total_commande
+                resolve(result[0].montant_total_commande || 0); // Handle case where there are no products in the cart
+              }
+            }
+          );
+        });
+  
+        // Construct the complete commandeDetails object
+        const currentDate = new Date().toISOString();
+        const commandeDetails = {
+          idcommande: currentCommandeId,
+          date_commande: commandDetails.date_commande,
+          description_commande: commandDetails.description_commande,
+          montantTotalCommande,
+          adresselivraison_commande: 'Value from user profile or checkout form',
+          modepaiement_commande: 'Value from user profile or checkout form',
+          statut_commande: "enattente", // Assuming the status remains "enattente"
+          date_livraison_commande: "2024-05-01", // Example date format: YYYY-MM-DD
+          metho_delivraison_commande: "domicile"
+        };
+  
+        // Return the commandeDetails object
+        return res.status(200).json(commandeDetails);
+      } else {
+        console.log("Command details not found.");
+        return res.status(404).json({ message: "Command details not found" });
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+  
+
+
+module.exports = {completeCommand, getProductsInCart, AddtoCart, increaseProductQuantity, decreaseProductQuantity };
