@@ -325,13 +325,19 @@ const completeCommand = async (req, res) => {
     if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
+    if (!authResult.decode.id) {
+      console.error("Client ID not found in token");
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    const client_idclient = authResult.decode.id;
   
     try {
       // Retrieve other command details using the command ID
       const commandDetails = await new Promise((resolve, reject) => {
         db.query(
-          'SELECT date_commande, description_commande FROM commande WHERE idcommande = ?',
-          [currentCommandeId],
+          'SELECT date_commande, description_commande FROM commande WHERE idcommande = ? AND client_idclient = ?',
+          [currentCommandeId, client_idclient],
           (err, result) => {
             if (err) {
               console.error(err);
