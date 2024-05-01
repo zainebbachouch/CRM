@@ -11,6 +11,7 @@ import Register from './views/register';
 import Home from './views/Home';
 import { AuthProvider } from './views/context/authContext';
 import GetCartProducts from './components/sidenav/getCartProducts';
+import CompleteCommand from './components/sidenav/completeCommand';
 
 function App() {
   return (
@@ -64,6 +65,11 @@ function App() {
               <Route path="cart">
                 <Route index element={<GetCartProducts />} />
               </Route>
+
+              <Route path="completeCommand">
+                  <Route index element={<CompleteCommand />} />
+                </Route>
+
 
             </Route>
           </Routes>

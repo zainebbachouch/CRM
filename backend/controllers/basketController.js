@@ -98,6 +98,7 @@ const AddtoCart = async (req, res) => {
 
         const currentCommandeId = await getOrCreateCommande(authResult.decode.id);
         if (currentCommandeId) {
+            
             const existingProduct = await new Promise((resolve, reject) => {
                 db.query(
                     'SELECT * FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
@@ -127,13 +128,14 @@ const AddtoCart = async (req, res) => {
                     [produitId, quantite, currentCommandeId]
                 );
             }
-            res.json({ message: "Product added to cart successfully" });
+            res.json({ message: "Product added to cart successfully", currentCommandeId });
         }
     } catch (error) {
         console.error("Error:", error);
         res.status(500).json({ message: 'Server error' });
     }
 };
+
 
 
 const getProductsInCart = async (req, res) => {
@@ -196,123 +198,8 @@ const getProductsInCart = async (req, res) => {
     }
 };
 
-const increaseProductQuantity = async (req, res) => {
-    try {
-        const { produitId } = req.body;
-        if (!produitId || typeof produitId !== 'number') {
-            return res.status(400).json({ message: 'Invalid request' });
-        }
-
-        const authResult = await isAuthorize(req, res);
-        if (authResult.message !== 'authorized') {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
-        if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
-            return res.status(403).json({ message: "Insufficient permissions" });
-        }
-
-        const currentCommandeId = await getOrCreateCommande(authResult.decode.id);
-        console.log("Current commande id:", currentCommandeId); // Log the current command ID
-
-        if (currentCommandeId) {
-            const existingProduct = await new Promise((resolve, reject) => {
-                db.query(
-                    'SELECT * FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
-                    [produitId, currentCommandeId],
-                    (err, result) => {
-                        if (err) {
-                            console.error(err);
-                            reject(err);
-                        } else {
-                            resolve(result);
-                        }
-                    }
-                );
-            });
-
-            console.log("Existing product in cart:", existingProduct); // Log the existing product in cart
-
-            if (existingProduct.length > 0) {
-                // Product already exists in the cart, update its quantity
-                const newQuantite = existingProduct[0].quantite_produit + 1;
-                await db.query(
-                    'UPDATE ligne_de_commande SET quantite_produit = ? WHERE produit_idproduit = ? AND commande_idcommande = ?',
-                    [newQuantite, produitId, currentCommandeId]
-                );
-                return res.json({ message: "Product quantity increased successfully" });
-            } else {
-                // If the product does not exist in the cart, return a 404 status code
-                return res.status(404).json({ message: "Product not found in the cart" });
-            }
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        return res.status(500).json({ message: 'Server error' });
-    }
-};
 
 
-const decreaseProductQuantity = async (req, res) => {
-    try {
-        const { produitId } = req.body;
-        if (!produitId || typeof produitId !== 'number') {
-            return res.status(400).json({ message: 'Invalid request' });
-        }
-
-        // Assuming isAuthorize, getOrCreateCommande, and db.query functions are correctly implemented
-
-        const authResult = await isAuthorize(req, res);
-        if (authResult.message !== 'authorized') {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
-        if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
-            return res.status(403).json({ message: "Insufficient permissions" });
-        }
-
-        const currentCommandeId = await getOrCreateCommande(authResult.decode.id);
-        if (currentCommandeId) {
-            const existingProduct = await new Promise((resolve, reject) => {
-                db.query(
-                    'SELECT * FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
-                    [produitId, currentCommandeId],
-                    (err, result) => {
-                        if (err) {
-                            console.error(err);
-                            reject(err);
-                        } else {
-                            resolve(result);
-                        }
-                    }
-                );
-            });
-
-            if (existingProduct.length > 0) {
-                // Product exists in the cart, decrease its quantity
-                const currentQuantite = existingProduct[0].quantite_produit;
-                if (currentQuantite > 1) {
-                    const newQuantite = currentQuantite - 1;
-                    await db.query(
-                        'UPDATE ligne_de_commande SET quantite_produit = ? WHERE produit_idproduit = ? AND commande_idcommande = ?',
-                        [newQuantite, produitId, currentCommandeId]
-                    );
-                    return res.json({ message: "Product quantity decreased successfully" });
-                } else {
-                    // If the quantity is already 1, remove the product from the cart
-                    await db.query(
-                        'DELETE FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
-                        [produitId, currentCommandeId]
-                    );
-                    return res.json({ message: "Product removed from the cart" });
-                }
-            } else {
-                return res.status(404).json({ message: "Product not found in the cart" });
-            }
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        return res.status(500).json({ message: 'Server error' });
-    }
-};
 
 const completeCommand = async (req, res) => {
     const { currentCommandeId } = req.body;
@@ -380,7 +267,8 @@ const completeCommand = async (req, res) => {
           modepaiement_commande: 'Value from user profile or checkout form',
           statut_commande: "enattente", // Assuming the status remains "enattente"
           date_livraison_commande: "2024-05-01", // Example date format: YYYY-MM-DD
-          metho_delivraison_commande: "domicile"
+          metho_delivraison_commande: "domicile",
+          client_idclient:client_idclient
         };
   
         // Return the commandeDetails object
@@ -397,4 +285,189 @@ const completeCommand = async (req, res) => {
   
 
 
-module.exports = {completeCommand, getProductsInCart, AddtoCart, increaseProductQuantity, decreaseProductQuantity };
+  const passCommand = async (req, res) => {
+    const { currentCommandeId, description_commande, adresselivraison_commande, modepaiement_commande, date_livraison_commande, metho_delivraison_commande ,montant_total_commande } = req.body;
+
+   
+    const authResult = await isAuthorize(req, res);
+    if (authResult.message !== 'authorized') {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+    }
+    if (!authResult.decode.id) {
+        console.error("Client ID not found in token");
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const client_idclient = authResult.decode.id;
+
+    try {
+       
+        const currentStatus = await new Promise((resolve, reject) => {
+            db.query(
+                'SELECT statut_commande FROM commande WHERE idcommande = ? AND client_idclient = ?',
+                [currentCommandeId, client_idclient],
+                (err, result) => {
+                    if (err) {
+                        console.error(err);
+                        reject(err);
+                    } else {
+                        resolve(result[0]?.statut_commande);
+                    }
+                }
+            );
+        });
+
+        if (currentStatus === 'expédié') {
+            return res.status(403).json({ message: "Command status is already 'expédié', cannot be updated." });
+        }
+
+       
+        await new Promise((resolve, reject) => {
+            db.query(
+                'UPDATE commande SET description_commande = ?, adresselivraison_commande = ?, modepaiement_commande = ?, date_livraison_commande = ?, metho_delivraison_commande = ? ,montant_total_commande =? WHERE idcommande = ? AND client_idclient = ?',
+                [description_commande, adresselivraison_commande, modepaiement_commande, date_livraison_commande, metho_delivraison_commande,montant_total_commande,currentCommandeId, client_idclient],
+                (err, result) => {
+                    if (err) {
+                        console.error(err);
+                        reject(err);
+                    } else {
+                       
+                        resolve(result);
+                    }
+                }
+            );
+        });
+
+        return res.status(200).json({ message: "Command passed successfully" });
+    } catch (error) {
+        console.error("Error passing command:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+
+
+const increaseProductQuantity = async (req, res) => {
+    try {
+        const { produitId } = req.body;
+        if (!produitId || typeof produitId !== 'number') {
+            return res.status(400).json({ message: 'Invalid request' });
+        }
+
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const currentCommandeId = await getOrCreateCommande(authResult.decode.id);
+        console.log("Current commande id:", currentCommandeId);
+
+        if (currentCommandeId) {
+            const existingProduct = await new Promise((resolve, reject) => {
+                db.query(
+                    'SELECT * FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                    [produitId, currentCommandeId],
+                    (err, result) => {
+                        if (err) {
+                            console.error(err);
+                            reject(err);
+                        } else {
+                            resolve(result);
+                        }
+                    }
+                );
+            });
+
+            console.log("Existing product in cart:", existingProduct); 
+
+            if (existingProduct.length > 0) {
+              
+                const newQuantite = existingProduct[0].quantite_produit + 1;
+                await db.query(
+                    'UPDATE ligne_de_commande SET quantite_produit = ? WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                    [newQuantite, produitId, currentCommandeId]
+                );
+                return res.json({ message: "Product quantity increased successfully" });
+            } else {
+                
+                return res.status(404).json({ message: "Product not found in the cart" });
+            }
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+const decreaseProductQuantity = async (req, res) => {
+    try {
+        const { produitId } = req.body;
+        if (!produitId || typeof produitId !== 'number') {
+            return res.status(400).json({ message: 'Invalid request' });
+        }
+
+
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const currentCommandeId = await getOrCreateCommande(authResult.decode.id);
+        if (currentCommandeId) {
+            const existingProduct = await new Promise((resolve, reject) => {
+                db.query(
+                    'SELECT * FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                    [produitId, currentCommandeId],
+                    (err, result) => {
+                        if (err) {
+                            console.error(err);
+                            reject(err);
+                        } else {
+                            resolve(result);
+                        }
+                    }
+                );
+            });
+
+            if (existingProduct.length > 0) {
+                const currentQuantite = existingProduct[0].quantite_produit;
+                if (currentQuantite > 1) {
+                    const newQuantite = currentQuantite - 1;
+                    await db.query(
+                        'UPDATE ligne_de_commande SET quantite_produit = ? WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                        [newQuantite, produitId, currentCommandeId]
+                    );
+                    return res.json({ message: "Product quantity decreased successfully" });
+                } else {
+                    await db.query(
+                        'DELETE FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
+                        [produitId, currentCommandeId]
+                    );
+                    return res.json({ message: "Product removed from the cart" });
+                }
+            } else {
+                return res.status(404).json({ message: "Product not found in the cart" });
+            }
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+
+
+module.exports = {passCommand ,completeCommand, getProductsInCart, AddtoCart, increaseProductQuantity, decreaseProductQuantity };

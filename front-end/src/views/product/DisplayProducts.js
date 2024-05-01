@@ -90,6 +90,9 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
             }, config);
     
             console.log(response.data); // Log the response from the server
+              // Store the currentCommandeId in localStorage if needed
+        const { currentCommandeId } = response.data;
+        localStorage.setItem('currentCommandeId', currentCommandeId);
     
             // You can add logic here to show a success message or update the UI as needed
         } catch (error) {

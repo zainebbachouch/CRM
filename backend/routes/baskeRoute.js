@@ -10,5 +10,6 @@ router.post('/increaseProductQuantity', basketController.increaseProductQuantity
 
 
 router.post('/completeCommand', basketController.completeCommand);
+router.put('/passCommand',basketController.passCommand);
 
 module.exports = router;

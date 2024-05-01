@@ -1,64 +1,63 @@
 import React, { useState, useEffect, useCallback } from 'react';
-
 import axios from 'axios';
-
 import { FaRegPlusSquare, FaRegMinusSquare } from 'react-icons/fa';
 
-
 function GetCartProducts() {
-
     const [cartProducts, setCartProducts] = useState([]);
-
     const [loading, setLoading] = useState(true);
 
-
-    // Define fetchCartProducts function with useCallback
-
+  
     const fetchCartProducts = useCallback(async () => {
-
         try {
-
             const token = localStorage.getItem('token');
-
             const config = {
-
                 headers: {
-
                     Authorization: `Bearer ${token}`,
-
                 },
-
             };
 
-
             const response = await axios.get('http://127.0.0.1:5000/api/getProductsInCart', config);
-
-
             setCartProducts(response.data.cartProductsResult);
-
             setLoading(false);
-
         } catch (error) {
-
             console.error('Error fetching cart products:', error);
-
             setLoading(false);
-
         }
-
-    }, []); // Empty dependency array, since fetchCartProducts doesn't rely on any values outside its scope
-
+    }, []);
 
     useEffect(() => {
-
-        fetchCartProducts(); // Call fetchCartProducts when component mounts
-
+        fetchCartProducts();
     }, [fetchCartProducts]);
+    /*
+    const handleCompleteCommand = () => {
+        const currentCommandeId = localStorage.getItem('currentCommandeId');
+        if (currentCommandeId) {
+          // Set the currentCommandeId in the localStorage
+          localStorage.setItem('currentCommandeId', currentCommandeId);
+      
+          // Navigate to the CompleteCommand page
+          window.location.href = "/completeCommand";
+        } else {
+          console.error('Current Commande ID not found in localStorage');
+        }
+      };*/
+    const handleCompleteCommand = () => {
+   
+        const currentCommandeId = localStorage.getItem('currentCommandeId');
+
+      
+        if (currentCommandeId) {
+           
+           window.location.href = `/completeCommand?idcommand=${currentCommandeId}`;
+       
+        } else {
+            console.error('Current Commande ID not found in localStorage');
+        }
+    };
 
 
 
     const handlePlusClick = async (product) => {
-        console.log('Product ID:', product.idproduit);
         try {
             const token = localStorage.getItem('token');
             const config = {
@@ -69,7 +68,7 @@ function GetCartProducts() {
 
             await axios.post('http://127.0.0.1:5000/api/increaseProductQuantity', { produitId: product.idproduit }, config);
 
-            // Fetch updated cart products after increasing quantity
+     
             await fetchCartProducts();
         } catch (error) {
             console.error('Error increasing product quantity:', error);
@@ -78,7 +77,6 @@ function GetCartProducts() {
     };
 
     const handleMinusClick = async (product) => {
-        console.log('Product ID:', product.idproduit);
         try {
             const token = localStorage.getItem('token');
             const config = {
@@ -86,10 +84,10 @@ function GetCartProducts() {
                     Authorization: `Bearer ${token}`,
                 },
             };
-            
+
             await axios.post('http://127.0.0.1:5000/api/decreaseProductQuantity', { produitId: product.idproduit }, config);
 
-            // Fetch updated cart products after decreasing quantity
+            
             await fetchCartProducts();
         } catch (error) {
             console.error('Error decreasing product quantity:', error);
@@ -122,6 +120,7 @@ function GetCartProducts() {
                             </div>
                         ))}
                     </div>
+                    <button onClick={handleCompleteCommand}>Complete Command</button>
                 </>
             ) : (
                 <div className="cart-count">Your cart is empty</div>

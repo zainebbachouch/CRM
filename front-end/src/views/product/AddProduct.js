@@ -84,10 +84,10 @@ function AddProduct({ addProduct, selectedProduct,products,setProducts, setSelec
             };
             if (selectedProduct) {
                 const response = await axios.put(`http://127.0.0.1:5000/api/updateProduct/${selectedProduct.idproduit}`, formData, config);
-                // Update product in the products list
+            
                 const updatedProducts = products.map((product) => {
                     if (product.idproduit === selectedProduct.idproduit) {
-                        return response.data; // Updated product
+                        return response.data; 
                     }
                     return product;
                 });
