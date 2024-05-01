@@ -36,6 +36,7 @@ function CompleteCommand() {
 
     const handleInputChange = (event) => {
         const { name, value } = event.target;
+        console.log(event.target.value)
         setCommand((prevState) => ({
             ...prevState,
             [name]: value,
@@ -44,8 +45,9 @@ function CompleteCommand() {
 
     const handlePassCommand = async () => {
         setLoading(true);
+       // console.log(command)
 
-        try {
+       try {
             const token = localStorage.getItem("token");
             const config = {
                 headers: {
@@ -53,14 +55,14 @@ function CompleteCommand() {
                 },
             };
 
-            const trimmedModePaiementCommande = command.modepaiement_commande.slice(0, 19); // Trim the value to 19 characters
-            console.log("Length of modepaiement_commande:", command.modepaiement_commande.length);
+            //  const trimmedModePaiementCommande = command.modepaiement_commande.slice(0, 19); // Trim the value to 19 characters
+            //  console.log("Length of modepaiement_commande:", command.modepaiement_commande.length);
 
             await axios.put(`http://127.0.0.1:5000/api/passCommand`, {
                 currentCommandeId: id,
                 description_commande: command.description_commande,
                 adresselivraison_commande: command.adresselivraison_commande,
-                modepaiement_commande: trimmedModePaiementCommande, // Use the trimmed value
+                modepaiement_commande: command.modepaiement_commande, 
                 date_livraison_commande: command.date_livraison_commande,
                 metho_delivraison_commande: command.metho_delivraison_commande,
                 montant_total_commande: command.montantTotalCommande,
@@ -98,12 +100,12 @@ function CompleteCommand() {
                         <span id="montant_total_commande">{command.montantTotalCommande}</span>
                     </div>
                     <div>
-                        <label htmlFor="adresselivraison_commande">Delivery Address:</label>
+                        <label htmlFor="adresselivraison_commande">Address:</label>
                         <input type="text" id="adresselivraison_commande" name="adresselivraison_commande" value={command.adresselivraison_commande || ''} onChange={handleInputChange} />
                     </div>
                     <div>
                         <label htmlFor="modepaiement_commande">Payment Method:</label>
-                        <select id="modepaiement_commande" name="modepaiement_commande" value={command.modepaiement_commande || ''} onChange={handleInputChange}>
+                        <select id="modepaiement_commande" name="modepaiement_commande" onChange={handleInputChange}>
                             <option value="Credit Card">Credit Card</option>
                             <option value="Debit Card">Debit Card</option>
                             <option value="PayPal">PayPal</option>

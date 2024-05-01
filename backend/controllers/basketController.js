@@ -98,7 +98,7 @@ const AddtoCart = async (req, res) => {
 
         const currentCommandeId = await getOrCreateCommande(authResult.decode.id);
         if (currentCommandeId) {
-            
+
             const existingProduct = await new Promise((resolve, reject) => {
                 db.query(
                     'SELECT * FROM ligne_de_commande WHERE produit_idproduit = ? AND commande_idcommande = ?',
@@ -203,92 +203,8 @@ const getProductsInCart = async (req, res) => {
 
 const completeCommand = async (req, res) => {
     const { currentCommandeId } = req.body;
-  
+
     // Perform authorization check
-    const authResult = await isAuthorize(req, res);
-    if (authResult.message !== 'authorized') {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
-      return res.status(403).json({ message: "Insufficient permissions" });
-    }
-    if (!authResult.decode.id) {
-      console.error("Client ID not found in token");
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    const client_idclient = authResult.decode.id;
-  
-    try {
-      // Retrieve other command details using the command ID
-      const commandDetails = await new Promise((resolve, reject) => {
-        db.query(
-          'SELECT date_commande, description_commande FROM commande WHERE idcommande = ? AND client_idclient = ?',
-          [currentCommandeId, client_idclient],
-          (err, result) => {
-            if (err) {
-              console.error(err);
-              reject(err);
-            } else {
-              // Resolve with the fetched command details
-              resolve(result[0]);
-            }
-          }
-        );
-      });
-  
-      // Check if command details are fetched successfully
-      if (commandDetails) {
-        // Calculate the montant_total_commande
-        const montantTotalCommande = await new Promise((resolve, reject) => {
-          db.query(
-            'SELECT SUM(p.prix_produit * l.quantite_produit) AS montant_total_commande FROM ligne_de_commande l JOIN produit p ON l.produit_idproduit = p.idproduit WHERE l.commande_idcommande = ?',
-            [currentCommandeId],
-            (err, result) => {
-              if (err) {
-                console.error(err);
-                reject(err);
-              } else {
-                // Resolve with the calculated montant_total_commande
-                resolve(result[0].montant_total_commande || 0); // Handle case where there are no products in the cart
-              }
-            }
-          );
-        });
-  
-        // Construct the complete commandeDetails object
-        const currentDate = new Date().toISOString();
-        const commandeDetails = {
-          idcommande: currentCommandeId,
-          date_commande: commandDetails.date_commande,
-          description_commande: commandDetails.description_commande,
-          montantTotalCommande,
-          adresselivraison_commande: 'Value from user profile or checkout form',
-          modepaiement_commande: 'Value from user profile or checkout form',
-          statut_commande: "enattente", // Assuming the status remains "enattente"
-          date_livraison_commande: "2024-05-01", // Example date format: YYYY-MM-DD
-          metho_delivraison_commande: "domicile",
-          client_idclient:client_idclient
-        };
-  
-        // Return the commandeDetails object
-        return res.status(200).json(commandeDetails);
-      } else {
-        console.log("Command details not found.");
-        return res.status(404).json({ message: "Command details not found" });
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  };
-  
-
-
-  const passCommand = async (req, res) => {
-    const { currentCommandeId, description_commande, adresselivraison_commande, modepaiement_commande, date_livraison_commande, metho_delivraison_commande ,montant_total_commande } = req.body;
-
-   
     const authResult = await isAuthorize(req, res);
     if (authResult.message !== 'authorized') {
         return res.status(401).json({ message: "Unauthorized" });
@@ -304,7 +220,91 @@ const completeCommand = async (req, res) => {
     const client_idclient = authResult.decode.id;
 
     try {
-       
+        // Retrieve other command details using the command ID
+        const commandDetails = await new Promise((resolve, reject) => {
+            db.query(
+                'SELECT date_commande, description_commande FROM commande WHERE idcommande = ? AND client_idclient = ?',
+                [currentCommandeId, client_idclient],
+                (err, result) => {
+                    if (err) {
+                        console.error(err);
+                        reject(err);
+                    } else {
+                        // Resolve with the fetched command details
+                        resolve(result[0]);
+                    }
+                }
+            );
+        });
+
+        // Check if command details are fetched successfully
+        if (commandDetails) {
+            // Calculate the montant_total_commande
+            const montantTotalCommande = await new Promise((resolve, reject) => {
+                db.query(
+                    'SELECT SUM(p.prix_produit * l.quantite_produit) AS montant_total_commande FROM ligne_de_commande l JOIN produit p ON l.produit_idproduit = p.idproduit WHERE l.commande_idcommande = ?',
+                    [currentCommandeId],
+                    (err, result) => {
+                        if (err) {
+                            console.error(err);
+                            reject(err);
+                        } else {
+                            // Resolve with the calculated montant_total_commande
+                            resolve(result[0].montant_total_commande || 0); // Handle case where there are no products in the cart
+                        }
+                    }
+                );
+            });
+
+            // Construct the complete commandeDetails object
+            const currentDate = new Date().toISOString();
+            const commandeDetails = {
+                idcommande: currentCommandeId,
+                date_commande: commandDetails.date_commande,
+                description_commande: commandDetails.description_commande,
+                montantTotalCommande,
+                adresselivraison_commande: '',
+                modepaiement_commande: '',
+                statut_commande: "enattente",
+                date_livraison_commande: "2024-05-01",
+                metho_delivraison_commande: "domicile",
+                client_idclient: client_idclient
+            };
+
+            // Return the commandeDetails object
+            return res.status(200).json(commandeDetails);
+        } else {
+            console.log("Command details not found.");
+            return res.status(404).json({ message: "Command details not found" });
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+const passCommand = async (req, res) => {
+    const { currentCommandeId, description_commande, adresselivraison_commande, modepaiement_commande, date_livraison_commande, metho_delivraison_commande, montant_total_commande } = req.body;
+    console.log(req.body)
+
+    const authResult = await isAuthorize(req, res);
+    if (authResult.message !== 'authorized') {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+    }
+    if (!authResult.decode.id) {
+        console.error("Client ID not found in token");
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const client_idclient = authResult.decode.id;
+
+    try {
+
         const currentStatus = await new Promise((resolve, reject) => {
             db.query(
                 'SELECT statut_commande FROM commande WHERE idcommande = ? AND client_idclient = ?',
@@ -324,17 +324,17 @@ const completeCommand = async (req, res) => {
             return res.status(403).json({ message: "Command status is already 'expédié', cannot be updated." });
         }
 
-       
+
         await new Promise((resolve, reject) => {
             db.query(
                 'UPDATE commande SET description_commande = ?, adresselivraison_commande = ?, modepaiement_commande = ?, date_livraison_commande = ?, metho_delivraison_commande = ? ,montant_total_commande =? WHERE idcommande = ? AND client_idclient = ?',
-                [description_commande, adresselivraison_commande, modepaiement_commande, date_livraison_commande, metho_delivraison_commande,montant_total_commande,currentCommandeId, client_idclient],
+                [description_commande, adresselivraison_commande, modepaiement_commande, date_livraison_commande, metho_delivraison_commande, montant_total_commande, currentCommandeId, client_idclient],
                 (err, result) => {
                     if (err) {
                         console.error(err);
                         reject(err);
                     } else {
-                       
+
                         resolve(result);
                     }
                 }
@@ -386,10 +386,10 @@ const increaseProductQuantity = async (req, res) => {
                 );
             });
 
-            console.log("Existing product in cart:", existingProduct); 
+            console.log("Existing product in cart:", existingProduct);
 
             if (existingProduct.length > 0) {
-              
+
                 const newQuantite = existingProduct[0].quantite_produit + 1;
                 await db.query(
                     'UPDATE ligne_de_commande SET quantite_produit = ? WHERE produit_idproduit = ? AND commande_idcommande = ?',
@@ -397,7 +397,7 @@ const increaseProductQuantity = async (req, res) => {
                 );
                 return res.json({ message: "Product quantity increased successfully" });
             } else {
-                
+
                 return res.status(404).json({ message: "Product not found in the cart" });
             }
         }
@@ -470,4 +470,4 @@ const decreaseProductQuantity = async (req, res) => {
 
 
 
-module.exports = {passCommand ,completeCommand, getProductsInCart, AddtoCart, increaseProductQuantity, decreaseProductQuantity };
+module.exports = { passCommand, completeCommand, getProductsInCart, AddtoCart, increaseProductQuantity, decreaseProductQuantity };
