@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
+import './TopNav.css';
 
 function CompleteCommand() {
     const [command, setCommand] = useState(null);
@@ -83,6 +84,7 @@ function CompleteCommand() {
                 <div>Loading...</div>
             ) : command ? (
                 <form>
+                     <div class='flexLabel'>
                     <div>
                         <label htmlFor="idcommande">Command ID:</label>
                         <span id="idcommande" name="idcommande">{command.idcommande}</span>
@@ -132,6 +134,7 @@ function CompleteCommand() {
                         <span id="client_idclient">{command.client_idclient}</span>
                     </div>
                     <button onClick={handlePassCommand}>pass Command</button>
+                    </div>
                 </form>
             ) : (
                 <div>Command details not found.</div>

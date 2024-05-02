@@ -7,6 +7,7 @@ import { useAuth } from '../../views/context/authContext';
 
 
 function SideBar() {
+  const role=localStorage.getItem("role");
   const menuItem = [
     /*  {
         path: "/Dashbord",
@@ -27,13 +28,13 @@ function SideBar() {
       path: "/invoices",
       name: "invoices",
       icon: <FaCommentAlt />
-    },
-    {
-      path: "/Categories",
-      name: "Categories",
-      icon: <FaCommentAlt />
     }
   ]
+  const categorieItem={
+    path: "/Categories",
+    name: "Categories",
+    icon: <FaCommentAlt />
+  }
   const menuItem2 = [
     /*  {
         path: "/Dashbord",
@@ -89,6 +90,13 @@ useEffect(()=>{
               <div className="link_text">{item.name}</div>
             </NavLink>
           ))
+        }
+        {
+          (role!='client') && (<NavLink style={{ color: 'white' }} to={categorieItem.path} key={3} className="link d-flex navLink mt-2 p-2  activeNavLink" >
+          <div className="icon navIcon" >{categorieItem.icon}</div>
+          <div className="link_text">{categorieItem.name}</div>
+        </NavLink>)
+          
         }
       </div>
       <div className="center p-0">

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import AddProduct from './AddProduct';
 import { Link } from 'react-router-dom';
-
+import "../../style/products.css"
 function DisplayProducts({ products, setProducts, addProduct, setSelectedProductId }) {
     const [loading, setLoading] = useState(true);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -100,7 +100,7 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
     
 
     return (
-        <div>
+        <div className="m-0 p-0">
             {role !== 'client' && (
                 <AddProduct
                     addProduct={addProduct}
@@ -156,22 +156,27 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                     </tbody>
                 </table>
             ) : (
-                <div className="d-flex flex-wrap">
+                <div className="d-flex flex-wrap m-0 p-0 justify-content-around productDisplay">
                     {products.map((product, index) => (
-                      <div className="card" style={{ width: '18rem' }} key={index}>
-                        <img className="card-img-top" src={product.photo_produit} alt={product.nom_produit} />
+                      <div className="card p-2" style={{ width: '18rem' }} key={index}>
+                        <img className="card-img-top" src={product.photo_produit} />
                         <div className="card-body">
-                          <h5 className="card-title">{product.nom_produit}</h5>
-                          <p>{getCategoryName(product.categorie_idcategorie)}</p>
+                          <p className="card-title"><span className="label">Nom Produit : </span>{product.nom_produit}</p>
+                          <p ><span className="label">Categorie Produit : </span>{getCategoryName(product.categorie_idcategorie)}</p>
                           <p className="card-text">{product.description_produit}</p>
-                          <p className="card-price">{product.prix_produit}</p>
-                          <Link to={`/Products/${product.idproduit}`} className="btn btn-primary">
-                         Show Details
-                          </Link>
-
-                          <button className="btn btn-primary" onClick={() => handleAddToBasket(product.idproduit)}>
+                          <p className="card-price"><span className="label">Prix Produit : </span>{product.prix_produit}</p>
+                         <div className="buttonsContainer d-flex container-fluid m-0 p-0 column-gap-2">
+                      
+                            <button className="btn btn-primary p-0">
+                            <Link to={`/Products/${product.idproduit}`} className="text-white btn-link">
+                         Show Details    
+                         </Link>
+                         </button>
+                      
+                          <button className="btn btn-success" onClick={() => handleAddToBasket(product.idproduit)}>
                                                  Add to basket
-                                        </button>
+                        </button>
+                         </div>
                         </div>
                       </div>
                     ))}

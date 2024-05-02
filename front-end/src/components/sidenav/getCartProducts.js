@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { FaRegPlusSquare, FaRegMinusSquare } from 'react-icons/fa';
-
+import TopBar from "./TopNav"
+import SideBar from "../sidebar/SideBar.js"
+import "./TopNav.css"
 function GetCartProducts() {
     const [cartProducts, setCartProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -96,36 +98,55 @@ function GetCartProducts() {
     };
 
     return (
-        <div>
+        <>
+               
+        <div className="d-flex">
+        <SideBar />
+        <div className="d-flex container-fluid m-0 p-0 flex-column">
+        <TopBar  /> 
+        <div className="container-fluid p-2 m-0 ">
+        <div >
             {loading ? (
                 <div className="cart-count">Loading...</div>
             ) : cartProducts && cartProducts.length > 0 ? (
                 <>
-                    <div className="cart-count">Cart Count: {cartProducts.length}</div>
+                    <div className="cart-count h3">Cart Count: {cartProducts.length}</div>
                     <div className="card-container d-flex flex-wrap">
                         {cartProducts.map((product, index) => (
                             <div className="card" style={{ width: '18rem' }} key={index}>
-                                <img className="card-img-top" src={product.photo_produit} alt={product.nom_produit} />
+                                <img className="card-img-top" src={product.photo_produit} />
                                 <div className="card-body">
-                                    <h5 className="card-title">{product.nom_produit}</h5>
-                                    <p className="card-text">{product.description_produit}</p>
-                                    <p className="card-price">{product.prix_produit}</p>
-                                    <p>Discount: {product.remise_produit}%</p>
-                                    <div className="quantity-control">
-                                        <FaRegPlusSquare onClick={() => handlePlusClick(product)} />
-                                        <p>Quantity: {product.quantite_produit}</p>
+                                    <h5 className="card-title"><span className='label h5'> Nom Produit : </span>{product.nom_produit}</h5>
+                                    <p className="card-text"><span className='label h5'> Categorie Produit : </span>{product.description_produit}</p>
+                                    <p className="card-price"><span className='label h5'> Prix Produit : </span>{product.prix_produit}</p>
+                                    <p><span className='label h5'> Discount : </span>{product.remise_produit}%</p>
+                                    <div className="quantity-control d-flex justify-content-between align-items-baseline">
+                                    <button className="btn btn-primary d-flex align-items-center justify-content-center p-2">
                                         <FaRegMinusSquare onClick={() => handleMinusClick(product)} />
+                                        </button>
+                                        <p> <span className="label ">Quantity :</span> {product.quantite_produit}</p>
+                                        <button className="btn btn-primary d-flex  justify-content-center align-items-center h5 p-2"><FaRegPlusSquare onClick={() => handlePlusClick(product)} /></button>
+
+                                       
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
-                    <button onClick={handleCompleteCommand}>Complete Command</button>
+                    <button onClick={handleCompleteCommand} className=" text-center mt-2 btn btn-success">Complete Command</button>
                 </>
             ) : (
                 <div className="cart-count">Your cart is empty</div>
             )}
         </div>
+               
+            </div>
+        </div>
+        
+        </div>
+       
+        </>
+        
     );
 }
 
