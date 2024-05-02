@@ -5,13 +5,11 @@ const createCategorie = async (req, res) => {
     try {
         const { nom_categorie, description } = req.body;
         
-        // Authorization check
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
         
-        // Check role
         if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe') {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
@@ -84,7 +82,6 @@ const getAllCategories = async (req, res) => {
             });
         });
 
-        // Send the categories as JSON
         res.json(categories);
     } catch (error) {
         console.error("Error fetching categories:", error);

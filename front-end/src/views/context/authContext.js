@@ -18,14 +18,14 @@ export const AuthProvider = ({ children }) => {
   const handleLogin = async (formData) => {
     try {
       const response = await axios.post("http://localhost:5000/api/login", formData, {
-        withCredentials: true, // Include credentials (cookies) in the request
+        withCredentials: true, 
       });
       console.log('Response:', response);
       console.log('User data:', response.data.user);
 
       setCurrentUser(response.data.user);
       localStorage.setItem('token', response.data.token);
-      localStorage.setItem('role', response.data.role);//value role champ role
+      localStorage.setItem('role', response.data.role);
 
       console.log(response.data)
 

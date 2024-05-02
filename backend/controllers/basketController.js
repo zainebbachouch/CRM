@@ -25,8 +25,7 @@ const getCommandID = async () => {
                 if (error) {
                     reject(error);
                 } else {
-                    // Since you're using COUNT(*) in the query, there will always be a result
-                    // So you should directly resolve with the count value
+
                     resolve(rows[0].count + 1);
                 }
             });
@@ -115,14 +114,12 @@ const AddtoCart = async (req, res) => {
             });
 
             if (existingProduct.length > 0) {
-                // Update the quantity of the existing product
                 const newQuantite = existingProduct[0].quantite_produit + quantite;
                 await db.query(
                     'UPDATE ligne_de_commande SET quantite_produit = ? WHERE produit_idproduit = ? AND commande_idcommande = ?',
                     [newQuantite, produitId, currentCommandeId]
                 );
             } else {
-                // Insert a new product into the cart
                 await db.query(
                     'INSERT INTO ligne_de_commande (produit_idproduit, quantite_produit, commande_idcommande) VALUES (?, ?, ?)',
                     [produitId, quantite, currentCommandeId]
@@ -157,7 +154,6 @@ const getProductsInCart = async (req, res) => {
         }
         console.log("Client ID:", client_idclient);
 
-        // Test query to retrieve all products
         const allProducts = await new Promise((resolve, reject) => {
             const query = 'SELECT * FROM produit';
             db.query(query, (err, result) => {
@@ -171,7 +167,6 @@ const getProductsInCart = async (req, res) => {
 
         console.log("Cart products result:", allProducts);
 
-        // Use the SQL query to retrieve products in the cart
         const cartProductsResult = await new Promise((resolve, reject) => {
             const query = "SELECT p.*, lc.quantite_produit FROM produit p JOIN ligne_de_commande lc ON p.idproduit = lc.produit_idproduit JOIN commande c ON lc.commande_idcommande = c.idcommande WHERE c.client_idclient = ?";
             db.query(query, [client_idclient], (err, result) => {
@@ -184,13 +179,10 @@ const getProductsInCart = async (req, res) => {
         });
         console.log("Cart products result:", cartProductsResult);
 
-        // Extract the rows from the query result
         const cartProducts = cartProductsResult;
 
-        // Log the cartProducts array
         console.log("Cart products:", cartProducts);
 
-        // Send only the necessary data as the response
         res.json({ cartProductsResult: cartProducts });
     } catch (error) {
         console.error(error);
@@ -204,7 +196,6 @@ const getProductsInCart = async (req, res) => {
 const completeCommand = async (req, res) => {
     const { currentCommandeId } = req.body;
 
-    // Perform authorization check
     const authResult = await isAuthorize(req, res);
     if (authResult.message !== 'authorized') {
         return res.status(401).json({ message: "Unauthorized" });
@@ -220,7 +211,6 @@ const completeCommand = async (req, res) => {
     const client_idclient = authResult.decode.id;
 
     try {
-        // Retrieve other command details using the command ID
         const commandDetails = await new Promise((resolve, reject) => {
             db.query(
                 'SELECT date_commande, description_commande FROM commande WHERE idcommande = ? AND client_idclient = ?',
@@ -230,16 +220,13 @@ const completeCommand = async (req, res) => {
                         console.error(err);
                         reject(err);
                     } else {
-                        // Resolve with the fetched command details
                         resolve(result[0]);
                     }
                 }
             );
         });
 
-        // Check if command details are fetched successfully
         if (commandDetails) {
-            // Calculate the montant_total_commande
             const montantTotalCommande = await new Promise((resolve, reject) => {
                 db.query(
                     'SELECT SUM(p.prix_produit * l.quantite_produit) AS montant_total_commande FROM ligne_de_commande l JOIN produit p ON l.produit_idproduit = p.idproduit WHERE l.commande_idcommande = ?',
@@ -249,29 +236,26 @@ const completeCommand = async (req, res) => {
                             console.error(err);
                             reject(err);
                         } else {
-                            // Resolve with the calculated montant_total_commande
-                            resolve(result[0].montant_total_commande || 0); // Handle case where there are no products in the cart
+                            resolve(result[0].montant_total_commande || 0);
                         }
                     }
                 );
             });
 
-            // Construct the complete commandeDetails object
             const currentDate = new Date().toISOString();
             const commandeDetails = {
                 idcommande: currentCommandeId,
                 date_commande: commandDetails.date_commande,
                 description_commande: commandDetails.description_commande,
                 montantTotalCommande,
-                adresselivraison_commande: '',
-                modepaiement_commande: '',
+                adresselivraison_commande: commandDetails.adresselivraison_commande,
+                modepaiement_commande: commandDetails.modepaiement_commande,
                 statut_commande: "enattente",
                 date_livraison_commande: "2024-05-01",
                 metho_delivraison_commande: "domicile",
                 client_idclient: client_idclient
             };
 
-            // Return the commandeDetails object
             return res.status(200).json(commandeDetails);
         } else {
             console.log("Command details not found.");

@@ -3,7 +3,7 @@ const { isAuthorize } = require('../services/validateToken ')
 
 const getProductById = (req, res) => {
     try {
-        const { produitId } = req.params; // Update parameter name to match the one specified in the route
+        const { produitId } = req.params; 
         if (!produitId) {
             return res.status(400).json({ message: 'Product ID is required' });
         }
@@ -59,16 +59,14 @@ const createProduct = async (req, res) => {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
-        // Check if the associated category exists
         const existingCategory = await db.query('SELECT * FROM categorie WHERE idcategorie = ?', [categorie_idcategorie]);
         if (existingCategory.length === 0) {
             return res.status(400).json({ message: "La catégorie associée n'existe pas" });
         }
 
-        // Set current date for date_ajout_produit
         const dateAjoutProduit = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-        // Insert the product into the database
+        
         const result = await db.query(
             'INSERT INTO produit (nom_produit, prix_produit, description_produit, categorie_idcategorie, remise_produit, photo_produit, date_ajout_produit) VALUES (?, ?, ?, ?, ?, ?, ?)', 
             [nom_produit, prix_produit, description_produit, categorie_idcategorie, remise_produit, photo_produit, dateAjoutProduit]
@@ -96,13 +94,11 @@ const updateProduct = async (req, res) => {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
-        // Check if the associated category exists
         const existingCategory = await db.query('SELECT * FROM categorie WHERE idcategorie = ?', [categorie_idcategorie]);
         if (existingCategory.length === 0) {
             return res.status(400).json({ message: "La catégorie associée n'existe pas" });
         }
 
-        // Update the product and set date_modification_produit to current timestamp
         const result = await db.query(
             'UPDATE produit SET nom_produit = ?, prix_produit = ?, description_produit = ?, categorie_idcategorie = ?, remise_produit = ?, photo_produit = ?, date_modification_produit = NOW() WHERE idproduit = ?',
             [nom_produit, prix_produit, description_produit, categorie_idcategorie, remise_produit, photo_produit, id]

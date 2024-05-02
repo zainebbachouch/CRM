@@ -49,7 +49,6 @@ function AddProduct({ addProduct, selectedProduct,products,setProducts, setSelec
     useEffect(() => {
         fetchCategories();
         if (selectedProduct) {
-            // Populate form fields with selected product's data
             setFormData({
                 nom_produit: selectedProduct.nom_produit,
                 prix_produit: selectedProduct.prix_produit,
@@ -91,7 +90,7 @@ function AddProduct({ addProduct, selectedProduct,products,setProducts, setSelec
                     }
                     return product;
                 });
-                setProducts(updatedProducts); // Use setProducts function from props to update products
+                setProducts(updatedProducts); 
                 setSuccessMessage('Product updated successfully');
                 fetchProducts();
             } else {

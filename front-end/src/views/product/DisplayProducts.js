@@ -70,7 +70,6 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
         setSelectedProduct(product);
     };
 
-    // Function to get category name based on category ID
     const getCategoryName = (categoryId) => {
         const category = categories.find((cat) => cat.idcategorie === categoryId);
         return category ? category.nom_categorie : 'N/A';
@@ -86,18 +85,16 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
     
             const response = await axios.post('http://127.0.0.1:5000/api/AddtoCart', {
                 produitId: productId,
-                quantite: 1, // You can adjust the quantity as needed
+                quantite: 1, 
             }, config);
     
-            console.log(response.data); // Log the response from the server
+            console.log(response.data); 
               // Store the currentCommandeId in localStorage if needed
         const { currentCommandeId } = response.data;
         localStorage.setItem('currentCommandeId', currentCommandeId);
     
-            // You can add logic here to show a success message or update the UI as needed
         } catch (error) {
             console.error('Error adding product to basket:', error);
-            // You can add logic here to show an error message or handle the error in other ways
         }
     };
     
