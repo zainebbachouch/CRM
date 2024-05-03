@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import crmIcon from "../../images/crm.png"
 import './sidebar.css';
 import { FaHome, FaUserAlt, FaRegChartBar, FaCommentAlt } from "react-icons/fa";
@@ -92,7 +92,7 @@ useEffect(()=>{
           ))
         }
         {
-          (role!='client') && (<NavLink style={{ color: 'white' }} to={categorieItem.path} key={3} className="link d-flex navLink mt-2 p-2  activeNavLink" >
+          (role!=='client') && (<NavLink style={{ color: 'white' }} to={categorieItem.path} key={3} className="link d-flex navLink mt-2 p-2  activeNavLink" >
           <div className="icon navIcon" >{categorieItem.icon}</div>
           <div className="link_text">{categorieItem.name}</div>
         </NavLink>)

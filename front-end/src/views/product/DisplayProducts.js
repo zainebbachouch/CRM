@@ -159,7 +159,8 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                 <div className="d-flex flex-wrap m-0 p-0 justify-content-around productDisplay">
                     {products.map((product, index) => (
                       <div className="card p-2" style={{ width: '18rem' }} key={index}>
-                        <img className="card-img-top" src={product.photo_produit} />
+                        <img className="card-img-top" src={product.photo_produit} alt={product.nom_produit} />
+
                         <div className="card-body">
                           <p className="card-title"><span className="label">Nom Produit : </span>{product.nom_produit}</p>
                           <p ><span className="label">Categorie Produit : </span>{getCategoryName(product.categorie_idcategorie)}</p>

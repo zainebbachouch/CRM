@@ -114,7 +114,8 @@ function GetCartProducts() {
                     <div className="card-container d-flex flex-wrap">
                         {cartProducts.map((product, index) => (
                             <div className="card" style={{ width: '18rem' }} key={index}>
-                                <img className="card-img-top" src={product.photo_produit} />
+                                <img className="card-img-top" src={product.photo_produit} alt={product.nom_produit} />
+
                                 <div className="card-body">
                                     <h5 className="card-title"><span className='label h5'> Nom Produit : </span>{product.nom_produit}</h5>
                                     <p className="card-text"><span className='label h5'> Categorie Produit : </span>{product.description_produit}</p>
