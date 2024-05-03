@@ -200,7 +200,7 @@ const completeCommand = async (req, res) => {
     if (authResult.message !== 'authorized') {
         return res.status(401).json({ message: "Unauthorized" });
     }
-    if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
+    if (!['client'].includes(authResult.decode.role)) {
         return res.status(403).json({ message: "Insufficient permissions" });
     }
     if (!authResult.decode.id) {

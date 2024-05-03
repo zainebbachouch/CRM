@@ -5,6 +5,8 @@ const userRoute = require("./routes/userRoute");
 const categorieRoute = require("./routes/categorieRoute");
 const productRoute = require("./routes/productRoute");
 const baskeRoute = require("./routes/baskeRoute");
+const commandsRoute = require("./routes/commandsRoute");
+
 const cookieParser = require("cookie-parser");
 const app = express();
 //app.use(cors()); 
@@ -48,6 +50,7 @@ app.use('/api', userRoute);
 app.use('/api', categorieRoute);
 app.use('/api', productRoute);
 app.use('/api', baskeRoute);
+app.use('/api', commandsRoute);
 app.listen(5000, () => {
   console.log('Server running on https://localhost:5000');
 

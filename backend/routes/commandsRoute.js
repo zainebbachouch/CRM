@@ -1,0 +1,9 @@
+const express = require("express");
+const commandsController = require("../controllers/commandsContoller");
+const router = express.Router();
+
+router.get("/getAllCommands", commandsController.getAllCommands);
+router.put("/updateStatus", commandsController.updateCommandStatus);
+router.get("/getCommandsByClientId/:clientId", commandsController.getCommandsByClientId);
+
+module.exports = router;
