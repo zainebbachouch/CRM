@@ -1,79 +1,158 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
-import CompleteCommand from '../../components/sidenav/completeCommand'; // Correct the import statement
+import CompleteCommand from '../../components/sidenav/completeCommand';
 import SideBar from '../../components/sidebar/SideBar';
-import TopBar from "../../components/sidenav/TopNav";
-
-
+import TopBar from '../../components/sidenav/TopNav';
+import { Link } from 'react-router-dom';
 
 function Commands() {
-    console.log('Commands component rendered');
-    const [loading, setLoading] = useState(true);
-    const location = useLocation();
-    //console.log('location.search:', location.search);
-    const searchParams = new URLSearchParams(location.search);
-    const id = searchParams.get('idcommand');
+  const [loading, setLoading] = useState(true);
+  const [commands, setCommands] = useState([]);
+  const [commandData, setCommandData] = useState(null);
+  const [error, setError] = useState(null);
 
-    // console.log('Extracted id:', id);
-    const [commandData, setCommandData] = useState(null); // Define commandData state variable
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const id = searchParams.get('idcommand');
+  const role = localStorage.getItem('role');
+  const token = localStorage.getItem('token');
 
-    useEffect(() => {
-        const currentCommandeId = localStorage.getItem('currentCommandeId');
-
-        if (id) {
-            // Fetch command details using the id from query parameter
-            console.log('fetch id uselocation ', id)
-            fetchData(id);
-        } else if (currentCommandeId) {
-            // Fetch command details using the currentCommandeId from local storage
-            fetchData(currentCommandeId);
-            console.log('localStorage  currentCommandeId', currentCommandeId)
-        } else {
-            setLoading(false);
-        }
-    }, [id]);
-
-    const fetchData = async (currentCommandeId) => {
-        try {
-            // console.log('Fetching data for ID:', currentCommandeId);
-            const token = localStorage.getItem('token');
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            };
-            const response = await axios.post('http://127.0.0.1:5000/api/completeCommand', { currentCommandeId }, config);
-            console.log('Fetched data:', response.data);
-            setCommandData(response.data); // Set the command state variable to the fetched data
-            setLoading(false);
-        } catch (error) {
-            console.error('Error fetching data:', error);
-            setLoading(false);
-        }
+  const config = useMemo(() => {
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     };
-    const role = localStorage.getItem('role');
-    return (
-        <div>
-            {loading ? (
-                <div>Loading...</div>
-            ) : commandData ? (
-                <CompleteCommand commandData={commandData} />
-            ) : null}
-            {role !== 'client' &&
-                <div className="d-flex">
-                    {/* Sidebar component */}
-                    <SideBar />
+  }, [token]);
 
-                    <div className="container-fluid flex-column">
-                        {/* TopBar component */}
-                        <TopBar />
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (role === 'client') {
+          const currentCommandeId = localStorage.getItem('currentCommandeId');
+          if (currentCommandeId) {
+            const response = await axios.post('http://127.0.0.1:5000/api/completeCommand', { currentCommandeId }, config);
+            setCommandData(response.data);
+          }
+        } else {
+          const response = await axios.get('http://127.0.0.1:5000/api/getAllCommands', config);
+          setCommands(response.data);
+        }
+        setLoading(false);
+      } catch (error) {
+        setError(error.message);
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [role, config]);
 
-                        <div className="container-fluid p-2">
-                            <div>Hello, I am an admin or employee.</div>
-                        </div></div></div>
-            }
+  /*const handleInputChange = (event, index) => {
+    const { name, value } = event.target;
+    setCommands((prevCommands) => {
+      const updatedCommands = [...prevCommands];
+      updatedCommands[index][name] = value;
+      return updatedCommands;
+    });
+  };*/
+  const handleInputChange = (event, index) => {
+    const { name, value } = event.target;
+    setCommands((prevCommands) => {
+      const updatedCommands = [...prevCommands]; // Créez une copie de l'array de commandes
+      updatedCommands[index] = { ...updatedCommands[index], [name]: value }; // Mettez à jour la commande spécifique avec la nouvelle valeur
+      return updatedCommands; // Réaffectez la copie mise à jour à l'état
+    });
+  };
+  
+
+  const updateCommandStatus = async (idcommande, newStatus) => {
+    try {
+      const response = await axios.put('http://127.0.0.1:5000/api/updateStatus', { idcommande, newStatus }, config);
+      console.log('Command status updated successfully:', response.data);
+    } catch (error) {
+      console.error('Error updating command status:', error);
+    }
+  };
+  
+
+  return (
+    <div>
+      {loading? (
+        <div>Loading...</div>
+      ) : error? (
+        <div>Error: {error}</div>
+      ) : commandData? (
+        <CompleteCommand commandData={commandData} />
+      ) : (
+        <div className="d-flex">
+          <SideBar />
+          <div className="container-fluid flex-column">
+            <TopBar />
+            <div className="container-fluid p-2">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th>Total Amount</th>
+                    <th>Address</th>
+                    <th>Payment Method</th>
+                    <th>Status</th>
+                    <th>Delivery Date</th>
+                    <th>Delivery Method</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                                    {commands.map((command, key) => (
+                    <tr key={key}>
+                        <td>{command.idcommande}</td>
+                        <td>{command.description_commande}</td>
+                        <td>{command.date_commande}</td>
+                        <td>{command.montant_total_commande}</td>
+                        <td>{command.adresselivraison_commande}</td>
+                        <td>{command.modepaiement_commande}</td>
+                        <td>
+                        <select
+                            className="form-control"
+                            id="statut_commande"
+                            name="statut_commande"
+                            onChange={(event) => handleInputChange(event, key)}
+                        >
+                            <option value="enattente">enattente</option>
+                            <option value="traitement">traitement</option>
+                            <option value="expédié">expédié</option>
+                            <option value="livré">livré</option>
+                        </select>
+                        </td>
+                        <td>{command.date_livraison_commande}</td>
+                        <td>{command.metho_delivraison_commande}</td>
+                        <td>
+                            <button
+                                className="btn btn-primary mr-2"
+                                onClick={() => updateCommandStatus(command.idcommande, command.statut_commande)}
+                                >
+                                Update
+                            </button>
+                            <button className="btn btn-primary p-0">
+                                <Link to={`/commands/${command.idcommande}`} className="text-white btn-link">
+                                Show Details
+                                </Link>
+
+                            </button>
+                        </td>
+                     </tr>
+                        ))}
+                 </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-    );
+      )}
+    </div>
+  );
 }
+
 export default Commands;

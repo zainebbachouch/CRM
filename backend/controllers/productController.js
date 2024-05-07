@@ -44,9 +44,12 @@ const getAllProducts  = async (req, res) => {
         res.json(result);
     });
 };
+
+
 const createProduct = async (req, res) => {
     try {
-        const { nom_produit, prix_produit, description_produit, categorie_idcategorie, remise_produit, photo_produit } = req.body;
+        const { nom_produit, prix_produit, description_produit, categorie_idcategorie,
+             remise_produit, photo_produit } = req.body;
         
         // Authorization check
         const authResult = await isAuthorize(req, res);

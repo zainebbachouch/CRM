@@ -12,6 +12,7 @@ import Home from './views/Home';
 import { AuthProvider } from './views/context/authContext';
 import GetCartProducts from './components/sidenav/getCartProducts';
 import CompleteCommand from './components/sidenav/completeCommand';
+import CommandDetails from './views/commands/CommandDetails';
 
 function App() {
   return (
@@ -51,7 +52,7 @@ function App() {
 
               <Route path="Commands">
                 <Route index element={<Commands />} />
-              </Route>
+                <Route path=":id" element={<CommandDetails />} />              </Route>
 
               <Route path="Invoices">
                 <Route index element={<Invoices />} />

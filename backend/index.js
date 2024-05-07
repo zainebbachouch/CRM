@@ -6,6 +6,8 @@ const categorieRoute = require("./routes/categorieRoute");
 const productRoute = require("./routes/productRoute");
 const baskeRoute = require("./routes/baskeRoute");
 const commandsRoute = require("./routes/commandsRoute");
+const factureRoute = require("./routes/factureRoute");
+
 
 const cookieParser = require("cookie-parser");
 const app = express();
@@ -51,6 +53,8 @@ app.use('/api', categorieRoute);
 app.use('/api', productRoute);
 app.use('/api', baskeRoute);
 app.use('/api', commandsRoute);
+app.use('/api', factureRoute);
+
 app.listen(5000, () => {
   console.log('Server running on https://localhost:5000');
 
