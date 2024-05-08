@@ -4,6 +4,11 @@ const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const { isAuthorize } = require('../services/validateToken ')
 const { createToken } = require('../services/createTokenService.js');
+const { saveToHistory } = require('./callback')
+
+
+
+
 
 const getUserById = async (req, res) => {
 
@@ -95,6 +100,14 @@ const loginAdmin = async (email, password) => {
 
         db.query(`UPDATE admin SET date_inscription_admin = NOW() WHERE idadmin = ?`, [user.idadmin]);
 
+        // Log the login action to history
+        const userId = user.idadmin;
+        const userRole = 'admin'; // Assuming there is no 'role' field in the user object
+        console.log('User connected:', userId);
+        await saveToHistory('Statut connecter pour client ', userId, userRole);
+
+
+
         return { success: true, message: "Login successful", token: token, role: 'admin', user: { username: user.nom_admin } };
     } catch (error) {
         console.error(error);
@@ -137,6 +150,12 @@ const loginEmploye = async (email, password) => {
 
         db.query(`UPDATE employe SET date_inscription_employe = NOW() WHERE idemploye = ?`, [user.idemploye]);
 
+        // Log the login action to history
+        const userId = user.idemploye;
+        const userRole = 'employe'; // Assuming there is no 'role' field in the user object
+        console.log('User connected:', userId);
+        await saveToHistory('Statut connecter pour client ', userId, userRole);
+
         return { success: true, message: "Login successful", token: token, role: 'employe', user: { username: user.nom_employe } };
     } catch (error) {
         console.error(error);
@@ -178,7 +197,20 @@ const loginClient = async (email, password) => {
 
         db.query(`UPDATE client SET date_inscription_client = NOW() WHERE idclient = ?`, [user.idclient]);
 
-        return { success: true, message: "Login successful", token: token, role: 'client', user: { username: user.nom_client } };
+
+        // Log the login action to history
+        const userId = user.idclient;
+        const userRole = 'client'; // Assuming there is no 'role' field in the user object
+        console.log('User connected:', userId);
+        await saveToHistory('Statut connecter pour client ', userId, userRole);
+
+
+
+        //saveToHistory('Statut connecter', userId, userRole);
+        return {
+            success: true, message: "Login successful", token: token, role: 'client', user: { username: user.nom_client }
+        };
+
     } catch (error) {
         console.error(error);
         return { success: false, message: "Internal server error" };
@@ -201,7 +233,7 @@ const loginUser = async (req, res) => {
         if (!loginResult.success) {
             return res.status(404).json({ message: loginResult.message });
         }
-     
+
 
         return res.json(loginResult);
     } catch (error) {
@@ -358,4 +390,4 @@ const registerUser = async (req, res) => {
 
 
 
-module.exports = {  loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, registerUser, getUserById };
+module.exports = { loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, registerUser, getUserById };

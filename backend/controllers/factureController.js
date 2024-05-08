@@ -1,23 +1,24 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ');
+const { getTotalAmountAndDeliveryMethod, checkExistingInvoice } = require('./commandsContoller')
 
-const { getTotalAmountAndDeliveryMethod ,checkExistingInvoice} = require('./commandsContoller')
+const { saveToHistory } = require('./callback')
 
 const getInvoiceDetailsByCommandId = async (req, res) => {
     try {
-      
+
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
 
-        
+
         if (!['admin', 'employe'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
         const { CommandId } = req.params;
-        console.log('getid',CommandId)
+        console.log('getid', CommandId)
         const InvoiceDetailsByCommandId = await new Promise((resolve, reject) => {
             const sqlQuery = `
                 SELECT f.*, c.*
@@ -36,7 +37,7 @@ const getInvoiceDetailsByCommandId = async (req, res) => {
         });
         const details = InvoiceDetailsByCommandId;
 
-        res.json({InvoiceDetailsByCommandId: details  });
+        res.json({ InvoiceDetailsByCommandId: details });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -93,15 +94,23 @@ const createInvoice = async (req, res) => {
 };
 */
 
-
 const createInvoice = async (req, res) => {
     try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (!['admin', 'employe'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
         const {
             date_facture,
             etat_facture,
             statut_paiement_facture,
             methode_paiment_facture,
-            date_echeance,            
+            date_echeance,
             idcommande
         } = req.body;
 
@@ -113,9 +122,12 @@ const createInvoice = async (req, res) => {
                 'UPDATE facture SET date_facture = NOW(), etat_facture = ?, statut_paiement_facture = ?, montant_total_facture = ?, methode_paiment_facture = ?, date_echeance = ?, mode_livraison_facture = ? WHERE idcommande = ?',
                 [etat_facture, statut_paiement_facture, montant_total_commande, methode_paiment_facture, new Date(date_echeance), metho_delivraison_commande, idcommande]
             );
-            
+            const userId = authResult.decode.id;
+            console.log('qui connecte', userId);
+            const userRole = authResult.decode.role;
+            saveToHistory('Statut de la facture created ', userId, userRole);
             res.status(200).json({ message: "Facture mise à jour avec succès", affectedRows: result.affectedRows });
-            
+
         } else {
             res.status(404).json({ message: "Facture non trouvée pour cette commande" });
         }
@@ -125,38 +137,41 @@ const createInvoice = async (req, res) => {
     }
 };
 
-
-
 const deleteInvoiceByCommandId = async (req, res) => {
     try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (!['admin', 'employe'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
         const { idcommande } = req.params;
 
-       
         const deleteResult = await db.query(
             'DELETE FROM facture WHERE idcommande = ?',
             [idcommande]
         );
 
-      
-       
-            const updateResult ='UPDATE commande SET statut_commande = ? WHERE idcommande = ?';               
-            
-            db.query(updateResult, ['livré', idcommande], (err, result) => {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({ message: "Internal Server Error" });
-                }
-                res.json({ message: "Command status updated successfully" });
-            });
-     
-        
+        const updateResult = await db.query(
+            'UPDATE commande SET statut_commande = ? WHERE idcommande = ?',
+            ['livré', idcommande]
+        );
+
+        const userId = authResult.decode.id;
+        console.log('qui connecte', userId);
+        const userRole = authResult.decode.role;
+        saveToHistory('Statut de la facture supprimee', userId, userRole); // Assuming always admin when deleting invoice
+
+        res.json({ message: "facture supprimee successfully" });
+
     } catch (error) {
         console.error("Erreur lors de la suppression de la facture:", error);
         res.status(500).json({ message: "Erreur interne du serveur" });
     }
 };
-
-
 
 
 
@@ -173,7 +188,7 @@ const getInvoiceDetailsById = async (req, res) => {
         }
 
         const { commandId, invoiceId } = req.params;
-        
+
         const InvoiceDetailsById = await new Promise((resolve, reject) => {
             const sqlQuery = `
                 SELECT f.*, c.*
@@ -190,7 +205,7 @@ const getInvoiceDetailsById = async (req, res) => {
                 }
             });
         });
-        
+
         res.json({ InvoiceDetailsById });
     } catch (error) {
         console.error(error);
@@ -198,4 +213,4 @@ const getInvoiceDetailsById = async (req, res) => {
     }
 };
 
-module.exports = { getInvoiceDetailsByCommandId ,getAllFactures ,createInvoice,deleteInvoiceByCommandId};
+module.exports = { getInvoiceDetailsByCommandId, getAllFactures, createInvoice, deleteInvoiceByCommandId };

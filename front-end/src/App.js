@@ -4,7 +4,7 @@ import Dashbord from './views/Dashbord';
 import Products from './views/product/Products';
 import ProductDetails from './views/product/ProductDetails';
 import Commands from './views/commands/Commands';
-import Invoices from './views/invoices';
+import Invoices from './views/invoices/invoices';
 import Categories from './views/categorie/Categories';
 import Login from './views/login';
 import Register from './views/register';

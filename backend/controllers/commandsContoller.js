@@ -1,5 +1,6 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ');
+const {saveToHistory}=require('./callback')
 
 
 const getAllCommands = async (req, res) => {
@@ -27,7 +28,6 @@ const getAllCommands = async (req, res) => {
     });
 };
 
-
 const updateCommandStatus = async (req, res) => {
     // Authorization check
     const authResult = await isAuthorize(req, res);
@@ -36,7 +36,8 @@ const updateCommandStatus = async (req, res) => {
     }
 
     // Check role
-    if (!['admin', 'employe'].includes(authResult.decode.role)) {
+    const userRole = authResult.decode.role;
+    if (!['admin', 'employe'].includes(userRole)) {
         return res.status(403).json({ message: "Insufficient permissions" });
     }
 
@@ -45,8 +46,6 @@ const updateCommandStatus = async (req, res) => {
     if (!idcommande || !newStatus) {
         return res.status(400).json({ message: "Missing required fields" });
     }
-
-
 
     if (newStatus === 'expédié') {
         const existingInvoice = await checkExistingInvoice(idcommande);
@@ -59,7 +58,6 @@ const updateCommandStatus = async (req, res) => {
             }
         }
     }
-
 
     const validStatus = ['enattente', 'traitement', 'expédié', 'livré'];
     if (!validStatus.includes(newStatus)) {
@@ -74,8 +72,15 @@ const updateCommandStatus = async (req, res) => {
             return res.status(500).json({ message: "Internal Server Error" });
         }
         res.json({ message: "Command status updated successfully" });
+        
+        const userId = authResult.decode.id;
+        //    const userRole = authResult.decode.role;
+        console.log('qui connecte',userId)
+
+        saveToHistory('Statut de la commande mis à jour', userId, userRole);
     });
 };
+
 
 
 
