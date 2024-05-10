@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect ,useMemo} from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import SideBar from '../../components/sidebar/SideBar';
@@ -7,15 +7,16 @@ import TopBar from '../../components/sidenav/TopNav';
 function CommandDetails() {
     const { id } = useParams();
     const [commands, setCommands] = useState([]);
-    const role = localStorage.getItem('role');
+    //const role = localStorage.getItem('role');
     const token = localStorage.getItem('token');
 
     // Define config outside of useEffect to ensure it's memoized correctly
-    const config = {
+    const config = useMemo(() => ({
         headers: {
             Authorization: `Bearer ${token}`,
         },
-    };
+    }), [token]);
+    
 
     useEffect(() => {
         async function fetchCommandById() {

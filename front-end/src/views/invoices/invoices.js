@@ -1,32 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect ,useMemo} from 'react';
 import axios from 'axios';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
-
+import { Link } from 'react-router-dom';
 function Invoices() {
   const [factures, setFactures] = useState([]);
-  const role = localStorage.getItem('role');
-
+  const token = localStorage.getItem('token');
+  //const role = localStorage.getItem('role');
+  const config = useMemo(() => {
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  }, [token]);
   useEffect(() => {
     async function fetchInvoices() {
       try {
-        const token = localStorage.getItem('token');
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        };
+       
         const response = await axios.get(
           'http://127.0.0.1:5000/api/getAllFactures',
           config
         );
+       // console.log('facttttttttttttttt',response.data)
         setFactures(response.data);
       } catch (err) {
         console.error('Error fetching invoices:', err);
       }
     }
     fetchInvoices();
-  }, [role]); // Fetch invoices when role changes
+  }, [config]); // Fetch invoices when token or role changes
 
   return (
     <div className="d-flex">
@@ -49,7 +52,7 @@ function Invoices() {
               </tr>
             </thead>
             <tbody>
-              {factures.map((invoice) => (
+              {factures.map((invoice, key) => (
                 <tr key={invoice.idfacture}>
                   <td>{invoice.idfacture}</td>
                   <td>{invoice.date_facture}</td>
@@ -60,7 +63,12 @@ function Invoices() {
                   <td>{invoice.statut_paiement_facture}</td>
                   <td>{invoice.idcommande}</td>
                   <td>
-                    <button className="btn btn-primary mr-2">Update</button>
+                  <button className="btn btn-success">
+                     <Link to={`/invoices/${invoice.idcommande}`} className="text-white btn-link"> 
+                    show details
+                    </Link>
+                   </button>
+
                     <button className="btn btn-danger">Delete</button>
                   </td>
                 </tr>

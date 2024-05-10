@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { useLocation } from 'react-router-dom';
+//import { useLocation } from 'react-router-dom';
 import CompleteCommand from '../../components/sidenav/completeCommand';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
@@ -12,9 +12,9 @@ function Commands() {
   const [commandData, setCommandData] = useState(null);
   const [error, setError] = useState(null);
 
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const id = searchParams.get('idcommand');
+ // const location = useLocation();
+  //const searchParams = new URLSearchParams(location.search);
+ // const id = searchParams.get('idcommand');
   const role = localStorage.getItem('role');
   const token = localStorage.getItem('token');
 
@@ -106,7 +106,7 @@ function Commands() {
                   </tr>
                 </thead>
                 <tbody>
-                                    {commands.map((command, key) => (
+                    {commands.map((command, key) => (
                     <tr key={key}>
                         <td>{command.idcommande}</td>
                         <td>{command.description_commande}</td>
@@ -143,7 +143,7 @@ function Commands() {
 
                             </button>
                         </td>
-                     </tr>
+                     </tr>  
                         ))}
                  </tbody>
               </table>

@@ -13,65 +13,50 @@ import { AuthProvider } from './views/context/authContext';
 import GetCartProducts from './components/sidenav/getCartProducts';
 import CompleteCommand from './components/sidenav/completeCommand';
 import CommandDetails from './views/commands/CommandDetails';
-
+import InvoicesDetails from './views/invoices/InvoicesDetails'; 
 function App() {
   return (
     <>
       <Router>
         <AuthProvider>
-
           <Routes>
             <Route path="/">
               <Route index element={<Home />} />
-
               <Route path="login">
                 <Route index element={<Login />} />
               </Route>
               <Route path="register">
                 <Route index element={<Register />} />
               </Route>
-
               <Route path="Dashboard">
                 <Route index element={<Dashbord />} />
               </Route>
-
               <Route path="Products">
                 <Route index element={<Products />} />
-                {/*<Route path=":productId" element={<Single />} />
-                  <Route
-                    path="new" element={<New inputs={productInputs} title="Add New Product" />}>
-                     
-                    */}
-                  <Route path=":id" element={<ProductDetails />}/>
-                   
+                <Route path=":id" element={<ProductDetails />}/>
               </Route>
-
               <Route path="Products">
                 <Route index element={<Products />} />
               </Route>
-
               <Route path="Commands">
                 <Route index element={<Commands />} />
-                <Route path=":id" element={<CommandDetails />} />              </Route>
+                <Route path=":id" element={<CommandDetails />} />
+              </Route>
 
-              <Route path="Invoices">
+              <Route path="invoices" >
                 <Route index element={<Invoices />} />
+                <Route path=":id" element={<InvoicesDetails />} />
               </Route>
 
               <Route path="Categories">
                 <Route index element={<Categories />} />
-
               </Route>
-              
               <Route path="cart">
                 <Route index element={<GetCartProducts />} />
               </Route>
-
               <Route path="completeCommand">
                   <Route index element={<CompleteCommand />} />
-                </Route>
-
-
+              </Route>
             </Route>
           </Routes>
         </AuthProvider>
