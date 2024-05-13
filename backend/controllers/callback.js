@@ -39,15 +39,8 @@ const saveToHistory = async (description, actionPerformerId, role) => {
     }
 };
 
-const getusername  = async (userId) => {
-    const query = 'SELECT client_id FROM users WHERE id = ?'; // Modifier selon votre structure de base de données
-    const [result] = await db.query(query, [userId]);
-    if (result.length > 0) {
-        return result[0].client_id;
-    } else {
-        throw new Error("Client ID not found for user ID: " + userId);
-    }
-};
+
+
 
 
 module.exports = {saveToHistory};

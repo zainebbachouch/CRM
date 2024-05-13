@@ -6,6 +6,6 @@ router.get("/getAllCommands", commandsController.getAllCommands);
 router.put("/updateStatus", commandsController.updateCommandStatus);
 router.get("/getCommandsByClientId/:clientId", commandsController.getCommandsByClientId);
 router.get("/getCommandsByCommandId/:CommandId", commandsController.getCommandsByCommandId);
-
+router.get("/getCustomerByIDCommand/:CommandId", commandsController.getCustomerByIDCommand);
 
 module.exports = router;

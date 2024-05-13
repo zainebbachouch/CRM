@@ -3,6 +3,45 @@ const { isAuthorize } = require('../services/validateToken ');
 const {saveToHistory}=require('./callback')
 
 
+const getCustomerByIDCommand = async (req, res) => {
+    try {
+        // Authorization check
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        
+        // Check role
+        if (!['admin', 'employe'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const {CommandId} = req.params;
+        
+        const sqlQuery = 'SELECT client.* FROM commande INNER JOIN client ON commande.client_idclient = client.idclient WHERE commande.idcommande = ?';
+        //console.log("Executing SQL query:", sqlQuery);
+        console.log("CommandId:::::::::::::::::::::");
+
+        db.query(sqlQuery, [CommandId], (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: "Internal Server Error" });
+            }
+
+            if (result.length === 0) {
+                return res.status(404).json({ message: "Client information not found for command ID: " + CommandId });
+            }
+
+            res.json(result); // Assuming you only need the first result
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Error retrieving customer information: " + error.message });
+    }
+};
+
+
+
 const getAllCommands = async (req, res) => {
     // Authorization check
     const authResult = await isAuthorize(req, res);
@@ -165,13 +204,6 @@ const getTotalAmountAndDeliveryMethod = async (idcommande) => {
 
 
 
-
-
-
-
-
-
-
 const getCommandsByClientId = async (req, res) => {
     // Authorization check
     const authResult = await isAuthorize(req, res);
@@ -227,4 +259,4 @@ const getCommandsByCommandId = async (req, res) => {
         res.json(result);
     });
 }
-module.exports = { getAllCommands, updateCommandStatus, getCommandsByClientId, getCommandsByCommandId,getTotalAmountAndDeliveryMethod ,checkExistingInvoice}
+module.exports = {getCustomerByIDCommand, getAllCommands, updateCommandStatus, getCommandsByClientId, getCommandsByCommandId,getTotalAmountAndDeliveryMethod ,checkExistingInvoice}

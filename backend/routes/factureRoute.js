@@ -9,4 +9,8 @@ router.put("/createInvoice",factureController.createInvoice);
 router.delete("/deleteInvoice/:idcommande", factureController.deleteInvoiceByCommandId);
 
 
+
+router.post("/createPDFInvoice", factureController.creatPDFInvoice);
+router.get("/fetchPDFInvoice", factureController.fetchPDFInvoice);
+
 module.exports = router;
