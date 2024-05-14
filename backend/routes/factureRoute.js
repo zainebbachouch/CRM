@@ -7,10 +7,11 @@ router.get('/getInvoiceDetailsByCommandId/:CommandId', factureController.getInvo
 router.get("/getAllFactures", factureController.getAllFactures);
 router.put("/createInvoice",factureController.createInvoice);
 router.delete("/deleteInvoice/:idcommande", factureController.deleteInvoiceByCommandId);
-
+router.get("/getFactureOfClientAuthorized",factureController.getFactureOfClientAuthorized);
 
 
 router.post("/createPDFInvoice", factureController.creatPDFInvoice);
 router.get("/fetchPDFInvoice", factureController.fetchPDFInvoice);
+
 
 module.exports = router;

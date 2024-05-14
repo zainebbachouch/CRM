@@ -13,7 +13,7 @@ const getCustomerByIDCommand = async (req, res) => {
 
         
         // Check role
-        if (!['admin', 'employe'].includes(authResult.decode.role)) {
+        if (!['admin', 'employe','client'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 

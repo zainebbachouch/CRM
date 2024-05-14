@@ -13,6 +13,49 @@ const pdfTemplate = require('../document/index');
 
 
 
+const getFactureOfClientAuthorized = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['client'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+        if (!authResult.decode.id) {
+            console.error("Client ID not found in token");
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+    
+        const client_idclient = authResult.decode.id;
+
+        const facturesClient = await new Promise((resolve, reject) => {
+            const sqlQuery = `
+                SELECT f.*, c.*
+                FROM facture f
+                INNER JOIN commande c ON f.idcommande = c.idcommande 
+                WHERE c.client_idclient  = ?
+            `;
+
+            db.query(sqlQuery, [client_idclient], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        res.json({ facturesClient });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+
+
 
 
 
@@ -25,7 +68,7 @@ const getInvoiceDetailsByCommandId = async (req, res) => {
         }
 
 
-        if (!['admin', 'employe'].includes(authResult.decode.role)) {
+        if (!['admin', 'employe','client'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
@@ -57,6 +100,7 @@ const getInvoiceDetailsByCommandId = async (req, res) => {
 };
 
 
+
 const getAllFactures = async (req, res) => {
     const authResult = await isAuthorize(req, res);
     if (authResult.message !== 'authorized') {
@@ -77,34 +121,8 @@ const getAllFactures = async (req, res) => {
         res.json(result);
     });
 };
-/*
-const createInvoice = async (req, res) => {
-    try {
-        const {
-            date_facture,
-            etat_facture,
-            statut_paiement_facture,            
-            methode_paiment_facture,
-            date_echeance,
-            idcommande
-        } = req.body;
 
-        // Récupérer le montant total de la commande depuis la table commande
-        const totalAmountCommande = await getTotalAmountCommande(idcommande);
 
-        // Insertion de la facture avec les détails fournis dans le corps de la requête
-        const result = await db.query(
-            'INSERT INTO facture (date_facture, etat_facture, statut_paiement_facture, montant_total_facture, methode_paiment_facture, date_echeance, idcommande) VALUES (NOW(), ?, ?, ?, ?, ?, ?)',
-            [date_facture, etat_facture, statut_paiement_facture, totalAmountCommande, methode_paiment_facture, date_echeance, idcommande]
-        );
-
-        res.status(201).json({ message: "Facture créée avec succès", result });
-    } catch (error) {
-        console.error("Erreur lors de la création de la facture:", error);
-        res.status(500).json({ message: "Erreur interne du serveur" });
-    }
-};
-*/
 const createInvoice = async (req, res) => {
     try {
          const authResult = await isAuthorize(req, res);
@@ -199,80 +217,7 @@ const deleteInvoiceByCommandId = async (req, res) => {
 
 
 
-///question ????
-const getInvoiceDetailsById = async (req, res) => {
-    try {
-        const authResult = await isAuthorize(req, res);
-        if (authResult.message !== 'authorized') {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
 
-        if (!['admin', 'employe'].includes(authResult.decode.role)) {
-            return res.status(403).json({ message: "Insufficient permissions" });
-        }
-
-        const { commandId, invoiceId } = req.params;
-
-        const InvoiceDetailsById = await new Promise((resolve, reject) => {
-            const sqlQuery = `
-                SELECT f.*, c.*
-                FROM facture f
-                INNER JOIN commande c ON f.idcommande = c.idcommande
-                WHERE f.idfacture = ? OR c.idcommande = ?
-            `;
-
-            db.query(sqlQuery, [invoiceId, commandId], (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-
-        res.json({ InvoiceDetailsById });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
-
-
-/*
-
-const creatPDFInvoice = async (req, res) => {
-    try {
-        // Generate PDF using pdfTemplate and the data sent from the client
-        const createPDF = await new Promise((resolve, reject) => {
-            pdf.create(pdfTemplate(req.body), {}).toBuffer((err, buffer) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(buffer);
-                }
-            });
-        });
-        
-
-        // Save the PDF file or send it directly to the client
-        // In this example, we send the PDF directly
-        res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': 'attachment; filename="invoice.pdf"'
-        });
-        res.send(createPDF); // Use createPDF instead of pdf
-    } catch (error) {
-        console.error("Error generating PDF:", error);
-        res.status(500).json({ message: "Error generating PDF" });
-    }
-};
-
-
-const  fetchPDFInvoice =async (req, res) => {
-    res.sendFile(`${__dirname}/invoice.pdf`)
-};
-*/
 const creatPDFInvoice = async (req, res) => {
     try {
         // Generate PDF using pdfTemplate and the data sent from the client
@@ -300,20 +245,7 @@ const creatPDFInvoice = async (req, res) => {
         res.status(500).json({ message: "Error generating PDF" });
     }
 };
-/*
-const fetchPDFInvoice = async (req, res) => {
-    try {
-        const filePath = req.query.filePath; // Get the file path from the request query
-        if (!filePath) {
-            return res.status(400).json({ message: "File path is missing" });
-        }
-        res.sendFile(filePath); // Send the file to the client
-    } catch (error) {
-        console.error("Error fetching PDF:", error);
-        res.status(500).json({ message: "Error fetching PDF" });
-    }
-};
-*/
+
 
 const fetchPDFInvoice = async (req, res) => {
     const filePath = req.query.filePath; 
@@ -331,4 +263,4 @@ const sanitizedFilePath = path.posix.join( path.posix.dirname(filePath),path.pos
 
 
 module.exports = { getInvoiceDetailsByCommandId, getAllFactures, createInvoice, 
-    deleteInvoiceByCommandId ,creatPDFInvoice,fetchPDFInvoice};
+    deleteInvoiceByCommandId ,creatPDFInvoice,fetchPDFInvoice,getFactureOfClientAuthorized};

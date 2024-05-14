@@ -11,6 +11,7 @@ function InvoicesDetails() {
     const { id } = useParams();
     const [facturesData, setFacturesData] = useState({});
     const [customers, setCustomers] = useState([]);
+    const role = localStorage.getItem('role');
 
     const token = localStorage.getItem("token");
 
@@ -23,7 +24,7 @@ function InvoicesDetails() {
     }, [token]);
 
 
-    
+
     const createAndDownloadPdf = () => {
         axios.post('http://127.0.0.1:5000/api/createPDFInvoice', { facturesData, customers })
             .then((response) => {
@@ -47,7 +48,7 @@ function InvoicesDetails() {
                 alert("Failed to create and download the invoice. Please correct any issues before trying again.");
             });
     };
-    
+
 
     useEffect(() => {
         const fetchInvoiceAndCustomerData = async () => {
@@ -155,6 +156,7 @@ function InvoicesDetails() {
                                             ))}
                                     </div>
                                 </div>
+                                {role !== 'client' ? (
                                 <form style={{ backgroundColor: "grey" }}>
                                     <div className="row">
                                         <div className="form-group">
@@ -179,7 +181,7 @@ function InvoicesDetails() {
                                                 id="etat_facture"
                                                 name="etat_facture"
                                                 value={facturesData.etat_facture || ""}
-onChange={handleInputChange}
+                                                onChange={handleInputChange}
                                             >
                                                 <option value="enAttente">En Attente</option>
                                                 <option value="payee">Payée</option>
@@ -249,10 +251,27 @@ onChange={handleInputChange}
                                         >
                                             Create invoice
                                         </button>
-                                        <button  className="btn btn-success" type="button" onClick={createAndDownloadPdf }>createAndDownloadPdf </button>
+                                        <button className="btn btn-success" type="button" onClick={createAndDownloadPdf}>createAndDownloadPdf </button>
 
                                     </div>
                                 </form>
+                                 ) :(
+                                    facturesData && (
+                                 <div>
+                                 <h2>Invoice Details</h2>
+                                 <p>
+                                     ID: {facturesData.idfacture}<br />
+                                     Date: {facturesData.date_facture}<br />
+                                     Status: {facturesData.etat_facture}<br />
+                                     Total Amount: {facturesData.montant_total_facture}<br />
+                                     Payment Method: {facturesData.methode_paiment_facture}<br />
+                                     Due Date: {facturesData.date_echeance}<br />
+                                     Payment Status: {facturesData.statut_paiement_facture}<br />
+                                 </p>
+                                 <button className="btn btn-success" type="button" onClick={createAndDownloadPdf}>Download Invoice</button>
+                                 </div>
+                                    )
+                                )}
                             </div>
                         )}
                     </div>
@@ -261,5 +280,6 @@ onChange={handleInputChange}
         </div>
     );
 }
+
 
 export default InvoicesDetails;

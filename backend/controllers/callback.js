@@ -39,8 +39,42 @@ const saveToHistory = async (description, actionPerformerId, role) => {
     }
 };
 
+const getInformationOfRole = async (role, id) => {
+    try {
+        let sqlQuery = '';
+
+        // Depending on the user's role, set the appropriate SQL query
+        switch (role) {
+            case 'admin':
+                sqlQuery = 'SELECT * FROM admin WHERE idadmin = ?';
+                break;
+
+            case 'client':
+                sqlQuery = 'SELECT * FROM client WHERE idclient = ?';
+                break;
+
+            case 'employe':
+                sqlQuery = 'SELECT * FROM employee WHERE idemployee = ?';
+                break;
+
+            default:
+                console.error("Invalid user role:", role);
+                throw new Error("Invalid user role");
+        }
+
+        const result = await db.query(
+            sqlQuery,
+            [id]
+        );
+        console.log("Information retrieved successfully");
+        return result;
+    } catch (error) {
+        console.error("Error retrieving user information:", error);
+        throw error;
+    }
+};
 
 
 
 
-module.exports = {saveToHistory};
+module.exports = {saveToHistory , getInformationOfRole};
