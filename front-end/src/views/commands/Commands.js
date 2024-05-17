@@ -119,6 +119,8 @@ function Commands() {
                             className="form-control"
                             id="statut_commande"
                             name="statut_commande"
+                            value={commands[key].statut_commande}
+
                             onChange={(event) => handleInputChange(event, key)}
                         >
                             <option value="enattente">enattente</option>

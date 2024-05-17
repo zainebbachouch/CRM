@@ -17,4 +17,14 @@ router.post('/registerUser', userController.registerUser);
 router.get('/getUserById/:id', userController.getUserById);
 
 
+
+
+router.get('/employees', userController.listEmployees);
+router.get('/clients', userController.listClients);
+
+router.put('/updateEmployeeStatus/:id', userController.updateEmployeeStatus);
+router.put('/updateClientStatus/:id', userController.updateClientStatus);
+
+router.delete('/employees/:id', userController.deleteEmployee);
+router.delete('/deleteClient/:id', userController.deleteClient);
 module.exports = router;

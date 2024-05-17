@@ -55,7 +55,7 @@ const getAllCommands = async (req, res) => {
     }
 
     // Construct SQL query
-    const sqlQuery = 'SELECT * FROM commande';
+    const sqlQuery = 'SELECT * FROM commande ';
 
     // Execute SQL query
     db.query(sqlQuery, (err, result) => {
@@ -259,4 +259,5 @@ const getCommandsByCommandId = async (req, res) => {
         res.json(result);
     });
 }
-module.exports = {getCustomerByIDCommand, getAllCommands, updateCommandStatus, getCommandsByClientId, getCommandsByCommandId,getTotalAmountAndDeliveryMethod ,checkExistingInvoice}
+module.exports = {getCustomerByIDCommand, getAllCommands, updateCommandStatus, 
+    getCommandsByClientId, getCommandsByCommandId,getTotalAmountAndDeliveryMethod ,checkExistingInvoice}

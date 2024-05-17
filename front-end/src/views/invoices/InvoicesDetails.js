@@ -180,6 +180,7 @@ function InvoicesDetails() {
                                                 className="form-control"
                                                 id="etat_facture"
                                                 name="etat_facture"
+                                                
                                                 value={facturesData.etat_facture || ""}
                                                 onChange={handleInputChange}
                                             >

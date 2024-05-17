@@ -390,4 +390,218 @@ const registerUser = async (req, res) => {
 
 
 
-module.exports = { loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, registerUser, getUserById };
+
+/*************************************************************************
+ * *******************************************************************
+ * ***********************************************************
+ */
+
+
+ const listEmployees = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            db.query('SELECT * FROM employe', (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+};
+
+
+const listClients = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            db.query('SELECT * FROM client', (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+};
+
+
+
+const updateEmployeeStatus = async (req, res) => {
+    const { id } = req.params;
+    const { etat_compte } = req.body;
+
+    if (!['active', 'inactive'].includes(etat_compte)) {
+        return res.status(400).json({ message: "Invalid account status" });
+    }
+
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            db.query('UPDATE employe SET etat_compte = ? WHERE idemploye = ?', [etat_compte, id], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Employee not found" });
+        }
+
+        res.json({ message: "Employee status updated successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+};
+
+
+
+const updateClientStatus = async (req, res) => {
+    const { id } = req.params;
+    const { etat_compte } = req.body;
+
+    if (!['active', 'inactive'].includes(etat_compte)) {
+        return res.status(400).json({ message: "Invalid account status" });
+    }
+
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            db.query('UPDATE client SET etat_compte = ? WHERE idclient = ?', [etat_compte, id], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Client not found" });
+        }
+
+        res.json({ message: "Client status updated successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+};
+
+
+const deleteEmployee = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            db.query('DELETE FROM employe WHERE idemploye = ?', [id], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Employee not found" });
+        }
+
+        res.json({ message: "Employee deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+};
+
+
+const deleteClient = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            db.query('DELETE FROM client WHERE idclient = ?', [id], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Client not found" });
+        }
+
+        res.json({ message: "Client deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur interne du serveur" });
+    }
+};
+
+
+
+module.exports = { listEmployees,listClients,updateEmployeeStatus,updateClientStatus,deleteEmployee,deleteClient,
+    
+    loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, registerUser, getUserById };

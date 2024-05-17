@@ -14,6 +14,7 @@ import GetCartProducts from './components/sidenav/getCartProducts';
 import CompleteCommand from './components/sidenav/completeCommand';
 import CommandDetails from './views/commands/CommandDetails';
 import InvoicesDetails from './views/invoices/InvoicesDetails'; 
+import Adminstration from './views/adminstration/adminstration';
 function App() {
   return (
     <>
@@ -50,6 +51,9 @@ function App() {
 
               <Route path="Categories">
                 <Route index element={<Categories />} />
+              </Route>
+              <Route path="adminstration">
+                <Route index element={<Adminstration/>}/>
               </Route>
               <Route path="cart">
                 <Route index element={<GetCartProducts />} />

@@ -29,7 +29,13 @@ function SideBar() {
       name: "invoices",
       icon: <FaCommentAlt />
     }
+ 
   ]
+  const  adminstration=  {
+    path: "/adminstration",
+    name: "adminstration",
+    icon: <FaCommentAlt />
+  }
   const categorieItem={
     path: "/Categories",
     name: "Categories",
@@ -91,13 +97,18 @@ useEffect(()=>{
             </NavLink>
           ))
         }
-        {
-          (role!=='client') && (<NavLink style={{ color: 'white' }} to={categorieItem.path} key={3} className="link d-flex navLink mt-2 p-2  activeNavLink" >
-          <div className="icon navIcon" >{categorieItem.icon}</div>
-          <div className="link_text">{categorieItem.name}</div>
-        </NavLink>)
-          
-        }
+        {role !== 'client' && (
+          <>
+            <NavLink style={{ color: 'white' }} to={categorieItem.path} key="categorieItem" className="link d-flex navLink mt-2 p-2 activeNavLink">
+              <div className="icon navIcon">{categorieItem.icon}</div>
+              <div className="link_text">{categorieItem.name}</div>
+            </NavLink>
+            <NavLink style={{ color: 'white' }} to={adminstration.path} key="adminstration" className="link d-flex navLink mt-2 p-2 activeNavLink">
+              <div className="icon navIcon">{adminstration.icon}</div>
+              <div className="link_text">{adminstration.name}</div>
+            </NavLink>
+          </>
+        )}
       </div>
       <div className="center p-0">
         <span style={{ color: 'white' }} className='navLink'>Pages</span>

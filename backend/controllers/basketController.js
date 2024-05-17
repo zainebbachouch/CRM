@@ -166,9 +166,9 @@ const getProductsInCart = async (req, res) => {
         });
 
         console.log("Cart products result:", allProducts);
-        /// status expidete 
+        /// status expidete /// add condition enattente
         const cartProductsResult = await new Promise((resolve, reject) => {
-            const query = "SELECT p.*, lc.quantite_produit FROM produit p JOIN ligne_de_commande lc ON p.idproduit = lc.produit_idproduit JOIN commande c ON lc.commande_idcommande = c.idcommande WHERE c.client_idclient = ?";
+            const query = "SELECT p.*, lc.quantite_produit FROM produit p JOIN ligne_de_commande lc ON p.idproduit = lc.produit_idproduit JOIN commande c ON lc.commande_idcommande = c.idcommande  AND c.statut_commande = 'enattente' WHERE c.client_idclient = ?";
             db.query(query, [client_idclient], (err, result) => {
                 if (err) {
                     reject(err);
@@ -454,4 +454,7 @@ const decreaseProductQuantity = async (req, res) => {
 
 
 
-module.exports = { passCommand, completeCommand, getProductsInCart, AddtoCart, increaseProductQuantity, decreaseProductQuantity };
+module.exports = {
+    passCommand, completeCommand, getProductsInCart, AddtoCart,
+    increaseProductQuantity, decreaseProductQuantity
+};

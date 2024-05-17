@@ -134,6 +134,8 @@ const createInvoice = async (req, res) => {
             return res.status(403).json({ message: "Insufficient permissions" });
         } 
         console.log(req.body)
+        //sql autorisation select column descrption --> add automatique 
+        // try 
         const {
             date_facture,
             etat_facture,
