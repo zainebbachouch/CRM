@@ -5,6 +5,7 @@ require("dotenv").config();
 const { isAuthorize } = require('../services/validateToken ')
 const { createToken } = require('../services/createTokenService.js');
 const { saveToHistory } = require('./callback')
+const nodemailer = require('nodemailer');
 
 
 
@@ -452,87 +453,6 @@ const listClients = async (req, res) => {
     }
 };
 
-
-
-const updateEmployeeStatus = async (req, res) => {
-    const { id } = req.params;
-    const { etat_compte } = req.body;
-
-    if (!['active', 'inactive'].includes(etat_compte)) {
-        return res.status(400).json({ message: "Invalid account status" });
-    }
-
-    try {
-        const authResult = await isAuthorize(req, res);
-        if (authResult.message !== 'authorized') {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
-        if (!['admin'].includes(authResult.decode.role)) {
-            return res.status(403).json({ message: "Insufficient permissions" });
-        }
-
-        const result = await new Promise((resolve, reject) => {
-            db.query('UPDATE employe SET etat_compte = ? WHERE idemploye = ?', [etat_compte, id], (err, results) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(results);
-                }
-            });
-        });
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Employee not found" });
-        }
-
-        res.json({ message: "Employee status updated successfully" });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erreur interne du serveur" });
-    }
-};
-
-
-
-const updateClientStatus = async (req, res) => {
-    const { id } = req.params;
-    const { etat_compte } = req.body;
-
-    if (!['active', 'inactive'].includes(etat_compte)) {
-        return res.status(400).json({ message: "Invalid account status" });
-    }
-
-    try {
-        const authResult = await isAuthorize(req, res);
-        if (authResult.message !== 'authorized') {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
-        if (!['admin'].includes(authResult.decode.role)) {
-            return res.status(403).json({ message: "Insufficient permissions" });
-        }
-
-        const result = await new Promise((resolve, reject) => {
-            db.query('UPDATE client SET etat_compte = ? WHERE idclient = ?', [etat_compte, id], (err, results) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(results);
-                }
-            });
-        });
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Client not found" });
-        }
-
-        res.json({ message: "Client status updated successfully" });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erreur interne du serveur" });
-    }
-};
-
-
 const deleteEmployee = async (req, res) => {
     const { id } = req.params;
 
@@ -601,6 +521,196 @@ const deleteClient = async (req, res) => {
 };
 
 
+
+const updateEmployeeStatus = async (req, res) => {
+    const { id } = req.params;
+    const { etat_compte } = req.body;
+
+    if (!['active', 'inactive'].includes(etat_compte)) {
+        return res.status(400).json({ message: "Invalid account status" });
+    }
+
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            db.query('UPDATE employe SET etat_compte = ? WHERE idemploye = ?', [etat_compte, id], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Employee not found" });
+        }
+
+        const employee = await new Promise((resolve, reject) => {
+            db.query('SELECT nom_employe, prenom_employe, email_employe FROM employe WHERE idemploye = ?', [id], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results[0]);
+                }
+            });
+        });
+
+        const { nom_employe, prenom_employe, email_employe } = employee;
+        const statusMessage = etat_compte === 'active' ? 'active' : 'inactive';
+        const recipients = [{ email: email_employe, name: `${prenom_employe} ${nom_employe}`, status: statusMessage }];
+
+        if (etat_compte === 'active') {
+            await sendActivationEmails(recipients);
+        } else {
+            await sendDeactivationEmails(recipients);
+        }
+
+        res.json({ message: "Employee status updated successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const updateClientStatus = async (req, res) => {
+    const { id } = req.params;
+    const { etat_compte } = req.body;
+
+    if (!['active', 'inactive'].includes(etat_compte)) {
+        return res.status(400).json({ message: "Invalid account status" });
+    }
+
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            db.query('UPDATE client SET etat_compte = ? WHERE idclient = ?', [etat_compte, id], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Client not found" });
+        }
+
+      
+        const client = await new Promise((resolve, reject) => {
+            db.query('SELECT nom_client, prenom_client, email_client FROM client WHERE idclient = ?', [id], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results[0]);
+                }
+            });
+        });
+
+        const { nom_client, prenom_client, email_client } = client;
+        const statusMessage = etat_compte === 'active' ? 'active' : 'inactive';
+        const recipients = [{ email: email_client, name: `${prenom_client} ${nom_client}`, status: statusMessage }];
+
+        
+        if (etat_compte === 'active') {
+            await sendActivationEmails(recipients);
+        } else {
+            await sendDeactivationEmails(recipients);
+        }
+
+        res.json({ message: "Client status updated successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+
+/*
+const transporter = nodemailer.createTransport({
+    host: 'smtp.example.com',
+    port: 587,
+    secure: false, 
+    auth: {
+        user: 'zaineb.bachouch@gmail.com',
+        pass: process.env.PASSMAIL 
+    }
+});
+  */
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'zaineb.bachouch@gmail.com',
+        pass: process.env.PASSMAIL
+    }
+});
+
+const sendEmail = async (to, subject, html) => {
+    try {
+        await transporter.sendMail({
+            from: 'zaineb.bachouch@gmail.com',
+            to,
+            subject,
+            html,
+        });
+        console.log('Email sent successfully');
+    } catch (error) {
+        console.error('Error sending email:', error);
+    }
+};
+
+const sendActivationEmails = async (recipients) => {
+    const subject = 'Account Activation';
+    try {
+        await Promise.all(recipients.map(async (recipient) => {
+            const { email, name, status } = recipient;
+            const html = `
+                <p>Hello ${name},</p>
+                <p>Your account status is now ${status}.</p>
+                <p>Welcome to our platform!</p>
+            `;
+            await sendEmail(email, subject, html);
+        }));
+        console.log('Activation emails sent successfully');
+    } catch (error) {
+        console.error('Error sending activation emails:', error);
+    }
+};
+
+const sendDeactivationEmails = async (recipients) => {
+    const subject = 'Account Deactivation';
+    try {
+        await Promise.all(recipients.map(async (recipient) => {
+            const { email, name, status } = recipient;
+            const html = `
+                <p>Hello ${name},</p>
+                <p>Your account status is now ${status}.</p>
+                <p>We are sorry to see you go.</p>
+            `;
+            await sendEmail(email, subject, html);
+        }));
+        console.log('Deactivation emails sent successfully');
+    } catch (error) {
+        console.error('Error sending deactivation emails:', error);
+    }
+};
 
 module.exports = { listEmployees,listClients,updateEmployeeStatus,updateClientStatus,deleteEmployee,deleteClient,
     
