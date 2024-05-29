@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import AddProduct from './AddProduct';
+import AddProduct from './addProduct';
 import { Link } from 'react-router-dom';
 import "../../style/products.css"
 function DisplayProducts({ products, setProducts, addProduct, setSelectedProductId }) {
@@ -66,8 +66,12 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
 
     const role = localStorage.getItem('role');
 
-    const handleUpdate = (product) => {
-        setSelectedProduct(product);
+    const handleUpdate = (product,action) => {
+        if(action=="update")
+            {
+             setSelectedProduct(product);   
+            }
+        
     };
 
     const getCategoryName = (categoryId) => {
@@ -101,6 +105,7 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
 
     return (
         <div className="m-0 p-0">
+            
             {role !== 'client' && (
                 <AddProduct
                     addProduct={addProduct}
@@ -114,7 +119,15 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                     products={products}
                     setProducts={setProducts}
                 />
+               
             )}
+            <div className="container-fluid d-flex justify-content-end mb-2">
+                {/* toggle */}
+               <button className="btn btn-success mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate('val','ajouter')}>
+                Ajouter un nouveau produit +
+            </button> 
+            </div>
+            
             {loading ? (
                 <p>Loading...</p>
             ) : role !== 'client' ? (
@@ -144,12 +157,13 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                                 <td>{val.date_ajout_produit}</td>
                                 <td>{val.date_modification_produit}</td>
                                 <td>
-                                    <button className="btn btn-primary mr-2" onClick={() => handleUpdate(val)}>
+                                    <button className="btn btn-primary mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate(val,'update')}>
                                         Update
                                     </button>
                                     <button className="btn btn-danger" onClick={() => handleDelete(val.idproduit)}>
                                         Delete
                                     </button>
+                                    
                                 </td>
                             </tr>
                         ))}

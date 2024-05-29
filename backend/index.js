@@ -7,6 +7,7 @@ const productRoute = require("./routes/productRoute");
 const baskeRoute = require("./routes/baskeRoute");
 const commandsRoute = require("./routes/commandsRoute");
 const factureRoute = require("./routes/factureRoute");
+const autorisationRoute = require("./routes/autorisationRoute");
 
 
 const cookieParser = require("cookie-parser");
@@ -28,7 +29,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200,
   // add this line
- // exposeHeaders: ['Set-Cookie'],
+  // exposeHeaders: ['Set-Cookie'],
   //debug: true,*/
 
 }));
@@ -54,6 +55,7 @@ app.use('/api', productRoute);
 app.use('/api', baskeRoute);
 app.use('/api', commandsRoute);
 app.use('/api', factureRoute);
+app.use('/api', autorisationRoute);
 
 app.listen(5000, () => {
   console.log('Server running on https://localhost:5000');

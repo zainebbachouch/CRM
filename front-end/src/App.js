@@ -15,6 +15,7 @@ import CompleteCommand from './components/sidenav/completeCommand';
 import CommandDetails from './views/commands/CommandDetails';
 import InvoicesDetails from './views/invoices/InvoicesDetails'; 
 import Adminstration from './views/adminstration/adminstration';
+import AuthorizationList from './views/authorization/AuthorizationList';
 function App() {
   return (
     <>
@@ -54,6 +55,9 @@ function App() {
               </Route>
               <Route path="adminstration">
                 <Route index element={<Adminstration/>}/>
+              </Route>
+              <Route path="authorization">
+                <Route index element={<AuthorizationList/>}/>
               </Route>
               <Route path="cart">
                 <Route index element={<GetCartProducts />} />

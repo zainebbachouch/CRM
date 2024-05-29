@@ -18,25 +18,40 @@ function Invoices() {
       },
     };
   }, [token]);
-
-  useEffect(() => {
-    async function fetchInvoices() {
-      try {
-        if (role === 'client') {
-          const response = await axios.get('http://127.0.0.1:5000/api/getFactureOfClientAuthorized', config);
-          setInvoices(response.data.facturesClient); // Assuming the data structure returned from the server
+  async function fetchInvoices() {
+    try {
+      if (role === 'client') {
+        const response = await axios.get('http://127.0.0.1:5000/api/getFactureOfClientAuthorized', config);
+        setInvoices(response.data.facturesClient); // Assuming the data structure returned from the server
 
 
-        } else {
-          const response = await axios.get('http://127.0.0.1:5000/api/getAllFactures', config);
-          setFactures(response.data);
-        }
-      } catch (err) {
-        console.error('Error fetching invoices:', err);
+      } else {
+        const response = await axios.get('http://127.0.0.1:5000/api/getAllFactures', config);
+        setFactures(response.data);
       }
+    } catch (err) {
+      console.error('Error fetching invoices:', err);
     }
+  }
+  useEffect(() => {
+  
     fetchInvoices();
   }, [role, config]); // Fetch invoices when token or role changes
+
+
+  const handleDelete = async (id) => {
+    try {
+      const response = await axios.delete(`http://127.0.0.1:5000/api/deleteInvoice/${id}`, config);
+      if (response.status === 200) {
+      //  setFactures(factures.filter((facture) => facture.idfacture !== id));
+      fetchInvoices();
+      } else {
+        console.error('Failed to delete invoice:', response.data.message);
+      }
+    } catch (error) {
+      console.error("Error deleting invoice:", error);
+    }
+  };
 
   return (
     <div className="d-flex">
@@ -77,8 +92,7 @@ function Invoices() {
                         </Link>
                       </button>
                        
-                      <button className="btn btn-danger">Delete</button>
-
+                      <button className="btn btn-danger" onClick={() => handleDelete(invoice.idcommande)}>Delete</button>
                       
                     </td>
                   </tr>

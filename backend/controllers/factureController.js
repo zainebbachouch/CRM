@@ -194,28 +194,29 @@ const deleteInvoiceByCommandId = async (req, res) => {
 
         const { idcommande } = req.params;
 
-        const deleteResult = await db.query(
+        // Delete the invoice
+        await db.query(
             'DELETE FROM facture WHERE idcommande = ?',
             [idcommande]
         );
 
-        const updateResult = await db.query(
+        // Update the order status
+        await db.query(
             'UPDATE commande SET statut_commande = ? WHERE idcommande = ?',
             ['livré', idcommande]
         );
 
         const userId = authResult.decode.id;
-        console.log('qui connecte', userId);
         const userRole = authResult.decode.role;
-        saveToHistory('Statut de la facture supprimee', userId, userRole); // Assuming always admin when deleting invoice
+        saveToHistory('Statut de la facture supprimee', userId, userRole);
 
-        res.json({ message: "facture supprimee successfully" });
-
+        res.json({ message: "Invoice deleted successfully" });
     } catch (error) {
-        console.error("Erreur lors de la suppression de la facture:", error);
-        res.status(500).json({ message: "Erreur interne du serveur" });
+        console.error("Error deleting invoice:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
+
 
 
 

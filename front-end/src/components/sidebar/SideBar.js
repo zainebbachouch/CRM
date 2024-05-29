@@ -36,6 +36,11 @@ function SideBar() {
     name: "adminstration",
     icon: <FaCommentAlt />
   }
+  const  authorization=  {
+    path: "/authorization",
+    name: "authorization",
+    icon: <FaCommentAlt />
+  }
   const categorieItem={
     path: "/Categories",
     name: "Categories",
@@ -106,6 +111,10 @@ useEffect(()=>{
             <NavLink style={{ color: 'white' }} to={adminstration.path} key="adminstration" className="link d-flex navLink mt-2 p-2 activeNavLink">
               <div className="icon navIcon">{adminstration.icon}</div>
               <div className="link_text">{adminstration.name}</div>
+            </NavLink>
+            <NavLink style={{ color: 'white' }} to={authorization.path} key="authorization" className="link d-flex navLink mt-2 p-2 activeNavLink">
+              <div className="icon navIcon">{authorization.icon}</div>
+              <div className="link_text">{authorization.name}</div>
             </NavLink>
           </>
         )}

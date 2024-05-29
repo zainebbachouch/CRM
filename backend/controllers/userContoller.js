@@ -398,7 +398,7 @@ const registerUser = async (req, res) => {
  */
 
 
- const listEmployees = async (req, res) => {
+const listEmployees = async (req, res) => {
     try {
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
@@ -611,7 +611,7 @@ const updateClientStatus = async (req, res) => {
             return res.status(404).json({ message: "Client not found" });
         }
 
-      
+
         const client = await new Promise((resolve, reject) => {
             db.query('SELECT nom_client, prenom_client, email_client FROM client WHERE idclient = ?', [id], (err, results) => {
                 if (err) {
@@ -626,7 +626,7 @@ const updateClientStatus = async (req, res) => {
         const statusMessage = etat_compte === 'active' ? 'active' : 'inactive';
         const recipients = [{ email: email_client, name: `${prenom_client} ${nom_client}`, status: statusMessage }];
 
-        
+
         if (etat_compte === 'active') {
             await sendActivationEmails(recipients);
         } else {
@@ -676,6 +676,8 @@ const sendEmail = async (to, subject, html) => {
     }
 };
 
+
+
 const sendActivationEmails = async (recipients) => {
     const subject = 'Account Activation';
     try {
@@ -687,6 +689,7 @@ const sendActivationEmails = async (recipients) => {
                 <p>Welcome to our platform!</p>
             `;
             await sendEmail(email, subject, html);
+            console.log(email)
         }));
         console.log('Activation emails sent successfully');
     } catch (error) {
@@ -705,6 +708,7 @@ const sendDeactivationEmails = async (recipients) => {
                 <p>We are sorry to see you go.</p>
             `;
             await sendEmail(email, subject, html);
+            console.log(email)
         }));
         console.log('Deactivation emails sent successfully');
     } catch (error) {
@@ -712,6 +716,8 @@ const sendDeactivationEmails = async (recipients) => {
     }
 };
 
-module.exports = { listEmployees,listClients,updateEmployeeStatus,updateClientStatus,deleteEmployee,deleteClient,
-    
-    loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, registerUser, getUserById };
+module.exports = {
+    listEmployees, listClients, updateEmployeeStatus, updateClientStatus, deleteEmployee, deleteClient,
+
+    loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, registerUser, getUserById
+};
