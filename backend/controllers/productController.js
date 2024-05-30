@@ -1,9 +1,12 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ')
+const { saveToHistory } = require('./callback')
+
+
 
 const getProductById = (req, res) => {
     try {
-        const { produitId } = req.params; 
+        const { produitId } = req.params;
         if (!produitId) {
             return res.status(400).json({ message: 'Product ID is required' });
         }
@@ -25,17 +28,17 @@ const getProductById = (req, res) => {
     }
 };
 
-const getAllProducts  = async (req, res) => {
-      // Authorization check
-      const authResult = await isAuthorize(req, res);
-      if (authResult.message !== 'authorized') {
-          return res.status(401).json({ message: "Unauthorized" });
-      }
-  
-       // Check role
-       if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe'&& authResult.decode.role !== 'client' ) {
-          return res.status(403).json({ message: "Insufficient permissions" });
-      }
+const getAllProducts = async (req, res) => {
+    // Authorization check
+    const authResult = await isAuthorize(req, res);
+    if (authResult.message !== 'authorized') {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Check role
+    if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe' && authResult.decode.role !== 'client') {
+        return res.status(403).json({ message: "Insufficient permissions" });
+    }
     db.query('SELECT * FROM produit', (err, result) => {
         if (err) {
             console.error(err);
@@ -49,14 +52,14 @@ const getAllProducts  = async (req, res) => {
 const createProduct = async (req, res) => {
     try {
         const { nom_produit, prix_produit, description_produit, categorie_idcategorie,
-             remise_produit, photo_produit } = req.body;
-        
+            remise_produit, photo_produit } = req.body;
+
         // Authorization check
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        
+
         // Check role
         if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe') {
             return res.status(403).json({ message: "Insufficient permissions" });
@@ -69,11 +72,14 @@ const createProduct = async (req, res) => {
 
         const dateAjoutProduit = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-        
+
         const result = await db.query(
-            'INSERT INTO produit (nom_produit, prix_produit, description_produit, categorie_idcategorie, remise_produit, photo_produit, date_ajout_produit) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+            'INSERT INTO produit (nom_produit, prix_produit, description_produit, categorie_idcategorie, remise_produit, photo_produit, date_ajout_produit) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [nom_produit, prix_produit, description_produit, categorie_idcategorie, remise_produit, photo_produit, dateAjoutProduit]
         );
+        const userId = authResult.decode.id;
+        const userRole = authResult.decode.role;
+        saveToHistory('Statut de la produit ajouter', userId, userRole);
         res.json({ message: "Produit créé avec succès" });
     } catch (error) {
         console.error(error);
@@ -110,7 +116,9 @@ const updateProduct = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Produit non trouvé" });
         }
-        
+        const userId = authResult.decode.id;
+        const userRole = authResult.decode.role;
+        saveToHistory('Statut de la produit mise a jour ', userId, userRole);
         res.json({ message: "Produit mis à jour avec succès" });
     } catch (error) {
         console.error(error);
@@ -137,8 +145,11 @@ const deleteProduct = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Produit non trouvé" });
         }
-        
+        const userId = authResult.decode.id;
+        const userRole = authResult.decode.role;
+        saveToHistory('Statut de la produit supprimer', userId, userRole);
         res.json({ message: "Produit supprimé avec succès" });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });

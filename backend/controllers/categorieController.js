@@ -1,15 +1,17 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ')
+const {saveToHistory}=require('./callback')
+
 
 const createCategorie = async (req, res) => {
     try {
         const { nom_categorie, description } = req.body;
-        
+
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        
+
         if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe') {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
@@ -29,10 +31,16 @@ const createCategorie = async (req, res) => {
             console.log("Catégorie insérée avec succès");
             console.log(result);
             res.json({ message: "Insertion réussie" });
+            const userId = authResult.decode.id;
+            const userRole = authResult.decode.role;
+            console.log('qui connecte', userId)
+
+            saveToHistory('Statut de la categorie ajouter', userId, userRole);
         } else {
             console.error("Erreur lors de l'insertion de la catégorie");
             res.status(500).json({ message: "Erreur lors de l'insertion de la catégorie" });
         }
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -42,7 +50,7 @@ const createCategorie = async (req, res) => {
 
 const getCategorieById = (req, res) => {
     const { id } = req.params;
-   
+
 
     db.query('SELECT * FROM categorie WHERE idcategorie = ?', [id], (err, result) => {
         if (err) {
@@ -62,16 +70,16 @@ const getCategorieById = (req, res) => {
 
 const getAllCategories = async (req, res) => {
     try {
-         // Authorization check
-    const authResult = await isAuthorize(req, res);
-    if (authResult.message !== 'authorized') {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
+        // Authorization check
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
-     // Check role
-     if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe'&& authResult.decode.role !== 'client' ) {
-        return res.status(403).json({ message: "Insufficient permissions" });
-    }
+        // Check role
+        if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe' && authResult.decode.role !== 'client') {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
         const categories = await new Promise((resolve, reject) => {
             db.query('SELECT * FROM categorie', (err, result) => {
                 if (err) {
@@ -96,18 +104,18 @@ const updateCategorie = async (req, res) => {
     try {
         const { id } = req.params;
         const { nom_categorie, description } = req.body;
-        
+
         // Authorization check
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        
+
         // Check role
         if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe') {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
-        
+
         db.query('UPDATE categorie SET nom_categorie = ?, description = ? WHERE idcategorie = ?', [nom_categorie, description, id], (err, result) => {
             if (err) {
                 console.error(err);
@@ -117,7 +125,13 @@ const updateCategorie = async (req, res) => {
                 return res.status(404).json({ message: "Catégorie non trouvée" });
             }
             res.json({ message: "Catégorie mise à jour avec succès" });
+            const userId = authResult.decode.id;
+            const userRole = authResult.decode.role;
+            console.log('qui connecte', userId)
+
+            saveToHistory('Statut de la categorie mis à jour', userId, userRole);
         });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -127,18 +141,18 @@ const updateCategorie = async (req, res) => {
 const deleteCategorie = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         // Authorization check
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        
+
         // Check role
         if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe') {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
-        
+
         db.query('DELETE FROM categorie WHERE idcategorie = ?', [id], (err, result) => {
             if (err) {
                 console.error(err);
@@ -148,7 +162,13 @@ const deleteCategorie = async (req, res) => {
                 return res.status(404).json({ message: "Catégorie non trouvée" });
             }
             res.json({ message: "Catégorie supprimée avec succès" });
+            const userId = authResult.decode.id;
+            const userRole = authResult.decode.role;
+            console.log('qui connecte', userId)
+
+            saveToHistory('Statut de la categorie supprimer', userId, userRole);
         });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -158,4 +178,4 @@ const deleteCategorie = async (req, res) => {
 
 
 
-module.exports = {createCategorie ,getCategorieById ,getAllCategories,updateCategorie,deleteCategorie}
+module.exports = { createCategorie, getCategorieById, getAllCategories, updateCategorie, deleteCategorie }

@@ -478,7 +478,9 @@ const deleteEmployee = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Employee not found" });
         }
-
+        const userId = authResult.decode.id;
+        const userRole = authResult.decode.role;
+        saveToHistory('Statut de la employe supprimer', userId, userRole);
         res.json({ message: "Employee deleted successfully" });
     } catch (error) {
         console.error(error);
@@ -512,7 +514,9 @@ const deleteClient = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Client not found" });
         }
-
+        const userId = authResult.decode.id;
+        const userRole = authResult.decode.role;
+        saveToHistory('Statut de la client supprimer', userId, userRole);
         res.json({ message: "Client deleted successfully" });
     } catch (error) {
         console.error(error);
@@ -572,7 +576,9 @@ const updateEmployeeStatus = async (req, res) => {
         } else {
             await sendDeactivationEmails(recipients);
         }
-
+        const userId = authResult.decode.id;
+        const userRole = authResult.decode.role;
+        saveToHistory('updateEmployeeStatus', userId, userRole);
         res.json({ message: "Employee status updated successfully" });
     } catch (error) {
         console.error(error);
@@ -632,7 +638,10 @@ const updateClientStatus = async (req, res) => {
         } else {
             await sendDeactivationEmails(recipients);
         }
-
+        const userId = authResult.decode.id;
+        const userRole = authResult.decode.role;
+        saveToHistory('Update Status Client', userId, userRole);
+        res.json({ message: "Client deleted successfully" });
         res.json({ message: "Client status updated successfully" });
     } catch (error) {
         console.error(error);

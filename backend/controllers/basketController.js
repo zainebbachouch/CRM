@@ -1,5 +1,6 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ');
+const {saveToHistory}=require('./callback')
 
 
 
@@ -323,9 +324,15 @@ const passCommand = async (req, res) => {
                     }
                 }
             );
+
+            const userId = authResult.decode.id;
+            const userRole = authResult.decode.role;
+            console.log('qui connecte', userId)
+
+            saveToHistory('Statut de la commande mis à jour', userId, userRole);
         });
 
-        return res.status(200).json({ message: "Command passed successfully" });
+        return res.status(200).json({ message: "PassCommand passed successfully" });
     } catch (error) {
         console.error("Error passing command:", error);
         return res.status(500).json({ message: "Internal server error" });

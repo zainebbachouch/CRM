@@ -1,5 +1,6 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ');
+const {saveToHistory}=require('./callback')
 
 
 const addEmployeesToAuthorization = async (req, res) => {
@@ -42,6 +43,7 @@ const addEmployeesToAuthorization = async (req, res) => {
                                 } else {
                                     resolve(result);
                                 }
+
                             });
                         } else {
                             resolve("Employee already exists in authorization table");
@@ -87,38 +89,44 @@ const updatestatusEmployesAutorisation = async (req, res) => {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
-        // Extract the employee's email and new authorization values from the request body
         const { email_employe, deleteFacture, deleteCommande, deleteProduit, deleteCategorie, activateClient, addProduit, addCategorie, incativeClient, updateFacture, updateCommande, updateProduit, updateCategorie } = req.body;
 
-        // Check if the email is provided
         if (!email_employe) {
             return res.status(400).json({ message: "Missing email_employe" });
         }
 
-        // Build the SQL update query
-        const sqlQuery = `
-            UPDATE autorisation
-            SET deleteFacture = ?, deleteCommande = ?, deleteProduit = ?, deleteCategorie = ?, activateClient = ?, addProduit = ?, addCategorie = ?, incativeClient = ?, updateFacture = ?, updateCommande = ?, updateProduit = ?, updateCategorie = ?
-            WHERE email_employe = ?`;
+        console.log('Received data:', req.body);  // Log received data
 
-        // Execute the SQL query
+        const sqlQuery = `
+        UPDATE autorisation
+        SET deleteFacture = ?, deleteCommande = ?, deleteProduit = ?, deleteCategorie = ?, activateClient = ?, addProduit = ?, addCategorie = ?, incativeClient = ?, updateFacture = ?, updateCommande = ?, updateProduit = ?, updateCategorie = ?
+        WHERE email_employe = ?`;
+
         db.query(sqlQuery, [deleteFacture, deleteCommande, deleteProduit, deleteCategorie, activateClient, addProduit, addCategorie, incativeClient, updateFacture, updateCommande, updateProduit, updateCategorie, email_employe], (err, result) => {
             if (err) {
-                console.error(err);
+                console.error('SQL Error:', err);
                 return res.status(500).json({ message: "Internal Server Error" });
             }
             if (result.affectedRows === 0) {
                 return res.status(404).json({ message: "Employee not found" });
             }
+            const userId = authResult.decode.id;
+            const userRole = authResult.decode.role;
+            console.log('qui connecte', userId);
+
+            saveToHistory('updatestatusEmployesAutorisation', userId, userRole);
             res.json({ message: "Authorizations updated successfully" });
         });
 
     } catch (error) {
-        console.error(error);
+        console.error('Server error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 }
 
 
 
-module.exports = {addEmployeesToAuthorization ,updatestatusEmployesAutorisation};
+
+module.exports = { addEmployeesToAuthorization, updatestatusEmployesAutorisation };
+
+
