@@ -1,6 +1,6 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ');
-const {saveToHistory}=require('./callback')
+const { saveToHistory } = require('./callback')
 
 
 const addEmployeesToAuthorization = async (req, res) => {
@@ -124,9 +124,42 @@ const updatestatusEmployesAutorisation = async (req, res) => {
     }
 }
 
+const getUserPermissions = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const userEmail = authResult.decode.email; // Obtenir l'email de l'utilisateur connecté
+
+        // Récupérer les autorisations de l'utilisateur à partir de la table 'autorisation'
+        const userPermissions = await new Promise((resolve, reject) => {
+            const query = `SELECT deleteClient, deleteFacture, deleteCommande, deleteProduit, deleteCategorie, activateClient, addProduit, addCategorie, updateFacture, updateCommande, updateProduit, updateCategorie 
+                           FROM autorisation 
+                           WHERE email_employe = ?`;
+            db.query(query, [userEmail], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result[0]); // Assurez-vous de renvoyer le premier résultat (qui devrait être unique)
+                }
+            });
+        });
+
+        console.log('User Permissions:', userPermissions); // Ajouté pour le débogage
+
+        res.json({ permissions: userPermissions });
+    } catch (error) {
+        console.error('Error fetching user permissions:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
 
 
-module.exports = { addEmployeesToAuthorization, updatestatusEmployesAutorisation };
+
+
+module.exports = { addEmployeesToAuthorization, updatestatusEmployesAutorisation, getUserPermissions };
 
 

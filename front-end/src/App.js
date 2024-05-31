@@ -16,11 +16,13 @@ import CommandDetails from './views/commands/CommandDetails';
 import InvoicesDetails from './views/invoices/InvoicesDetails'; 
 import Adminstration from './views/adminstration/adminstration';
 import AuthorizationList from './views/authorization/AuthorizationList';
+import UserPermissionsPage from './views/context/UserPermissionsPage';
 function App() {
   return (
     <>
       <Router>
         <AuthProvider>
+          <UserPermissionsPage>
           <Routes>
             <Route path="/">
               <Route index element={<Home />} />
@@ -67,6 +69,7 @@ function App() {
               </Route>
             </Route>
           </Routes>
+          </UserPermissionsPage>
         </AuthProvider>
       </Router>
     </>

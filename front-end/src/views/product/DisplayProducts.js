@@ -1,12 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import axios from 'axios';
 import AddProduct from './addProduct';
 import { Link } from 'react-router-dom';
 import "../../style/products.css"
+//import UserPermissionsContext from '../context/UserPermissionsPage';
+import { UserPermissionsContext } from '../context/UserPermissionsPage'; // Correction de l'import
+
 function DisplayProducts({ products, setProducts, addProduct, setSelectedProductId }) {
     const [loading, setLoading] = useState(true);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [categories, setCategories] = useState([]);
+    const userPermissions = useContext(UserPermissionsContext);
+    useEffect(() => {
+
+        console.log('User Permissions in DisplayProducts:', userPermissions);
+
+    }, [userPermissions]);
+
 
     const fetchProducts = useCallback(async () => {
         setLoading(true);
@@ -36,7 +46,6 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                     Authorization: `Bearer ${token}`,
                 },
             };
-
             const response = await axios.get('http://127.0.0.1:5000/api/getAllCategories', config);
             setCategories(response.data);
         } catch (err) {
@@ -66,18 +75,17 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
 
     const role = localStorage.getItem('role');
 
-    const handleUpdate = (product,action) => {
-        if(action=="update")
-            {
-             setSelectedProduct(product);   
-            }
-        
+    const handleUpdate = (product, action) => {
+        if (action === "update") {
+            setSelectedProduct(product);
+        }
     };
 
     const getCategoryName = (categoryId) => {
         const category = categories.find((cat) => cat.idcategorie === categoryId);
         return category ? category.nom_categorie : 'N/A';
     };
+
     const handleAddToBasket = async (productId) => {
         try {
             const token = localStorage.getItem('token');
@@ -86,26 +94,20 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                     Authorization: `Bearer ${token}`,
                 },
             };
-    
             const response = await axios.post('http://127.0.0.1:5000/api/AddtoCart', {
                 produitId: productId,
-                quantite: 1, 
+                quantite: 1,
             }, config);
-    
-            console.log(response.data); 
-              // Store the currentCommandeId in localStorage if needed
-        const { currentCommandeId } = response.data;
-        localStorage.setItem('currentCommandeId', currentCommandeId);
-    
+            console.log(response.data);
+            const { currentCommandeId } = response.data;
+            localStorage.setItem('currentCommandeId', currentCommandeId);
         } catch (error) {
             console.error('Error adding product to basket:', error);
         }
     };
-    
 
     return (
         <div className="m-0 p-0">
-            
             {role !== 'client' && (
                 <AddProduct
                     addProduct={addProduct}
@@ -119,15 +121,13 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                     products={products}
                     setProducts={setProducts}
                 />
-               
             )}
             <div className="container-fluid d-flex justify-content-end mb-2">
-                {/* toggle */}
-               <button className="btn btn-success mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate('val','ajouter')}>
-                Ajouter un nouveau produit +
-            </button> 
+                <button className="btn btn-success mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate('val', 'ajouter')}>
+                    Ajouter un nouveau produit +
+                </button>
             </div>
-            
+
             {loading ? (
                 <p>Loading...</p>
             ) : role !== 'client' ? (
@@ -137,7 +137,7 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                             <th>Name</th>
                             <th>Price</th>
                             <th>Description</th>
-                            <th>Categoryyyyyyyyyyyyyyyyyyy</th>
+                            <th>Category</th>
                             <th>Discount</th>
                             <th>Photo</th>
                             <th>Added Date</th>
@@ -157,14 +157,16 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                                 <td>{val.date_ajout_produit}</td>
                                 <td>{val.date_modification_produit}</td>
                                 <td>
-                                    <button className="btn btn-primary mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate(val,'update')}>
-                                        Update
-                                    </button>
-                                    <button className="btn btn-danger" onClick={() => handleDelete(val.idproduit)}>
-                                        Delete
-                                    </button>
-                                    
-                                </td>
+                                        {userPermissions && userPermissions.updateProduit === 1 && (
+                                        <button className="btn btn-primary mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate(val, 'update')}>
+                                            Update
+                                        </button>
+                                        )}
+
+                                        {userPermissions && userPermissions.deleteProduit === 1 && (
+                                        <button className="btn btn-danger" onClick={() => handleDelete(val.idproduit)}>
+                                            Delete
+                                        </button> )}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -172,33 +174,31 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
             ) : (
                 <div className="d-flex flex-wrap m-0 p-0 justify-content-around productDisplay">
                     {products.map((product, index) => (
-                      <div className="card p-2" style={{ width: '18rem' }} key={index}>
-                        <img className="card-img-top" src={product.photo_produit} alt={product.nom_produit} />
-
-                        <div className="card-body">
-                          <p className="card-title"><span className="label">Nom Produit : </span>{product.nom_produit}</p>
-                          <p ><span className="label">Categorie Produit : </span>{getCategoryName(product.categorie_idcategorie)}</p>
-                          <p className="card-text">{product.description_produit}</p>
-                          <p className="card-price"><span className="label">Prix Produit : </span>{product.prix_produit}</p>
-                         <div className="buttonsContainer d-flex container-fluid m-0 p-0 column-gap-2">
-                      
-                            <button className="btn btn-primary p-0">
-                            <Link to={`/Products/${product.idproduit}`} className="text-white btn-link">
-                         Show Details    
-                         </Link>
-                         </button>
-                      
-                          <button className="btn btn-success" onClick={() => handleAddToBasket(product.idproduit)}>
-                                                 Add to basket
-                        </button>
-                         </div>
+                        <div className="card p-2" style={{ width: '18rem' }} key={index}>
+                            <img className="card-img-top" src={product.photo_produit} alt={product.nom_produit} />
+                            <div className="card-body">
+                                <p className="card-title"><span className="label">Nom Produit : </span>{product.nom_produit}</p>
+                                <p><span className="label">Categorie Produit : </span>{getCategoryName(product.categorie_idcategorie)}</p>
+                                <p className="card-text">{product.description_produit}</p>
+                                <p className="card-price"><span className="label">Prix Produit : </span>{product.prix_produit}</p>
+                                <div className="buttonsContainer d-flex container-fluid m-0 p-0 column-gap-2">
+                                    <button className="btn btn-primary p-0">
+                                        <Link to={`/Products/${product.idproduit}`} className="text-white btn-link">
+                                            Show Details
+                                        </Link>
+                                    </button>
+                                    <button className="btn btn-success" onClick={() => handleAddToBasket(product.idproduit)}>
+                                        Add to basket
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                      </div>
                     ))}
                 </div>
             )}
         </div>
     );
 }
+
 
 export default DisplayProducts;
