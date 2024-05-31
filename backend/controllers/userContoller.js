@@ -404,7 +404,10 @@ const listEmployees = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        if (!['admin'].includes(authResult.decode.role)) {
+       /* if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }*/
+        if (authResult.decode.role !== 'admin') {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
@@ -432,7 +435,7 @@ const listClients = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        if (!['admin'].includes(authResult.decode.role)) {
+        if (!['admin', 'employe'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
@@ -461,7 +464,10 @@ const deleteEmployee = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        if (!['admin'].includes(authResult.decode.role)) {
+     /*   if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }*/
+        if (authResult.decode.role !== 'admin') {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
@@ -497,7 +503,7 @@ const deleteClient = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        if (!['admin'].includes(authResult.decode.role)) {
+        if (!['admin', 'employe'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
@@ -539,7 +545,10 @@ const updateEmployeeStatus = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        if (!['admin'].includes(authResult.decode.role)) {
+     /*   if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }*/
+        if (authResult.decode.role !== 'admin') {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
@@ -599,7 +608,7 @@ const updateClientStatus = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        if (!['admin'].includes(authResult.decode.role)) {
+        if (!['admin', 'employe'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 

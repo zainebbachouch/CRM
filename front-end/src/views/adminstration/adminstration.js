@@ -7,15 +7,17 @@ import '../../style/viewsStyle/adminstration.css';
 function Adminstration() {
   const [employees, setEmployees] = useState([]);
   const [clients, setClients] = useState([]);
-  const [filterActive, setFilterActive] = useState(1); // Default to Employee List
+  const [filterActive, setFilterActive] = useState(2); // Default to Client List for employees
 
   const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
 
   const config = useMemo(() => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      withCredentials: true,
     };
   }, [token]);
 
@@ -38,9 +40,12 @@ function Adminstration() {
       }
     };
 
-    fetchEmployees();
+    if (role !== 'employe') {
+      fetchEmployees();
+      setFilterActive(1); // Default to Employee List for admins
+    }
     fetchClients();
-  }, [config]);
+  }, [config, role]);
 
   const handleFilterClick = (filter) => {
     setFilterActive(filter);
@@ -104,27 +109,30 @@ function Adminstration() {
       alert('Failed to delete client');
     }
   };
+
   const formatDate = (dateString) => {
     if (!dateString) return ''; // Return an empty string if dateString is null or undefined
     return dateString.slice(0, 10);
   };
-  
+
   return (
     <div className="d-flex">
       <SideBar />
       <div className="container-fluid flex-column">
         <TopBar />
-        <div className="container-fluid p-2">  
-          <div className='contentadminstrationWrap'> 
+        <div className="container-fluid p-2">
+          <div className='contentadminstrationWrap'>
             <div className="adminstrationNavWrap">
               <div className="adminstrationNav">
                 <ul>
-                  <li
-                    className={`${filterActive === 1 ? "active" : ""}`}
-                    onClick={() => handleFilterClick(1)}
-                  >
-                    Employee List
-                  </li>
+                  {role !== 'employe' && (
+                    <li
+                      className={`${filterActive === 1 ? "active" : ""}`}
+                      onClick={() => handleFilterClick(1)}
+                    >
+                      Employee List
+                    </li>
+                  )}
                   <li
                     className={`${filterActive === 2 ? "active" : ""}`}
                     onClick={() => handleFilterClick(2)}
@@ -172,23 +180,13 @@ function Adminstration() {
                                     value={employee.etat_compte}
                                     onChange={(event) => handleInputChange(event, key)}
                                   >
-                                    <option value="active">active</option>
-                                    <option value="inactive">inactive</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
                                   </select>
                                 </td>
                                 <td>
-                                  <button
-                                    className="btn btn-primary mr-2"
-                                    onClick={() => updateEmployeeStatus(employee.idemploye, employee.etat_compte)}
-                                  >
-                                    Update
-                                  </button>
-                                  <button 
-                                    className="btn btn-danger"
-                                    onClick={() => deleteEmployee(employee.idemploye)}
-                                  >
-                                    Delete
-                                  </button>
+                                  <button  className="btn btn-primary mr-2" onClick={() => updateEmployeeStatus(employee.idemploye, employee.etat_compte)}>Save</button>
+                                  <button  className="btn btn-danger" onClick={() => deleteEmployee(employee.idemploye)}>Delete</button>
                                 </td>
                               </tr>
                             ))
@@ -200,7 +198,7 @@ function Adminstration() {
                                 <td>{client.photo_client}</td>
                                 <td>{client.telephone_client}</td>
                                 <td>{client.adresse_client}</td>
-                                <td>{formatDate(client.datede_naissance_client)}</td>
+                                <td>{formatDate(client.datede_naissance_client)}</td> 
                                 <td>{formatDate(client.date_inscription_client)}</td>
                                 <td>{client.genre_client}</td>
                                 <td>
@@ -211,23 +209,13 @@ function Adminstration() {
                                     value={client.etat_compte}
                                     onChange={(event) => handleInputChange(event, key)}
                                   >
-                                    <option value="active">active</option>
-                                    <option value="inactive">inactive</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
                                   </select>
                                 </td>
                                 <td>
-                                  <button
-                                    className="btn btn-primary mr-2"
-                                    onClick={() => updateClientStatus(client.idclient, client.etat_compte)}
-                                  >
-                                    Update
-                                  </button>
-                                  <button
-                                    className="btn btn-danger"
-                                    onClick={() => deleteClient(client.idclient)}
-                                  >
-                                    Delete
-                                  </button>
+                                  <button  className="btn btn-primary mr-2" onClick={() => updateClientStatus(client.idclient, client.etat_compte)}>Save</button>
+                                  <button  className="btn btn-danger" onClick={() => deleteClient(client.idclient)}>Delete</button>
                                 </td>
                               </tr>
                             ))}
@@ -239,7 +227,7 @@ function Adminstration() {
             </div>
           </div>
         </div>
-      </div>
+      </div> 
     </div>
   );
 }
