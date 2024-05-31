@@ -105,7 +105,7 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
             console.error('Error adding product to basket:', error);
         }
     };
-
+    const isAdmin = localStorage.getItem('role') === 'admin';
     return (
         <div className="m-0 p-0">
             {role !== 'client' && (
@@ -157,16 +157,19 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                                 <td>{val.date_ajout_produit}</td>
                                 <td>{val.date_modification_produit}</td>
                                 <td>
-                                        {userPermissions && userPermissions.updateProduit === 1 && (
+                                    {(isAdmin || (userPermissions && userPermissions.updateProduit === 1)) && ( // Add parentheses here
                                         <button className="btn btn-primary mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate(val, 'update')}>
                                             Update
                                         </button>
-                                        )}
+                                    )}
 
-                                        {userPermissions && userPermissions.deleteProduit === 1 && (
+                                    {(isAdmin || (userPermissions && userPermissions.deleteProduit === 1)) && ( // Add parentheses here
                                         <button className="btn btn-danger" onClick={() => handleDelete(val.idproduit)}>
                                             Delete
-                                        </button> )}</td>
+                                        </button>
+                                    )}
+                                </td>
+
                             </tr>
                         ))}
                     </tbody>
