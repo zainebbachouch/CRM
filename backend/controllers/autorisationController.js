@@ -89,7 +89,7 @@ const updatestatusEmployesAutorisation = async (req, res) => {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
-        const { email_employe, deleteFacture, deleteCommande, deleteProduit, deleteCategorie, activateClient, addProduit, addCategorie, incativeClient, updateFacture, updateCommande, updateProduit, updateCategorie } = req.body;
+        const { email_employe,deleteClient, deleteFacture, deleteCommande, deleteProduit, deleteCategorie, addProduit, addCategorie,  updateFacture, updateCommande, updateProduit, updateCategorie ,statusClient } = req.body;
 
         if (!email_employe) {
             return res.status(400).json({ message: "Missing email_employe" });
@@ -99,10 +99,10 @@ const updatestatusEmployesAutorisation = async (req, res) => {
 
         const sqlQuery = `
         UPDATE autorisation
-        SET deleteFacture = ?, deleteCommande = ?, deleteProduit = ?, deleteCategorie = ?, activateClient = ?, addProduit = ?, addCategorie = ?, incativeClient = ?, updateFacture = ?, updateCommande = ?, updateProduit = ?, updateCategorie = ?
+        SET deleteFacture = ?, deleteClient=? ,deleteCommande = ?, deleteProduit = ?, deleteCategorie = ?,  addProduit = ?, addCategorie = ?,  updateFacture = ?, updateCommande = ?, updateProduit = ?, updateCategorie = ?, statusClient = ?
         WHERE email_employe = ?`;
 
-        db.query(sqlQuery, [deleteFacture, deleteCommande, deleteProduit, deleteCategorie, activateClient, addProduit, addCategorie, incativeClient, updateFacture, updateCommande, updateProduit, updateCategorie, email_employe], (err, result) => {
+        db.query(sqlQuery, [deleteFacture,deleteClient, deleteCommande, deleteProduit, deleteCategorie,  addProduit, addCategorie, updateFacture, updateCommande, updateProduit, updateCategorie,statusClient, email_employe], (err, result) => {
             if (err) {
                 console.error('SQL Error:', err);
                 return res.status(500).json({ message: "Internal Server Error" });
@@ -135,7 +135,7 @@ const getUserPermissions = async (req, res) => {
 
         // Récupérer les autorisations de l'utilisateur à partir de la table 'autorisation'
         const userPermissions = await new Promise((resolve, reject) => {
-            const query = `SELECT deleteClient, deleteFacture, deleteCommande, deleteProduit, deleteCategorie, activateClient, addProduit, addCategorie, updateFacture, updateCommande, updateProduit, updateCategorie 
+            const query = `SELECT deleteClient, deleteFacture, deleteCommande, deleteProduit, deleteCategorie, addProduit, addCategorie, updateFacture, updateCommande, updateProduit, updateCategorie,statusClient 
                            FROM autorisation 
                            WHERE email_employe = ?`;
             db.query(query, [userEmail], (err, result) => {

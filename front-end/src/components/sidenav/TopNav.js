@@ -10,31 +10,32 @@ import { Link } from 'react-router-dom';
 import './TopNav.css';
 
 function TopNav() {
-    const { currentUser } = useAuth();
+    const currentUser = localStorage.getItem('username');
     /*const [user,setUser]=useState()
     useEffect(()=>{
         axios.get(.....) 
     })*/
     return (
-   <div  className="row m-0 p-0">
-        <div className="container-fluid navbar m-0 p-0 d-flex justify-content-between navbar p-2">
-            <div className="icons d-flex column-gap-2">
-                <div className="icon1"><GiHamburgerMenu /></div>
-                <Link to="/cart" className="basket">
-                    <FaShoppingBasket />                  
-                </Link>
-            </div>
+        <div className="row m-0 p-0">
+            <div className="container-fluid navbar m-0 p-0 d-flex justify-content-between navbar p-2">
+                <div className="icons d-flex column-gap-2">
+                    <div className="icon1"><GiHamburgerMenu /></div>
+                    <Link to="/cart" className="basket">
+                        <FaShoppingBasket />
+                    </Link>
+                </div>
 
-            <div className="icons d-flex column-gap-2">
-                <div className="icons1"><FaBell /></div>
-                <div className="icon1"><CiSettings /></div>
-                <div className="icon1"> <img src={flag} alt="flag" className='flag' /></div>
-                <div className='d-flex'>
-                    <div className="icon1">  <img src={profile} alt="profile" className='profile' /></div>
-                    <div className="icon1">{currentUser && currentUser.username ? currentUser.username : 'userrrrrrrrrr'}<FaArrowDown /></div>
+                <div className="icons d-flex column-gap-2">
+                    <div className="icons1"><FaBell /></div>
+                    <div className="icon1"><CiSettings /></div>
+                    <div className="icon1"> <img src={flag} alt="flag" className='flag' /></div>
+                    <div className='d-flex'>
+                        {console.log(localStorage)}
+                        <div className="icon1">  <img src={profile} alt="profile" className='profile' /></div>
+                        <div className="icon1">{currentUser && currentUser ? currentUser : 'userrrrrrrrrr'}<FaArrowDown /></div>
+                    </div>
                 </div>
             </div>
-        </div>
         </div>
     );
 }

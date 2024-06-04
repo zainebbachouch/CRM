@@ -1,16 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo,useContext} from 'react';
 import axios from 'axios';
 //import { useLocation } from 'react-router-dom';
 import CompleteCommand from '../../components/sidenav/completeCommand';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
 import { Link } from 'react-router-dom';
+import { UserPermissionsContext } from '../context/UserPermissionsPage'; // Correction de l'import
+
+
+
+
 
 function Commands() {
   const [loading, setLoading] = useState(true);
   const [commands, setCommands] = useState([]);
   const [commandData, setCommandData] = useState(null);
   const [error, setError] = useState(null);
+  const isAdmin = localStorage.getItem('role') === 'admin';
+  const userPermissions = useContext(UserPermissionsContext);
+
+
 
  // const location = useLocation();
   //const searchParams = new URLSearchParams(location.search);
@@ -132,12 +141,18 @@ function Commands() {
                         <td>{command.date_livraison_commande}</td>
                         <td>{command.metho_delivraison_commande}</td>
                         <td>
+                        {(isAdmin || (userPermissions && userPermissions.updateCommande === 1)) && ( // Add parentheses here
+
                             <button
                                 className="btn btn-primary mr-2"
                                 onClick={() => updateCommandStatus(command.idcommande, command.statut_commande)}
                                 >
                                 Update
                             </button>
+                        )}
+                         {(isAdmin || (userPermissions && userPermissions.deleteCommande === 1)) && ( // Add parentheses here
+                           <button> delete</button>
+                         )}
                             <button className="btn btn-primary p-0">
                                 <Link to={`/commands/${command.idcommande}`} className="text-white btn-link">
                                 Show Details

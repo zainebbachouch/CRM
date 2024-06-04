@@ -39,7 +39,7 @@ function AuthorizationList() {
     setAuthorizations((prevState) => {
       const updatedAuthorizations = [...prevState];
       updatedAuthorizations[key] = {
-       ...updatedAuthorizations[key],
+        ...updatedAuthorizations[key],
         [name]: parseInt(value)
       };
       console.log(`Updated authorizations:`, updatedAuthorizations);
@@ -51,19 +51,18 @@ function AuthorizationList() {
     try {
       const dataToSend = {
         email_employe,
-        deleteClient: updatedAuth.deleteClient? 1 : 0,
-        deleteFacture: updatedAuth.deleteFacture? 1 : 0,
-        deleteCommande: updatedAuth.deleteCommande? 1 : 0,
-        deleteProduit: updatedAuth.deleteProduit? 1 : 0,
-        deleteCategorie: updatedAuth.deleteCategorie? 1 : 0,
-        activateClient: updatedAuth.activateClient? 1 : 0,
-        addProduit: updatedAuth.addProduit? 1 : 0,
-        addCategorie: updatedAuth.addCategorie? 1 : 0,
-        incativeClient: updatedAuth.incativeClient? 1 : 0,
-        updateFacture: updatedAuth.updateFacture? 1 : 0,
-        updateCommande: updatedAuth.updateCommande? 1 : 0,
-        updateProduit: updatedAuth.updateProduit? 1 : 0,
-        updateCategorie: updatedAuth.updateCategorie? 1 : 0
+        deleteClient: updatedAuth.deleteClient ? 1 : 0,
+        deleteFacture: updatedAuth.deleteFacture ? 1 : 0,
+        deleteCommande: updatedAuth.deleteCommande ? 1 : 0,
+        deleteProduit: updatedAuth.deleteProduit ? 1 : 0,
+        deleteCategorie: updatedAuth.deleteCategorie ? 1 : 0,
+        statusClient: updatedAuth.statusClient ? 1 : 0,
+        addProduit: updatedAuth.addProduit ? 1 : 0,
+        addCategorie: updatedAuth.addCategorie ? 1 : 0,
+        updateFacture: updatedAuth.updateFacture ? 1 : 0,
+        updateCommande: updatedAuth.updateCommande ? 1 : 0,
+        updateProduit: updatedAuth.updateProduit ? 1 : 0,
+        updateCategorie: updatedAuth.updateCategorie ? 1 : 0
       };
 
       console.log('Data to send:', dataToSend); // Log the data to verify it's correct
@@ -98,10 +97,9 @@ function AuthorizationList() {
                 <th>Delete Commande</th>
                 <th>Delete Produit</th>
                 <th>Delete Categorie</th>
-                <th>Activate Client</th>
+                <th>statusClient</th>
                 <th>Add Produit</th>
                 <th>Add Categorie</th>
-                <th>Incative Client</th>
                 <th>Update Facture</th>
                 <th>Update Commande</th>
                 <th>Update Produit</th>
@@ -115,10 +113,10 @@ function AuthorizationList() {
                   <td>{auth.email_employe}</td>
                   <td>
                     <select
-                      className={auth.deleteClient? 'active' : 'inactive'}
+                      className={auth.deleteClient ? 'active' : 'inactive'}
                       id="deleteClient"
                       name="deleteClient"
-                      value={auth.deleteClient? '1' : '0'}
+                      value={auth.deleteClient ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>
@@ -127,10 +125,10 @@ function AuthorizationList() {
                   </td>
                   <td>
                     <select
-                      className={auth.deleteFacture? 'active' : 'inactive'}
+                      className={auth.deleteFacture ? 'active' : 'inactive'}
                       id="deleteFacture"
                       name="deleteFacture"
-                      value={auth.deleteFacture? '1' : '0'}
+                      value={auth.deleteFacture ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>
@@ -139,10 +137,10 @@ function AuthorizationList() {
                   </td>
                   <td>
                     <select
-                      className={auth.deleteCommande? 'active' : 'inactive'}
+                      className={auth.deleteCommande ? 'active' : 'inactive'}
                       id="deleteCommande"
                       name="deleteCommande"
-                      value={auth.deleteCommande? '1' : '0'}
+                      value={auth.deleteCommande ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>
@@ -151,10 +149,10 @@ function AuthorizationList() {
                   </td>
                   <td>
                     <select
-                      className={auth.deleteProduit? 'active' : 'inactive'}
+                      className={auth.deleteProduit ? 'active' : 'inactive'}
                       id="deleteProduit"
                       name="deleteProduit"
-                      value={auth.deleteProduit? '1' : '0'}
+                      value={auth.deleteProduit ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>
@@ -163,10 +161,10 @@ function AuthorizationList() {
                   </td>
                   <td>
                     <select
-                      className={auth.deleteCategorie? 'active' : 'inactive'}
+                      className={auth.deleteCategorie ? 'active' : 'inactive'}
                       id="deleteCategorie"
                       name="deleteCategorie"
-                      value={auth.deleteCategorie? '1' : '0'}
+                      value={auth.deleteCategorie ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>
@@ -175,10 +173,10 @@ function AuthorizationList() {
                   </td>
                   <td>
                     <select
-                      className={auth.activateClient? 'active' : 'inactive'}
-                      id="activateClient"
-                      name="activateClient"
-                      value={auth.activateClient? '1' : '0'}
+                      className={auth.statusClient ? 'active' : 'inactive'}
+                      id="statusClient"
+                      name="statusClient"
+                      value={auth.statusClient ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>
@@ -187,10 +185,10 @@ function AuthorizationList() {
                   </td>
                   <td>
                     <select
-                      className={auth.addProduit? 'active' : 'inactive'}
+                      className={auth.addProduit ? 'active' : 'inactive'}
                       id="addProduit"
                       name="addProduit"
-                      value={auth.addProduit? '1' : '0'}
+                      value={auth.addProduit ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>
@@ -199,34 +197,23 @@ function AuthorizationList() {
                   </td>
                   <td>
                     <select
-                      className={auth.addCategorie? 'active' : 'inactive'}
+                      className={auth.addCategorie ? 'active' : 'inactive'}
                       id="addCategorie"
                       name="addCategorie"
-                      value={auth.addCategorie? '1' : '0'}
+                      value={auth.addCategorie ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>
                       <option value="0">inactive</option>
                     </select>
                   </td>
+
                   <td>
                     <select
-                      className={auth.incativeClient? 'active' : 'inactive'}
-                      id="incativeClient"
-                      name="incativeClient"
-                      value={auth.incativeClient? '1' : '0'}
-                      onChange={(event) => handleInputChange(event, key)}
-                    >
-                      <option value="1">active</option>
-                      <option value="0">inactive</option>
-                    </select>
-                  </td>
-                  <td>
-                    <select
-                      className={auth.updateFacture? 'active' : 'inactive'}
+                      className={auth.updateFacture ? 'active' : 'inactive'}
                       id="updateFacture"
                       name="updateFacture"
-                      value={auth.updateFacture? '1' : '0'}
+                      value={auth.updateFacture ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>
@@ -235,10 +222,10 @@ function AuthorizationList() {
                   </td>
                   <td>
                     <select
-                      className={auth.updateCommande? 'active' : 'inactive'}
+                      className={auth.updateCommande ? 'active' : 'inactive'}
                       id="updateCommande"
                       name="updateCommande"
-                      value={auth.updateCommande? '1' : '0'}
+                      value={auth.updateCommande ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>
@@ -247,10 +234,10 @@ function AuthorizationList() {
                   </td>
                   <td>
                     <select
-                      className={auth.updateProduit? 'active' : 'inactive'}
+                      className={auth.updateProduit ? 'active' : 'inactive'}
                       id="updateProduit"
                       name="updateProduit"
-                      value={auth.updateProduit? '1' : '0'}
+                      value={auth.updateProduit ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>
@@ -259,10 +246,10 @@ function AuthorizationList() {
                   </td>
                   <td>
                     <select
-                      className={auth.updateCategorie? 'active' : 'inactive'}
+                      className={auth.updateCategorie ? 'active' : 'inactive'}
                       id="updateCategorie"
                       name="updateCategorie"
-                      value={auth.updateCategorie? '1' : '0'}
+                      value={auth.updateCategorie ? '1' : '0'}
                       onChange={(event) => handleInputChange(event, key)}
                     >
                       <option value="1">active</option>

@@ -39,7 +39,9 @@ function UserPermissionsPage({ children }) {
 
     return (
         <UserPermissionsContext.Provider value={userPermissions}>
-            {children}
+            {children}         
+
+            
         </UserPermissionsContext.Provider>
     );
 }

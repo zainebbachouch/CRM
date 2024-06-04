@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo ,useContext } from 'react';
 import axios from 'axios';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
 import { Link } from 'react-router-dom';
+import { UserPermissionsContext } from '../context/UserPermissionsPage'; // Correction de l'import
+
+
 
 function Invoices() {
   const [factures, setFactures] = useState([]);
@@ -10,6 +13,10 @@ function Invoices() {
 
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
+
+
+  const isAdmin = localStorage.getItem('role') === 'admin';
+  const userPermissions = useContext(UserPermissionsContext);
 
   const config = useMemo(() => {
     return {
@@ -91,9 +98,10 @@ function Invoices() {
                           show details
                         </Link>
                       </button>
-                       
+                      {(isAdmin || (userPermissions && userPermissions.deleteFacture === 1)) && ( // Add parentheses here
+
                       <button className="btn btn-danger" onClick={() => handleDelete(invoice.idcommande)}>Delete</button>
-                      
+                      )}
                     </td>
                   </tr>
                 ))}

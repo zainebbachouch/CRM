@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo , useContext} from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
 import { saveAs } from 'file-saver';
+import { UserPermissionsContext } from '../context/UserPermissionsPage'; // Correction de l'import
 
 
 
@@ -14,6 +15,11 @@ function InvoicesDetails() {
     const role = localStorage.getItem('role');
 
     const token = localStorage.getItem("token");
+
+
+
+    const isAdmin = localStorage.getItem('role') === 'admin';
+    const userPermissions = useContext(UserPermissionsContext);
 
     const config = useMemo(() => {
         return {
@@ -244,6 +250,8 @@ function InvoicesDetails() {
                                                 <option value="non_paye">Non Payé</option>
                                             </select>
                                         </div>
+                                        {(isAdmin || (userPermissions && userPermissions.updateFacture === 1)) && ( // Add parentheses here
+
                                         <button
                                             className="btn btn-primary mr-2" /*
 
@@ -252,6 +260,7 @@ function InvoicesDetails() {
                                         >
                                             Create invoice
                                         </button>
+                                        )}
                                         <button className="btn btn-success" type="button" onClick={createAndDownloadPdf}>createAndDownloadPdf </button>
 
                                     </div>

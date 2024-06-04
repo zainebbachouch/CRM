@@ -141,7 +141,7 @@ const loginEmploye = async (email, password) => {
         }
 
         const token = await createToken("employe", user.idemploye, user.email_employe, process.env.JWT_SECRET);
-        const { mdp, ...others } = user;
+     
 
         /*  res.cookie("accessToken", token, {
               httpOnly: true,
@@ -188,7 +188,7 @@ const loginClient = async (email, password) => {
         }
 
         const token = await createToken("client", user.idclient, user.email_client, process.env.JWT_SECRET);
-        const { mdp, ...others } = user;
+     
 
         /* res.cookie("accessToken", token, {
              httpOnly: true,
@@ -404,9 +404,9 @@ const listEmployees = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-       /* if (!['admin'].includes(authResult.decode.role)) {
-            return res.status(403).json({ message: "Insufficient permissions" });
-        }*/
+        /* if (!['admin'].includes(authResult.decode.role)) {
+             return res.status(403).json({ message: "Insufficient permissions" });
+         }*/
         if (authResult.decode.role !== 'admin') {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
@@ -464,9 +464,9 @@ const deleteEmployee = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-     /*   if (!['admin'].includes(authResult.decode.role)) {
-            return res.status(403).json({ message: "Insufficient permissions" });
-        }*/
+        /*   if (!['admin'].includes(authResult.decode.role)) {
+               return res.status(403).json({ message: "Insufficient permissions" });
+           }*/
         if (authResult.decode.role !== 'admin') {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
@@ -545,9 +545,9 @@ const updateEmployeeStatus = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-     /*   if (!['admin'].includes(authResult.decode.role)) {
-            return res.status(403).json({ message: "Insufficient permissions" });
-        }*/
+        /*   if (!['admin'].includes(authResult.decode.role)) {
+               return res.status(403).json({ message: "Insufficient permissions" });
+           }*/
         if (authResult.decode.role !== 'admin') {
             return res.status(403).json({ message: "Insufficient permissions" });
         }

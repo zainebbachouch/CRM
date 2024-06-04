@@ -1,10 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback,useContext } from 'react';
 import axios from 'axios';
 import AddCategorie from './AddCategorie';
+import { UserPermissionsContext } from '../context/UserPermissionsPage'; // Correction de l'import
+
 
 function DisplayCategories({ categories, setCategories, addCategory }) {
     const [loading, setLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const isAdmin = localStorage.getItem('role') === 'admin';
+    const userPermissions = useContext(UserPermissionsContext);
+
+
+
+
 
     const fetchCategories = useCallback(async () => {
         setLoading(true);
@@ -64,9 +72,12 @@ function DisplayCategories({ categories, setCategories, addCategory }) {
                         fetchCategories={fetchCategories}
                     />
                     <div className="container-fluid d-flex justify-content-end mb-2">
+                    {(isAdmin || (userPermissions && userPermissions.addCategorie === 1)) && ( // Add parentheses here
+
                         <button className="btn btn-success mr-2" data-bs-toggle="modal" data-bs-target="#categoryModal" onClick={() => handleUpdate(null, 'ajouter')}>
                             Ajouter un nouveau categorie +
                         </button>
+                    )}
                     </div>
                     {loading ? (
                         <p>Loading...</p>
@@ -85,9 +96,15 @@ function DisplayCategories({ categories, setCategories, addCategory }) {
                                         <td>{val.nom_categorie}</td>
                                         <td>{val.description}</td>
                                         <td>
+                                        {(isAdmin || (userPermissions && userPermissions.updateCategorie === 1)) && ( // Add parentheses here
+
                                             <button className="btn btn-primary mr-2" data-bs-toggle="modal" data-bs-target="#categoryModal" onClick={() => handleUpdate(val, 'update')}>Update</button>
+                                        )}
+                                            {(isAdmin || (userPermissions && userPermissions.deleteCategorie === 1)) && ( // Add parentheses here
+
                                             <button className="btn btn-danger" onClick={() => handleDelete(val.idcategorie)}>Delete</button>
-                                        </td>
+                                            )}
+                                            </td>
                                     </tr>
                                 ))}
                             </tbody>

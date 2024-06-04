@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect  } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import './TopNav.css';
 import SideBar from '../sidebar/SideBar';
 import TopBar from "./TopNav";
+
+
+
+
 
 function CompleteCommand(props) {
     const { commandData } = props; // Destructure commandData and id props
@@ -14,6 +18,10 @@ function CompleteCommand(props) {
     const [command, setCommand] = useState(commandData);// Define commandData state
 
     const commandId = localStorage.getItem('commandId');
+
+
+
+
 
     useEffect(() => {
         const fetchCommandDetails = async (currentCommandeId) => {
@@ -176,10 +184,9 @@ function CompleteCommand(props) {
 
 
 
-
-
-                            <button className="btn btn-primary" onClick={handlePassCommand}>Pass Command</button>
-                        </div>
+                           <button className="btn btn-primary" onClick={handlePassCommand}>Pass Command</button>
+                            
+                            </div>
                         
                     ) : (
                         <div>Command details not found.</div>

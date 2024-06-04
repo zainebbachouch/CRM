@@ -123,9 +123,12 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                 />
             )}
             <div className="container-fluid d-flex justify-content-end mb-2">
-                <button className="btn btn-success mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate('val', 'ajouter')}>
-                    Ajouter un nouveau produit +
-                </button>
+                {(isAdmin || (userPermissions && userPermissions.addProduit === 1)) && ( // Add parentheses here
+
+                    <button className="btn btn-success mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate('val', 'ajouter')}>
+                        Ajouter un nouveau produit +
+                    </button>
+                )}
             </div>
 
             {loading ? (
@@ -157,11 +160,15 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                                 <td>{val.date_ajout_produit}</td>
                                 <td>{val.date_modification_produit}</td>
                                 <td>
+
+
                                     {(isAdmin || (userPermissions && userPermissions.updateProduit === 1)) && ( // Add parentheses here
                                         <button className="btn btn-primary mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate(val, 'update')}>
                                             Update
                                         </button>
                                     )}
+
+                                    {/** concernat  userPermissions.deleteProduit lorsque on mis . pas select de choix de atribut */}
 
                                     {(isAdmin || (userPermissions && userPermissions.deleteProduit === 1)) && ( // Add parentheses here
                                         <button className="btn btn-danger" onClick={() => handleDelete(val.idproduit)}>
