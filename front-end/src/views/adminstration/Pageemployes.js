@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Outlet, useParams } from 'react-router-dom';
+import { Outlet, useParams, useNavigate } from 'react-router-dom'; 
 import axios from 'axios';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
@@ -11,6 +11,15 @@ function Pageemployes() {
   const { id } = useParams(); // Utiliser le hook useParams pour obtenir les paramètres d'URL
     const [employeData, setEmployeData] = useState({});
     const [loading, setLoading] = useState(true);
+    const [filterActive, setFilterActive] = useState(1); // Default to account setting
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+      if (loading) {
+        navigate(`/Pageemployes/${id}/envoyeeMail`);
+      }
+    }, [loading, id, navigate]);
 
     const token = localStorage.getItem('token');
     //const role = localStorage.getItem('role');
@@ -102,23 +111,38 @@ function Pageemployes() {
 </div>
 </div>
 <div className="col-md-9">
-<ul className="nav nav-tabs" id="profileTabs" role="tablist">
-  <li className="nav-item">
-    <Link className="nav-link" to={`envoyeeMail`} role="tab">
-      Envoyee Mail
-    </Link>
-  </li>
-  <li className="nav-item">
-    <Link className="nav-link" to={`makecall`} role="tab">
-      Make Call
-    </Link>
-  </li>
-  <li className="nav-item">
-    <Link className="nav-link" to={`historique`} role="tab">
-      Historique
-    </Link>
-  </li>
-</ul>
+              <ul className="nav nav-tabs" id="profileTabs" role="tablist">
+                <li className="nav-item">
+                  <Link
+                    className={`nav-link ${filterActive === 1 ? 'active' : ''}`}
+                    to={`/Pageemployes/${id}/envoyeeMail`}
+                    role="tab"
+                    onClick={() => setFilterActive(1)}
+                  >
+                    Envoyee Mail
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    className={`nav-link ${filterActive === 2 ? 'active' : ''}`}
+                    to={`/Pageemployes/${id}/makecall`}
+                    role="tab"
+                    onClick={() => setFilterActive(2)}
+                  >
+                    Make Call
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    className={`nav-link ${filterActive === 3 ? 'active' : ''}`}
+                    to={`/Pageemployes/${id}/historique`}
+                    role="tab"
+                    onClick={() => setFilterActive(3)}
+                  >
+                    Historique
+                  </Link>
+                </li>
+              </ul>
 
               <div className="tab-content" id="profileTabsContent">
                 <Outlet />

@@ -1,18 +1,31 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { Outlet, useParams ,useNavigate} from 'react-router-dom';
 import axios from 'axios';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
+import { Link } from 'react-router-dom';
+
 
 
 function Pageclients() {
     const { id } = useParams(); // Utiliser le hook useParams pour obtenir les paramètres d'URL
-    const [filterActive, setFilterActive] = useState(1); // Default to account setting
       const [clientsData, setClientsData] = useState({});
       const [loading, setLoading] = useState(true);
   
       const token = localStorage.getItem('token');
   
+      const [filterActive, setFilterActive] = useState(1); // Default to account setting
+
+      const navigate = useNavigate();
+  
+      useEffect(() => {
+        if (loading) {
+          navigate(`/Pageclients/${id}/envoyeeMail`);
+        }
+      }, [loading, id, navigate]);
+
+
+
       const config = useMemo(() => ({
           headers: {
               Authorization: `Bearer ${token}`,
@@ -38,9 +51,7 @@ function Pageclients() {
         fetchClientsData();
     }, [ config, id]);
   
-    const handleFilterClick = (filter) => {
-      setFilterActive(filter);
-  };
+
   
   
   
@@ -101,44 +112,40 @@ function Pageclients() {
     </div>
 
     <div className="col-md-9">
-                            <ul className="nav nav-tabs" id="profileTabs" role="tablist">
-                            <li
-                                      className={`nav-link ${filterActive === 1 ? 'active' : ''}`}
-                                      onClick={() => handleFilterClick(1)}
-                                      role="tab"
-                                  >
-                                      envoyee mail
-                                  </li>
-                                  <li
-                                      className={`nav-link ${filterActive === 2 ? 'active' : ''}`}
-                                      onClick={() => handleFilterClick(2)}
-                                      role="tab"
-                                  >
-                                      make call
-                                  </li>
-                                  <li
-                                      className={`nav-link ${filterActive === 3 ? 'active' : ''}`}
-                                      onClick={() => handleFilterClick(3)}
-                                      role="tab"
-                                  >
-                                      historique
-                                  </li>
-                            </ul>
-                            <div className="tab-content" id="profileTabsContent">
-                                <div className={`tab-pane fade ${filterActive === 1 ? 'show active' : ''}`} role="tabpanel">
-                                    <form className="form mt-4">
-                                      
-                                      </form>
-                                      </div>
-                                      <div className={`tab-pane fade ${filterActive === 2 ? 'show active' : ''}`} role="tabpanel">
-                                          <h1>Make Call</h1>
-                                        </div>
-                                        <div className={`tab-pane fade ${filterActive === 3 ? 'show active' : ''}`} role="tabpanel">
-                                          <h1>Historique</h1>
-                                        </div>
-                                      </div>
-                          </div>
-                          
+    <ul className="nav nav-tabs" id="profileTabs" role="tablist">
+    <li className="nav-item">
+                  <Link className="nav-link"
+                   to={`/Pageclients/${id}/envoyeeMail`} 
+                   role="tab"
+                   onClick={() => setFilterActive(1)}
+                   >
+                    Envoyee Mail
+                  </Link>
+                </li>
+  <li className="nav-item">
+  <Link
+                    className={`nav-link ${filterActive === 2 ? 'active' : ''}`}
+                    to={`/Pageclients/${id}/makecall`}
+                    role="tab"
+                    onClick={() => setFilterActive(2)}
+                  >      Make Call
+    </Link>
+  </li>
+  <li className="nav-item">
+  <Link
+                    className={`nav-link ${filterActive === 3 ? 'active' : ''}`}
+                    to={`/Pageclients/${id}/historique`}
+                    role="tab"
+                    onClick={() => setFilterActive(3)}
+                  >      Historique
+    </Link>
+  </li>
+</ul>
+
+              <div className="tab-content" id="profileTabsContent">
+                <Outlet/>
+              </div>
+              </div>
                           
 
                             

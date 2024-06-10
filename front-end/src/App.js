@@ -20,7 +20,7 @@ import UserPermissionsPage from './views/context/UserPermissionsPage';
 import Profile from './components/sidenav/profile';
 import Pageemployes from './views/adminstration/Pageemployes';
 import Pageclients from './views/adminstration/Pageclients';
-import EnvoyeeMail from './views/adminstration/EnvoyeeMail';
+import  { EnvoyeeMailClient, EnvoyeeMailEmploye } from './views/adminstration/EnvoyeeMail';
 import MakeCall from './views/adminstration/MakeCall';
 import Historique from './views/adminstration/Historique';
 function App() {
@@ -79,15 +79,17 @@ function App() {
 
 
                 <Route path="Pageemployes/:id" element={<Pageemployes />}>
-                  <Route path="envoyeeMail" element={<EnvoyeeMail />} />
+                <Route path="envoyeeMail" element={<EnvoyeeMailEmploye />} />      
                   <Route path="makecall" element={<MakeCall />} /> 
                   <Route path="historique" element={<Historique />} />   
                 </Route>
 
 
              
-                <Route path="Pageclients">
-                  <Route path=":id"  element={<Pageclients />} />                  
+                <Route path="Pageclients/:id"  element={<Pageclients />} >
+                  <Route path="envoyeeMail" element={<EnvoyeeMailClient />} />
+                  <Route path="makecall" element={<MakeCall />} /> 
+                  <Route path="historique" element={<Historique />} />                   
                 </Route>
 
                 </Route>
