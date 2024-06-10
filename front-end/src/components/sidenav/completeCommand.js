@@ -146,7 +146,8 @@ function CompleteCommand(props) {
                                         <option value="PayPal">PayPal</option>
                                         <option value="Cash on Delivery">Cash on Delivery</option>
                                     </select>
-                                </div></div>
+                                </div>
+                                </div>
                             </div>
 
 

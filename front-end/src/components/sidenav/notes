@@ -20,3 +20,8 @@ gerer moi autorisation a appliquer comme select * dapres email
 zb@gmail.com  comparers les artributs => true false true 
 si dans page produit {autorisation.deleteproduit=="true" && 
 <button class...>Delete </button>} affiche bouton ou non 
+
+
+j'ai deja commente dans route listAdminAuthorized
+  erruer si j'ai commentais assi en backend 
+ 

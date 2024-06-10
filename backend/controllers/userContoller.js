@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const { isAuthorize } = require('../services/validateToken ')
 const { createToken } = require('../services/createTokenService.js');
-const { saveToHistory } = require('./callback')
+const { saveToHistory, getInformationOfRole, updateInformationOfRole } = require('./callback')
 const nodemailer = require('nodemailer');
 
 
@@ -109,7 +109,7 @@ const loginAdmin = async (email, password) => {
 
 
 
-        return { success: true, message: "Login successful", token: token, role: 'admin', user: { username: user.nom_admin } };
+        return { success: true, message: "Login successful", token: token, role: 'admin', user: { username: user.nom_admin, id: user.idadmin } };
     } catch (error) {
         console.error(error);
         return { success: false, message: "Internal server error" };
@@ -141,7 +141,7 @@ const loginEmploye = async (email, password) => {
         }
 
         const token = await createToken("employe", user.idemploye, user.email_employe, process.env.JWT_SECRET);
-     
+
 
         /*  res.cookie("accessToken", token, {
               httpOnly: true,
@@ -155,9 +155,9 @@ const loginEmploye = async (email, password) => {
         const userId = user.idemploye;
         const userRole = 'employe'; // Assuming there is no 'role' field in the user object
         console.log('User connected:', userId);
-        await saveToHistory('Statut connecter pour client ', userId, userRole);
+        await saveToHistory('Statut connecter pour employe ', userId, userRole);
 
-        return { success: true, message: "Login successful", token: token, role: 'employe', user: { username: user.nom_employe } };
+        return { success: true, message: "Login successful", token: token, role: 'employe', user: { username: user.nom_employe, id: user.idemploye } };
     } catch (error) {
         console.error(error);
         return { success: false, message: "Internal server error" };
@@ -188,7 +188,7 @@ const loginClient = async (email, password) => {
         }
 
         const token = await createToken("client", user.idclient, user.email_client, process.env.JWT_SECRET);
-     
+
 
         /* res.cookie("accessToken", token, {
              httpOnly: true,
@@ -209,7 +209,7 @@ const loginClient = async (email, password) => {
 
         //saveToHistory('Statut connecter', userId, userRole);
         return {
-            success: true, message: "Login successful", token: token, role: 'client', user: { username: user.nom_client }
+            success: true, message: "Login successful", token: token, role: 'client', user: { username: user.nom_client, id: user.idemploye }
         };
 
     } catch (error) {
@@ -455,6 +455,7 @@ const listClients = async (req, res) => {
         res.status(500).json({ message: "Erreur interne du serveur" });
     }
 };
+
 
 const deleteEmployee = async (req, res) => {
     const { id } = req.params;
@@ -734,8 +735,306 @@ const sendDeactivationEmails = async (recipients) => {
     }
 };
 
+
+
+
+
+/*************************** ,**********************************************
+ * *******************************************************************
+ * ***********************************************************
+ */
+
+
+const listAdminAuthorized = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+        const userId = authResult.decode.id;
+        const result = await new Promise((resolve, reject) => {
+            db.query('SELECT * FROM admin WHERE idadmin = ?', [userId], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+
+const listEmployeAuthorized = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['employe','admin'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+        const id = req.params.id;
+        const result = await new Promise((resolve, reject) => {
+            db.query('SELECT * FROM employe WHERE idemploye = ?', [id], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+
+const listClientAuthorized = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['employe','admin','client'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+        const id = req.params.id;
+        const result = await new Promise((resolve, reject) => {
+            db.query('SELECT * FROM client WHERE idclient = ?', [id], (err, results) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+
+
+
+
+const getAdminInformation = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (authResult.decode.role !== 'admin') {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+        const id = req.params.id;
+
+        const adminInfo = await getInformationOfRole('admin', id);
+        if (!adminInfo) {
+            return res.status(404).json({ message: "Admin not found" });
+        }
+        res.json(adminInfo);
+    } catch (error) {
+        console.error("Error retrieving admin information:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const getClientInformation = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['client'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const id = req.params.id;
+        const clientInfo = await getInformationOfRole('client', id);
+
+        if (!clientInfo) {
+            return res.status(404).json({ message: "Client not found" });
+        }
+
+        res.json(clientInfo);
+    } catch (error) {
+        console.error("Error retrieving client information:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const getEmployeInformation = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (!['employe'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const id = req.params.id;
+        const employeInfo = await getInformationOfRole('employe', id);
+
+        if (!employeInfo) {
+            return res.status(404).json({ message: "Employe not found" });
+        }
+
+        res.json(employeInfo);
+    } catch (error) {
+        console.error("Error retrieving employe information:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+
+const updateAdminInformation = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        if (authResult.decode.role !== 'admin') {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+        const id = req.params.id;
+
+        // Get existing admin information
+        const existingAdminInfo = await getInformationOfRole('admin', id);
+        if (!existingAdminInfo) {
+            return res.status(404).json({ message: "Admin not found" });
+        }
+
+        // Merge the request body with the existing data
+        const updatedAdminInfo = { ...existingAdminInfo };
+        Object.keys(req.body).forEach(key => {
+            if (req.body[key] !== undefined) {
+                updatedAdminInfo[key] = req.body[key];
+            }
+        });
+
+        // Update the database
+        const result = await updateInformationOfRole('admin', id, updatedAdminInfo);
+        if (result) {
+            res.json({ message: "Admin information updated successfully" });
+        } else {
+            res.status(500).json({ message: "Failed to update admin information" });
+        }
+    } catch (error) {
+        console.error("Error updating admin information:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+const updateClientInformation = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const id = req.params.id;
+        if (authResult.decode.role === 'client') {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        // Get existing client information
+        const existingClientInfo = await getInformationOfRole('client', id);
+        if (!existingClientInfo) {
+            return res.status(404).json({ message: "Client not found" });
+        }
+
+        // Merge the request body with the existing data
+        const updatedClientInfo = { ...existingClientInfo };
+        Object.keys(req.body).forEach(key => {
+            if (req.body[key] !== undefined) {
+                updatedClientInfo[key] = req.body[key];
+            }
+        });
+
+        // Update the database
+        const result = await updateInformationOfRole('client', id, updatedClientInfo);
+        if (result) {
+            res.json({ message: "Client information updated successfully" });
+        } else {
+            res.status(500).json({ message: "Failed to update client information" });
+        }
+    } catch (error) {
+        console.error("Error updating client information:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+const updateEmployeInformation = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const id = req.params.id;
+        if (authResult.decode.role !== 'employe') {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        // Get existing employe information
+        const existingEmployeInfo = await getInformationOfRole('employe', id);
+        if (!existingEmployeInfo) {
+            return res.status(404).json({ message: "Employe not found" });
+        }
+
+        // Merge the request body with the existing data
+        const updatedEmployeInfo = { ...existingEmployeInfo };
+        Object.keys(req.body).forEach(key => {
+            if (req.body[key] !== undefined) {
+                updatedEmployeInfo[key] = req.body[key];
+            }
+        });
+
+        // Update the database
+        const result = await updateInformationOfRole('employe', id, updatedEmployeInfo);
+        if (result) {
+            res.json({ message: "Employe information updated successfully" });
+        } else {
+            res.status(500).json({ message: "Failed to update employe information" });
+        }
+    } catch (error) {
+        console.error("Error updating employe information:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+///////////////////////////////////////**
+
+
+
+
 module.exports = {
     listEmployees, listClients, updateEmployeeStatus, updateClientStatus, deleteEmployee, deleteClient,
 
-    loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, registerUser, getUserById
+    loginAdmin, loginEmploye, loginClient, loginUser, registerA, registerE, registerC, registerUser, getUserById, getAdminInformation,
+
+    getClientInformation, getEmployeInformation, updateAdminInformation, updateClientInformation,
+
+    updateEmployeInformation, listAdminAuthorized, listEmployeAuthorized, listClientAuthorized
 };

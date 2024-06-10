@@ -48,33 +48,119 @@ const getInformationOfRole = async (role, id) => {
             case 'admin':
                 sqlQuery = 'SELECT * FROM admin WHERE idadmin = ?';
                 break;
-
             case 'client':
                 sqlQuery = 'SELECT * FROM client WHERE idclient = ?';
                 break;
-
             case 'employe':
-                sqlQuery = 'SELECT * FROM employee WHERE idemployee = ?';
+                sqlQuery = 'SELECT * FROM employe WHERE idemploye = ?';
                 break;
-
             default:
                 console.error("Invalid user role:", role);
                 throw new Error("Invalid user role");
         }
 
-        const result = await db.query(
-            sqlQuery,
-            [id]
-        );
+        const result = await new Promise((resolve, reject) => {
+            db.query(sqlQuery, [id], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        if (result.length === 0) {
+            console.log("No information found for the given ID.");
+            return null;
+        }
+
         console.log("Information retrieved successfully");
-        return result;
+        return result[0];
     } catch (error) {
         console.error("Error retrieving user information:", error);
         throw error;
     }
 };
+const formatDateForMySQL = (date) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = ('0' + (d.getMonth() + 1)).slice(-2);
+    const day = ('0' + d.getDate()).slice(-2);
+    return `${year}-${month}-${day}`;
+};
 
+const updateInformationOfRole = async (role, id, updatedData) => {
+    try {
+        let sqlQuery = '';
+        let params = [];
 
+        // Depending on the user's role, set the appropriate SQL query and parameters
+        switch (role) {
+            case 'admin':
+                sqlQuery = `UPDATE admin SET 
+                            nom_admin = ?, prenom_admin = ?, email_admin = ?, 
+                            photo_admin = ?, telephone_admin = ?, adresse_admin = ?, 
+                            date_de_naissance_admin = ?, genre = ?, etat_compte = ? 
+                            WHERE idadmin = ?`;
+                params = [
+                    updatedData.nom_admin, updatedData.prenom_admin, updatedData.email_admin,
+                    updatedData.photo_admin, updatedData.telephone_admin, updatedData.adresse_admin,
+                    formatDateForMySQL(updatedData.date_de_naissance_admin), // Formatting the date here
+                    updatedData.genre, updatedData.etat_compte, id
+                ];
+                break;
+            case 'client':
+                sqlQuery = `UPDATE client SET 
+                            nom_client = ?, prenom_client = ?, email_client = ?, 
+                            photo_client = ?, telephone_client = ?, adresse_client = ?, 
+                            datede_naissance_client = ?, genre_client = ?, etat_compte = ? 
+                            WHERE idclient = ?`;
+                params = [
+                    updatedData.nom_client, updatedData.prenom_client, updatedData.email_client,
+                    updatedData.photo_client, updatedData.telephone_client, updatedData.adresse_client,
+                    formatDateForMySQL(updatedData.datede_naissance_client), // Formatting the date here
+                    updatedData.genre_client, updatedData.etat_compte, id
+                ];
+                break;
+            case 'employe':
+                sqlQuery = `UPDATE employe SET 
+                            nom_employe = ?, prenom_employe = ?, email_employe = ?, 
+                            photo_employe = ?, telephone_employe = ?, adresse_employe = ?, 
+                            datede_naissance_employe = ?, genre_employe = ?, etat_compte = ? 
+                            WHERE idemploye = ?`;
+                params = [
+                    updatedData.nom_employe, updatedData.prenom_employe, updatedData.email_employe,
+                    updatedData.photo_employe, updatedData.telephone_employe, updatedData.adresse_employe,
+                    formatDateForMySQL(updatedData.datede_naissance_employe), // Formatting the date here
+                    updatedData.genre_employe, updatedData.etat_compte, id
+                ];
+                break;
+            default:
+                console.error("Invalid user role:", role);
+                throw new Error("Invalid user role");
+        }
 
+        const result = await new Promise((resolve, reject) => {
+            db.query(sqlQuery, params, (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
 
-module.exports = {saveToHistory , getInformationOfRole};
+        if (result.affectedRows === 0) {
+            console.log("No information found for the given ID.");
+            return null;
+        }
+
+        console.log("Information updated successfully");
+        return { message: "Information updated successfully" };
+    } catch (error) {
+        console.error("Error updating user information:", error);
+        throw error;
+    }
+};
+
+module.exports = {saveToHistory , getInformationOfRole ,updateInformationOfRole};

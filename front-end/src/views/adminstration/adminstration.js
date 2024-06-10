@@ -3,7 +3,9 @@ import axios from 'axios';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
 import '../../style/viewsStyle/adminstration.css';
-import { UserPermissionsContext } from '../context/UserPermissionsPage'; // Correction de l'import
+import { UserPermissionsContext } from '../context/UserPermissionsPage';
+import { Link } from 'react-router-dom';
+import { FaDoorOpen } from "react-icons/fa6";
 
 
 
@@ -119,7 +121,7 @@ function Adminstration() {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return ''; // Return an empty string if dateString is null or undefined
+    if (!dateString) return '';
     return dateString.slice(0, 10);
   };
 
@@ -165,6 +167,7 @@ function Adminstration() {
                           <th>Gender</th>
                           <th>Status</th>
                           <th>Action</th>
+                          <th>read more</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -196,6 +199,11 @@ function Adminstration() {
                                 <button className="btn btn-primary mr-2" onClick={() => updateEmployeeStatus(employee.idemploye, employee.etat_compte)}>Save</button>
                                 <button className="btn btn-danger" onClick={() => deleteEmployee(employee.idemploye)}>Delete</button>
                               </td>
+                              <td>
+                                <Link to={`/Pageemployes/${employee.idemploye}`}>
+                                  <FaDoorOpen />                           </Link>
+                              </td>
+
                             </tr>
                           ))
                           : clients.map((client, key) => (
@@ -230,6 +238,11 @@ function Adminstration() {
 
                                   <button className="btn btn-danger" onClick={() => deleteClient(client.idclient)}>Delete</button>
                                 )}
+                              </td>
+                              <td>
+                                <Link to={`/Pageclients/${client.idclient}`}>
+                                  <FaDoorOpen />
+                                </Link>
                               </td>
                             </tr>
                           ))}
