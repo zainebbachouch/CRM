@@ -81,6 +81,8 @@ const getInformationOfRole = async (role, id) => {
         throw error;
     }
 };
+
+
 const formatDateForMySQL = (date) => {
     const d = new Date(date);
     const year = d.getFullYear();

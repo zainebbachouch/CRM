@@ -135,8 +135,8 @@ function Adminstration() {
             <div className="adminstrationNavWrap">
               <div className="adminstrationNav">
                 <ul>
-                  {role !== 'employe' && (
-                    <li
+                {role === 'admin' && (
+                  <li
                       className={`${filterActive === 1 ? "active" : ""}`}
                       onClick={() => handleFilterClick(1)}
                     >
@@ -200,9 +200,9 @@ function Adminstration() {
                                 <button className="btn btn-danger" onClick={() => deleteEmployee(employee.idemploye)}>Delete</button>
                               </td>
                               <td>
-                 <Link to={`/Pageemployes/${employee.idemploye}/envoyeeMail/${employee.email_employe}`}>
-                            <FaDoorOpen />
-                          </Link>
+                                <Link to={`/Pageemployes/${employee.idemploye}/envoyeeMail/${employee.email_employe}`}>
+                                  <FaDoorOpen />
+                                </Link>
                               </td>
 
                             </tr>

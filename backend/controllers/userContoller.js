@@ -1074,6 +1074,14 @@ const sendMailEmploye = async (req, res) => {
         }
 
         const emailId = await insertEmailIntoDatabase(to, subject, message);
+        
+        const senderRole = authResult.decode.role;
+        const validSenderRoles = ['admin', 'employe', 'client']; // Liste des rôles autorisés pour l'expéditeur
+
+        if (!validSenderRoles.includes(senderRole)) {
+            throw new Error('Invalid sender role');
+        }
+        console.log('authResult.decode.role',senderRole)
 
         await insertEmailSender(emailId, authResult.decode.id, authResult.decode.role);
 
@@ -1112,7 +1120,7 @@ async function insertEmailSender(emailId, senderId, senderRole) {
         let query;
         if (senderRole === 'admin') {
             query = `INSERT INTO email_senders (email_id, sender_admin_id) VALUES (?, ?)`;
-        } else if (senderRole === 'employee') {
+        } else if (senderRole === 'employe') {
             query = `INSERT INTO email_senders (email_id, sender_employe_id) VALUES (?, ?)`;
         } else if (senderRole === 'client') {
             query = `INSERT INTO email_senders (email_id, sender_client_id) VALUES (?, ?)`;
@@ -1142,7 +1150,7 @@ async function insertEmailRecipient(emailId, recipientId, recipientRole) {
         let query;
         if (recipientRole === 'admin') {
             query = `INSERT INTO email_recipients (email_id, recipient_admin_id) VALUES (?, ?)`;
-        } else if (recipientRole === 'employee') {
+        } else if (recipientRole === 'employe') {
             query = `INSERT INTO email_recipients (email_id, recipient_employe_id) VALUES (?, ?)`;
         } else if (recipientRole === 'client') {
             query = `INSERT INTO email_recipients (email_id, recipient_client_id) VALUES (?, ?)`;
