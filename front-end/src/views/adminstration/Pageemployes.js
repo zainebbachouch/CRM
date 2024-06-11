@@ -8,18 +8,18 @@ import { Link } from 'react-router-dom';
 
 
 function Pageemployes() {
-  const { id } = useParams(); // Utiliser le hook useParams pour obtenir les paramètres d'URL
+  const { id ,email_employe} = useParams(); // Utiliser le hook useParams pour obtenir les paramètres d'URL
     const [employeData, setEmployeData] = useState({});
     const [loading, setLoading] = useState(true);
     const [filterActive, setFilterActive] = useState(1); // Default to account setting
 
     const navigate = useNavigate();
-
     useEffect(() => {
-      if (loading) {
-        navigate(`/Pageemployes/${id}/envoyeeMail`);
+      if (loading && email_employe) {
+        navigate(`/Pageemployes/${id}/envoyeeMail/${email_employe}`);
       }
-    }, [loading, id, navigate]);
+    }, [loading, id, email_employe, navigate]);
+    
 
     const token = localStorage.getItem('token');
     //const role = localStorage.getItem('role');
@@ -69,54 +69,56 @@ function Pageemployes() {
                             <p>employeData</p>
                             {console.log("employedattttta",employeData)}
                             <hr />
-                            <div className="clientInfo">
-  <div className="clientContactInfo">
-    <span>Contact info</span>
- 
-    <div >
-      <div >Nom</div>
-      <div >{employeData.nom_employe}{employeData.prenom_employe}</div>
-    </div>
+                            {employeData.length > 0 && (
+                                  <div className="clientInfo">
+                                      <div className="clientContactInfo">
+                                        <span>Contact info</span>
+                                    
+                                        <div >
+                                          <div >Nom</div>
+                                          <div >{employeData[0].nom_employe}{employeData[0].prenom_employe}</div>
+                                        </div>
 
-    <div >
-  <div >Email address</div>
-  <div >{employeData.email_employe}</div>
-</div>
+                                        <div >
+                                      <div >Email address</div>
+                                      <div >{employeData[0].email_employe}</div>
+                                    </div>
 
-    <div >
-      <div >Phone number</div>
-      <div >{employeData.telephone_employe}</div>
-    </div>
-    <div >
-      <div >Address</div>
-      <div >{employeData.adresse_employe}</div>
-    </div>
-    <div >
-      <div >Date of Birth</div>
-      <div >{employeData.datede_naissance_employe}</div>
-    </div>
-    <div >
-      <div >Date of Registration</div>
-      <div >{employeData.date_inscription_employe}</div>
-    </div>
-    <div >
-      <div >Gender</div>
-      <div >{employeData.genre_employe}</div>
-    </div>
-    <div >
-      <div >Account Status</div>
-      <div >{employeData.etat_compte}</div>
-    </div>
-  </div>
-</div>
-</div>
-<div className="col-md-9">
+                                        <div >
+                                          <div >Phone number</div>
+                                          <div >{employeData[0].telephone_employe}</div>
+                                        </div>
+                                        <div >
+                                          <div >Address</div>
+                                          <div >{employeData[0].adresse_employe}</div>
+                                        </div>
+                                        <div >
+                                          <div >Date of Birth</div>
+                                          <div >{employeData[0].datede_naissance_employe}</div>
+                                        </div>
+                                        <div >
+                                          <div >Date of Registration</div>
+                                          <div >{employeData[0].date_inscription_employe}</div>
+                                        </div>
+                                        <div >
+                                          <div >Gender</div>
+                                          <div >{employeData[0].genre_employe}</div>
+                                        </div>
+                                        <div >
+                                          <div >Account Status</div>
+                                          <div >{employeData[0].etat_compte}</div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    ) }
+                                    </div>
+        <div className="col-md-9">
               <ul className="nav nav-tabs" id="profileTabs" role="tablist">
                 <li className="nav-item">
                   <Link
                     className={`nav-link ${filterActive === 1 ? 'active' : ''}`}
-                    to={`/Pageemployes/${id}/envoyeeMail`}
-                    role="tab"
+  to={employeData[0].email_employe ? `/Pageemployes/${id}/envoyeeMail/${employeData[0].email_employe}` : `/Pageemployes/${id}/envoyeeMail`}   role="tab"
                     onClick={() => setFilterActive(1)}
                   >
                     Envoyee Mail

@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 
 
 function Pageclients() {
-    const { id } = useParams(); // Utiliser le hook useParams pour obtenir les paramètres d'URL
+    const { id,email_client } = useParams(); // Utiliser le hook useParams pour obtenir les paramètres d'URL
       const [clientsData, setClientsData] = useState({});
       const [loading, setLoading] = useState(true);
   
@@ -19,10 +19,10 @@ function Pageclients() {
       const navigate = useNavigate();
   
       useEffect(() => {
-        if (loading) {
-          navigate(`/Pageclients/${id}/envoyeeMail`);
+        if (loading && email_client) {
+          navigate(`/Pageclients/${id}/envoyeeMail/${email_client}`);
         }
-      }, [loading, id, navigate]);
+      }, [loading, id, email_client,navigate]);
 
 
 
@@ -76,37 +76,37 @@ function Pageclients() {
            
             <div >
                 <div >Nom</div>
-                <div >{clientsData.nom_client}{clientsData.prenom_client}</div>
+                <div >{clientsData[0].nom_client}{clientsData[0].prenom_client}</div>
             </div>
            
             <div >
                 <div >Email address</div>
-                <div >{clientsData.email_client}</div>
+                <div >{clientsData[0].email_client}</div>
             </div>
           
             <div >
                 <div >Phone number</div>
-                <div >{clientsData.telephone_client}</div>
+                <div >{clientsData[0].telephone_client}</div>
             </div>
             <div >
                 <div >Address</div>
-                <div >{clientsData.adresse_client}</div>
+                <div >{clientsData[0].adresse_client}</div>
             </div>
             <div>
                 <div >Date of Birth</div>
-                <div >{clientsData.datede_naissance_client}</div>
+                <div >{clientsData[0].datede_naissance_client}</div>
             </div>
             <div >
                 <div >Date of Registration</div>
-                <div >{clientsData.date_inscription_client}</div>
+                <div >{clientsData[0].date_inscription_client}</div>
             </div>
             <div >
                 <div >Gender</div>
-                <div >{clientsData.genre_client}</div>
+                <div >{clientsData[0].genre_client}</div>
             </div>
             <div >
                 <div >Account Status</div>
-                <div >{clientsData.etat_compte}</div>
+                <div >{clientsData[0].etat_compte}</div>
             </div>
         </div>
     </div>
@@ -115,7 +115,7 @@ function Pageclients() {
     <ul className="nav nav-tabs" id="profileTabs" role="tablist">
     <li className="nav-item">
                   <Link className="nav-link"
-                   to={`/Pageclients/${id}/envoyeeMail`} 
+        to={clientsData[0].email_client ? `/Pageclients/${id}/envoyeeMail/${clientsData[0].email_client }`:`/Pageclients/${id}/envoyeeMail`} 
                    role="tab"
                    onClick={() => setFilterActive(1)}
                    >

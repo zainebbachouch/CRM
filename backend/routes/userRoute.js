@@ -40,4 +40,10 @@ router.put('/updateClientStatus/:id', userController.updateClientStatus);
 router.delete('/employees/:id', userController.deleteEmployee);
 router.delete('/deleteClient/:id', userController.deleteClient);
 
+
+
+//envoie mail
+router.post('/sendMailEmploye',userController.sendMailEmploye)
+router.get('/listEmails',userController.listEmails)
+
 module.exports = router;

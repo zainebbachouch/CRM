@@ -10,6 +10,7 @@ function Profile() {
     const [filterActive, setFilterActive] = useState(1); // Default to account setting
     const [profileData, setProfileData] = useState({});
     const [loading, setLoading] = useState(true);
+    
 
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');

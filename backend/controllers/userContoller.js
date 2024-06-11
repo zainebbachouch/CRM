@@ -779,7 +779,7 @@ const listEmployeAuthorized = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        if (!['employe','admin'].includes(authResult.decode.role)) {
+        if (!['employe', 'admin'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
         const id = req.params.id;
@@ -807,7 +807,7 @@ const listClientAuthorized = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        if (!['employe','admin','client'].includes(authResult.decode.role)) {
+        if (!['employe', 'admin', 'client'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
         const id = req.params.id;
@@ -1024,10 +1024,180 @@ const updateEmployeInformation = async (req, res) => {
     }
 };
 
-///////////////////////////////////////**
+///////////////////////////////////////**////////////////////////////
+/****************************************************************** */
+/*const sendMailEmploye = async (req, res) => {
+
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (authResult.decode.role !== 'admin') {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+   // Récupérer les données de l'email depuis la requête
+   const { to, subject, message } = req.body;
+
+   // Vérification des données
+   if (!to || !subject || !message) {
+       return res.status(400).json({ message: "Incomplete email data" });
+   }
+
+   // Envoyer l'email
+   await sendEmail(to, subject, message);
+    
+    } catch (error) {
+        console.error("Error send mail to employe information:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+*/
 
 
 
+
+
+const sendMailEmploye = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { to, subject, message, recipientRole, recipientId } = req.body;
+
+        if (!to || !subject || !message) {
+            return res.status(400).json({ message: "Incomplete email data" });
+        }
+
+        const emailId = await insertEmailIntoDatabase(to, subject, message);
+
+        await insertEmailSender(emailId, authResult.decode.id, authResult.decode.role);
+
+        await insertEmailRecipient(emailId, recipientId, recipientRole);
+
+        await sendEmail(to, subject, message);
+
+        res.status(200).json({ message: "Email sent successfully" });
+    } catch (error) {
+        console.error("Error sending email to employe:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const insertEmailIntoDatabase = async (to, subject, message) => {
+    try {
+        const query = 'INSERT INTO emails (to_email, subject, message) VALUES (?, ?, ?)';
+        const result = await new Promise((resolve, reject) => {
+            db.query(query, [to, subject, message], (error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+        return result.insertId;
+    } catch (error) {
+        console.error("Error inserting email into database:", error);
+        throw error;
+    }
+};
+
+async function insertEmailSender(emailId, senderId, senderRole) {
+    try {
+        let query;
+        if (senderRole === 'admin') {
+            query = `INSERT INTO email_senders (email_id, sender_admin_id) VALUES (?, ?)`;
+        } else if (senderRole === 'employee') {
+            query = `INSERT INTO email_senders (email_id, sender_employe_id) VALUES (?, ?)`;
+        } else if (senderRole === 'client') {
+            query = `INSERT INTO email_senders (email_id, sender_client_id) VALUES (?, ?)`;
+        }
+
+        if (!query) {
+            throw new Error('Invalid sender role');
+        }
+
+        await new Promise((resolve, reject) => {
+            db.query(query, [emailId, senderId], (error) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    } catch (error) {
+        console.error("Error inserting email sender into database:", error);
+        throw error;
+    }
+}
+
+async function insertEmailRecipient(emailId, recipientId, recipientRole) {
+    try {
+        let query;
+        if (recipientRole === 'admin') {
+            query = `INSERT INTO email_recipients (email_id, recipient_admin_id) VALUES (?, ?)`;
+        } else if (recipientRole === 'employee') {
+            query = `INSERT INTO email_recipients (email_id, recipient_employe_id) VALUES (?, ?)`;
+        } else if (recipientRole === 'client') {
+            query = `INSERT INTO email_recipients (email_id, recipient_client_id) VALUES (?, ?)`;
+        }
+
+        if (!query) {
+            throw new Error('Invalid recipient role');
+        }
+
+        await new Promise((resolve, reject) => {
+            db.query(query, [emailId, recipientId], (error) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    } catch (error) {
+        console.error("Error inserting email recipient into database:", error);
+        throw error;
+    }
+}
+
+
+
+
+
+const listEmails = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const sqlQuery = 'SELECT * FROM emails';
+
+
+        const result = await new Promise((resolve, reject) => {
+            db.query(sqlQuery, (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        res.json({ result });
+    }
+    catch (error) {
+        console.error("Error list email ", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
 
 module.exports = {
     listEmployees, listClients, updateEmployeeStatus, updateClientStatus, deleteEmployee, deleteClient,
@@ -1036,5 +1206,7 @@ module.exports = {
 
     getClientInformation, getEmployeInformation, updateAdminInformation, updateClientInformation,
 
-    updateEmployeInformation, listAdminAuthorized, listEmployeAuthorized, listClientAuthorized
+    updateEmployeInformation, listAdminAuthorized, listEmployeAuthorized, listClientAuthorized, sendMailEmploye,
+
+    listEmails
 };

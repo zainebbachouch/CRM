@@ -200,8 +200,9 @@ function Adminstration() {
                                 <button className="btn btn-danger" onClick={() => deleteEmployee(employee.idemploye)}>Delete</button>
                               </td>
                               <td>
-                                <Link to={`/Pageemployes/${employee.idemploye}`}>
-                                  <FaDoorOpen />                           </Link>
+                 <Link to={`/Pageemployes/${employee.idemploye}/envoyeeMail/${employee.email_employe}`}>
+                            <FaDoorOpen />
+                          </Link>
                               </td>
 
                             </tr>
@@ -240,7 +241,7 @@ function Adminstration() {
                                 )}
                               </td>
                               <td>
-                                <Link to={`/Pageclients/${client.idclient}`}>
+                                <Link to={`/Pageclients/${client.idclient}/envoyeeMail/${client.email_client}`}>
                                   <FaDoorOpen />
                                 </Link>
                               </td>

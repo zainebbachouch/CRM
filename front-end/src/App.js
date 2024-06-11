@@ -79,7 +79,7 @@ function App() {
 
 
                 <Route path="Pageemployes/:id" element={<Pageemployes />}>
-                <Route path="envoyeeMail" element={<EnvoyeeMailEmploye />} />      
+                <Route path="envoyeeMail/:email" element={<EnvoyeeMailEmploye />} />      
                   <Route path="makecall" element={<MakeCall />} /> 
                   <Route path="historique" element={<Historique />} />   
                 </Route>
@@ -87,7 +87,7 @@ function App() {
 
              
                 <Route path="Pageclients/:id"  element={<Pageclients />} >
-                  <Route path="envoyeeMail" element={<EnvoyeeMailClient />} />
+                  <Route path="envoyeeMail/:email" element={<EnvoyeeMailClient />} />
                   <Route path="makecall" element={<MakeCall />} /> 
                   <Route path="historique" element={<Historique />} />                   
                 </Route>
