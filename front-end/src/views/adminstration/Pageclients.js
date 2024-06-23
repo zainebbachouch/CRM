@@ -8,13 +8,13 @@ import { Link } from 'react-router-dom';
 
 
 function Pageclients() {
-    const { id,email_client } = useParams(); // Utiliser le hook useParams pour obtenir les paramètres d'URL
+    const { id,email_client } = useParams(); 
       const [clientsData, setClientsData] = useState({});
       const [loading, setLoading] = useState(true);
   
       const token = localStorage.getItem('token');
   
-      const [filterActive, setFilterActive] = useState(1); // Default to account setting
+      const [filterActive, setFilterActive] = useState(1); 
 
       const navigate = useNavigate();
   

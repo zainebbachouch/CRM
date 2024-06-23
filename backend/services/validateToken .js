@@ -1,6 +1,7 @@
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 require("dotenv").config();
-
+//const { storeRefreshToken } = require('../controllers/userController');
 
 
 const isAuthorize = async (req, res) => {
@@ -25,9 +26,16 @@ const isAuthorize = async (req, res) => {
           console.log('User type:', decode.type);*/
 
 
-         // req.user = decode;
+        // req.user = decode;
+      // Générer un nouveau refresh token
+      const refreshToken = crypto.randomBytes(32).toString('hex');
+/*
+      // Stocker le refresh token
+      storeRefreshToken(decode.email, refreshToken);
 
-        return ({ message: 'authorized', decode })
+      // Retourner l'objet avec le refresh token
+      return { message: 'authorized', decode, refreshToken };*/
+      return ({ message: 'authorized', decode })
 
     } catch (error) {
         console.log(error.message);

@@ -20,9 +20,17 @@ import UserPermissionsPage from './views/context/UserPermissionsPage';
 import Profile from './components/sidenav/profile';
 import Pageemployes from './views/adminstration/Pageemployes';
 import Pageclients from './views/adminstration/Pageclients';
-import  { EnvoyeeMailClient, EnvoyeeMailEmploye } from './views/adminstration/EnvoyeeMail';
+import { EnvoyeeMailClient, EnvoyeeMailEmploye } from './views/adminstration/EnvoyeeMail';
 import MakeCall from './views/adminstration/MakeCall';
 import Historique from './views/adminstration/Historique';
+import MessengerPage from './views/messenger/MessengerPage';
+
+
+
+
+
+
+
 function App() {
   return (
     <>
@@ -74,25 +82,30 @@ function App() {
                   <Route index element={<CompleteCommand />} />
                 </Route>
                 <Route path="profile">
-                  <Route path=":id"  element={<Profile />} />
+                  <Route path=":id" element={<Profile />} />
                 </Route>
+
+                <Route path="messenger">
+                  <Route index element={<MessengerPage/>} />
+                </Route>
+
 
 
                 <Route path="Pageemployes/:id" element={<Pageemployes />}>
-                <Route path="envoyeeMail/:email" element={<EnvoyeeMailEmploye />} />      
-                  <Route path="makecall" element={<MakeCall />} /> 
-                  <Route path="historique" element={<Historique />} />   
+                  <Route path="envoyeeMail/:email" element={<EnvoyeeMailEmploye />} />
+                  <Route path="makecall" element={<MakeCall />} />
+                  <Route path="historique" element={<Historique />} />
                 </Route>
 
 
-             
-                <Route path="Pageclients/:id"  element={<Pageclients />} >
+
+                <Route path="Pageclients/:id" element={<Pageclients />} >
                   <Route path="envoyeeMail/:email" element={<EnvoyeeMailClient />} />
-                  <Route path="makecall" element={<MakeCall />} /> 
-                  <Route path="historique" element={<Historique />} />                   
+                  <Route path="makecall" element={<MakeCall />} />
+                  <Route path="historique" element={<Historique />} />
                 </Route>
 
-                </Route>
+              </Route>
             </Routes>
           </UserPermissionsPage>
         </AuthProvider>

@@ -1,0 +1,143 @@
+/* Sidebar */
+.srch_bar input{
+     border:1px solid #cdcdcd; 
+    border-width:0 0 1px 0; 
+    width:80%; 
+    padding:2px 0 4px 6px;
+     background:none;
+    }
+
+.srch_bar .input-group-addon button {
+  background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
+  border: medium none;
+  padding: 0;
+  color: #707070;
+  font-size: 18px;
+}
+.srch_bar .input-group-addon { margin: 0 0 0 -27px;}
+
+
+.sidebar {
+    width: 250px;
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar li {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.sidebar li span:first-child {
+    font-size: 14px;
+    color: #333;
+    margin-right: auto;
+}
+
+.sidebar li span:last-child {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Conversation */
+.conversation {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #fff;
+}
+
+.conversation-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.conversation-header span {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.conversation-body {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.message {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 60%;
+    word-wrap: break-word;
+}
+
+.message-left {
+    background-color: #f1f0f0;
+    align-self: flex-start;
+}
+
+.message-right {
+    background-color: #81cee7;
+    align-self: flex-end;
+}
+
+.message span:first-child {
+    font-size: 14px;
+    color: #333;
+}
+
+.message span:last-child {
+    font-size: 12px;
+    color: #888;
+    align-self: flex-end;
+}
+
+/* Footer */
+.conversation-footer {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-top: 1px solid #ddd;
+}
+
+.conversation-footer input[type="text"] {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.conversation-footer button {
+    padding: 10px 20px;
+    font-size: 14px;
+    background-color: #007bff;
+    color: white;
+    border: none;    
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+
+.conversation-footer button:hover {
+    background-color: #0056b3;
+}

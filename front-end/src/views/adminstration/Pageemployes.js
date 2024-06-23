@@ -8,10 +8,10 @@ import { Link } from 'react-router-dom';
 
 
 function Pageemployes() {
-  const { id ,email_employe} = useParams(); // Utiliser le hook useParams pour obtenir les paramètres d'URL
+  const { id ,email_employe} = useParams(); 
     const [employeData, setEmployeData] = useState({});
     const [loading, setLoading] = useState(true);
-    const [filterActive, setFilterActive] = useState(1); // Default to account setting
+    const [filterActive, setFilterActive] = useState(1); 
 
     const navigate = useNavigate();
     useEffect(() => {
@@ -121,7 +121,7 @@ function Pageemployes() {
   to={employeData[0].email_employe ? `/Pageemployes/${id}/envoyeeMail/${employeData[0].email_employe}` : `/Pageemployes/${id}/envoyeeMail`}   role="tab"
                     onClick={() => setFilterActive(1)}
                   >
-                    Envoyee Mail
+                  messenger
                   </Link>
                 </li>
                 <li className="nav-item">
@@ -131,7 +131,7 @@ function Pageemployes() {
                     role="tab"
                     onClick={() => setFilterActive(2)}
                   >
-                    Make Call
+                    company list
                   </Link>
                 </li>
                 <li className="nav-item">

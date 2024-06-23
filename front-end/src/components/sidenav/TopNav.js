@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
 import { FaBell, FaArrowDown, FaShoppingBasket } from 'react-icons/fa';
-import { GiHamburgerMenu } from "react-icons/gi";
 import { CiSettings } from "react-icons/ci";
 import flag from "../../images/flag.png";
 import profile from "../../images/profile.png";
@@ -61,7 +60,7 @@ function TopNav() {
         <div className="row m-0 p-0">
             <div className="container-fluid navbar m-0 p-0 d-flex justify-content-between navbar p-2">
                 <div className="icons d-flex column-gap-2">
-                    <div className="icon1"><GiHamburgerMenu /></div>
+                
                     <Link to="/cart" className="basket">
                         <FaShoppingBasket />
                     </Link>
