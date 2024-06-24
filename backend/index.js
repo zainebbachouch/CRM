@@ -90,6 +90,67 @@ app.get('/api/listMessages', (req, res) => {
 });
 
 
+app.get('/api/conversations', (req, res) => {
+  const userId = req.query.userId;
+  const query = `
+  SELECT 
+    CASE 
+        WHEN sender_id = ? THEN receiver_id 
+        ELSE sender_id 
+    END AS id,
+    CASE 
+        WHEN sender_id = ? THEN rolereciever 
+        ELSE rolesender 
+    END AS role,
+    COALESCE(c.nom_client, e.nom_employe, a.nom_admin) AS name,
+    COALESCE(c.prenom_client, e.prenom_employe, a.prenom_admin) AS prenom,
+    COALESCE(c.photo_client, e.photo_employe, a.photo_admin) AS photo,
+    (SELECT message FROM messages 
+        WHERE (sender_id = ? AND receiver_id = CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END) 
+           OR (sender_id = CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END AND receiver_id = ?)
+        ORDER BY timestamp DESC LIMIT 1) AS message
+  FROM messages 
+  LEFT JOIN client c ON c.idclient = CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END
+  LEFT JOIN employe e ON e.idemploye = CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END
+  LEFT JOIN admin a ON a.idadmin = CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END
+  WHERE sender_id = ? OR receiver_id = ?
+  GROUP BY id, role, name, prenom, photo
+  ORDER BY timestamp DESC;
+`;
+
+  db.query(query, [userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId], (err, results) => {
+    if (err) {
+      console.error('Error fetching conversations:', err);
+      res.status(500).send('Error fetching conversations');
+      return;
+    }
+    res.status(200).json({ conversations: results });
+  });
+});
+
+
+app.get('/api/allUsers', (req, res) => {
+  const query = `
+    SELECT idadmin AS userId, 'admin' AS role, nom_admin AS name, prenom_admin AS prenom, photo_admin AS photo FROM admin
+    UNION
+    SELECT idemploye AS userId, 'employe' AS role, nom_employe AS name, prenom_employe AS prenom, photo_employe AS photo FROM employe
+    UNION
+    SELECT idclient AS userId, 'client' AS role, nom_client AS name, prenom_client AS prenom, photo_client AS photo FROM client;
+  `;
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching users:', err);
+      res.status(500).send('Error fetching users');
+      return;
+    }
+    res.status(200).json({ users: results });
+  });
+});
+
+
+
+
+
 
 
 io.on('connection', (socket) => {

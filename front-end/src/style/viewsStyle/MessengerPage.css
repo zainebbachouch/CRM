@@ -74,7 +74,7 @@
 .conversation-body {
     flex-grow: 1;
     padding: 20px;
-    overflow-y: auto;
+    overflow-y: auto; /* Ajout de la propriété overflow-y */
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -110,6 +110,14 @@
     align-self: flex-end;
 }
 
+/*uniqueConversations*/
+.uniqueConversations{
+    margin-top: 20px;
+    height:300;
+   
+    overflow-y: scroll; /* Ajout de la propriété overflow-y */
+}
+
 /* Footer */
 .conversation-footer {
     display: flex;
@@ -141,3 +149,55 @@
 .conversation-footer button:hover {
     background-color: #0056b3;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Add styles for the "All Users" section */
+.all-users {
+    margin-top: 20px;
+    height:300px;
+   
+    overflow-y: scroll; /* Ajout de la propriété overflow-y */
+  
+
+  }
+  
+  .all-users h3 {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .all-users ul {
+    list-style: none;
+    padding: 0;
+
+  }
+  
+  .all-users li {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+  }
+  
+  .all-users li img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  
+  .all-users li span {
+    font-size: 16px;
+  }
+  

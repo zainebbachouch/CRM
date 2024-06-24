@@ -1,93 +1,270 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from "../../components/sidenav/TopNav";
 import '../../style/viewsStyle/MessengerPage.css';
+import axios from 'axios';
+import io from "socket.io-client";
+import { format, isValid } from 'date-fns';
+
 
 function MessengerPage() {
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem("role");
+  const userId = localStorage.getItem("userId");
+  const socket = io.connect("http://localhost:3300");
+
+
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [allUsers, setAllUsers] = useState([]); // State to store all users
+
+
+  const config = useMemo(() => {
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+
+      },
+    };
+  }, [token]);
+
+
+
+  const [formData, setFormData] = useState({
+    message: '',
+    rolesender: role,
+    receiver_id: null,
+    rolereciever: null,
+    sender_id: userId,
+  });
+
+
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+
+  useEffect(() => {
+    fetchConversations();
+    fetchAllUsers(); // Fetch all users when component mounts
+  }, []);
+
+
+  useEffect(() => {
+    if (selectedConversation) {
+      fetchMessages(selectedConversation.id);
+    }
+  }, [selectedConversation]);
+
+
+
+  useEffect(() => {
+    socket.on('receiveMessage', (message) => {
+      console.log('New message received:', message);
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
+
+    return () => {
+      socket.off('receiveMessage');
+    };
+  }, []);
+
+
+  // Fetch all users who haven't been part of conversations yet
+  const fetchAllUsers = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:5000/api/allUsers', config);
+      setAllUsers(response.data.users);
+    } catch (error) {
+      console.error('Error fetching all users:', error);
+    }
+  };
+
+  const fetchConversations = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:5000/api/conversations', {
+        ...config,
+        params: {
+          userId,
+        },
+      });
+      setConversations(response.data.conversations);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    }
+  };
+
+
+  const fetchMessages = async (conversationId) => {
+
+    try {
+
+      const response = await axios.get('http://127.0.0.1:5000/api/listMessages', {
+        ...config,
+        params: {
+          sender_id: userId,
+          receiver_id: conversationId
+        },
+      });
+      setMessages(response.data.messages);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+
+  };
+
+
+/*  const handleConversationClick = (conversation) => {
+    setSelectedConversation(conversation);
+    setFormData({
+      ...formData,
+      receiver_id: conversation.id,
+      rolereciever: conversation.role,
+    });
+    fetchMessages(conversation.id);
+  };*/
+
+const handleConversationClick = (data) => {
+  if (data.hasOwnProperty('id')) {
+    // Handle conversation click
+    setSelectedConversation(data);
+    setFormData({
+      ...formData,
+      receiver_id: data.id,
+      rolereciever: data.role,
+    });
+    fetchMessages(data.id);
+  } else {
+    // Handle user click
+    // Here you can implement the logic to start a new conversation or do any other action
+    console.log('Clicked on user:', data);
+  }
+};
+
+
+
+  const handleSendMessage = () => {
+    if (newMessage.trim() === '') return;
+
+    const message = {
+      sender_id: userId,
+      rolesender: role,
+      receiver_id: selectedConversation.id,
+      rolereciever: selectedConversation.role,
+      message: newMessage,
+    };
+
+    socket.emit('sendMessage', message);
+    setNewMessage('');
+  };
+  // Filter out duplicate conversations based on their IDs
+  const uniqueConversations = conversations.filter((conversation, index) => (
+    conversations.findIndex((c) => c.id === conversation.id) === index
+  ));
+
+
+  if (!userId) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="d-flex">
       <SideBar />
       <div className="container-fluid flex-column">
         <TopBar />
         <div className="container-fluid p-2 d-flex">
-
           <div className="sidebar">
+            <div className="srch_bar">
+              <div className="stylish-input-group">
+                <input type="text" className="search-bar" placeholder="Search" />
+                <span className="input-group-addon">
+                  <button type="button"> <i className="fa fa-search" aria-hidden="true"></i> </button>
+                </span>
+              </div>
+  </div>
+  <div className='uniqueConversations'>
+  <ul>
+  {uniqueConversations.map((conversation, index) => (
+    <li key={index} onClick={() => handleConversationClick(conversation)}>
+      <img src={conversation.photo} alt={`${conversation.name} ${conversation.prenom}`} />
+      <span>{conversation.role}</span>
+      {conversation.message && (
+        <span>{conversation.message.slice(0, 5)}</span>
+      )}
+    </li>
+  ))}
+</ul>
+  </div>
 
-          <div class="srch_bar">
-          <div class="stylish-input-group">
-            <input type="text" class="search-bar"  placeholder="Search" />
-            <span class="input-group-addon">
-            <button type="button"> <i class="fa fa-search" aria-hidden="true"></i> </button>
-            </span> </div>
+
+{/* Section for displaying all users */}
+<div className="all-users">
+  <h3>All Users</h3>
+  <ul>
+    {/* Loop through all users not in conversations */}
+    {allUsers.map((user, index) => (
+      <li key={index} onClick={() => handleConversationClick(user)}>
+        <img src={user.photo} alt={`${user.name} ${user.prenom}`} />
+        <span>{user.role}</span>
+      </li>
+    ))}
+  </ul>
+</div>
+
+
+
+            </div>
+
+
+           
+
+          {selectedConversation && (
+            <div className="conversation">
+              <div className="conversation-header">
+                <span>{selectedConversation.rolereciever}</span>
+              </div>
+              <div className="conversation-body">
+                {messages.map((message, index) => {
+                  const timestamp = new Date(message.timestamp);
+                  return (
+                    <div key={index} className={`message ${message.sender_id === userId ? 'message-right' : 'message-left'}`}>
+                      <span>{message.message}</span>
+                      <span className="messenger-timestamp">
+                        {isValid(timestamp) ? format(timestamp, 'HH:mm') : 'Invalid date'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="conversation-footer">
+                <input
+                  type="text"
+                  name="message"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type your message here"
+                />
+                <button onClick={handleSendMessage}>Send</button>
+              </div>
+            </div>
+          )}
+
         </div>
-            <ul>
-              <li>
-                <span>Megan Leib</span>
-                <span>12 set</span>
-              </li>
-              <li>
-                <span>Dave Corlew</span>
-                <span>Let's meet for a coffee or some</span>
-              </li>
-              <li>
-                <span>Jerome Seiber</span>
-                <span>Hi, how are you?</span>
-              </li>
-              <li>
-                <span>Thomas Dbtn</span>
-                <span>See you tomorrow!</span>
-              </li>
-              <li>
-                <span>Elsie Amador</span>
-                <span>What is going on?</span>
-              </li>
-              <li>
-                <span>Billy Southard</span>
-                <span>Ahahah</span>
-              </li>
-              <li>
-                <span>Paul Walker</span>
-                <span>Type your message here</span>
-              </li>
-            </ul>
-          </div>
 
-          <div className="conversation">
-            <div className="conversation-header">
-              <span>Megan Leib</span>
-            </div>
-            <div className="conversation-body">
-              <div className="message message-left">
-                <span>Hi, how are you?</span>
-                <span>14:58</span>
-              </div>
-              <div className="message message-left">
-                <span>What are you doing tonight? Want to go take a drink?</span>
-                <span>14:58</span>
-              </div>
-              <div className="message message-right">
-                <span>Hey Megan! It's been a while 😊</span>
-                <span>15:04</span>
-              </div>
-              <div className="message message-right">
-                <span>When can we meet?</span>
-                <span>15:04</span>
-              </div>
-              <div className="message message-left">
-                <span>9 pm at the bar if possible 🥺</span>
-                <span>15:09</span>
-              </div>
-            </div>
-            <div className="conversation-footer">
-              <input type="text" placeholder="Type your message here" />
-              <button>Send</button>
-            </div>
-          </div>
-
-        </div>
       </div>
+
     </div>
+
   );
+
 }
+
 
 export default MessengerPage;
