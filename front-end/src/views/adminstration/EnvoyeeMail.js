@@ -60,16 +60,20 @@ function EnvoyeeMailEmploye() {
     socket.emit("sendMessage", formData);
     setFormData({ ...formData, message: '' }); 
   };
-
+useEffect(()=>{
+  fetchMessages();
+}, [id, userId])
   useEffect(() => {
     socket.on("connect", () => {
       console.log("client connected");
     });
     socket.on("receiveMessage", (message) => {
       console.log("New message received:", message); 
-      setMessages((prevMessages) => [...prevMessages, message]);
+
+      fetchMessages()
+      
     });
-    fetchMessages();
+
   }, [id, userId]);
 
   if (!userId) {
@@ -85,8 +89,9 @@ function EnvoyeeMailEmploye() {
         <div className="messenger-chat">
           {Messages && Messages.length > 0 && Messages.map((message, index) => {
             const timestamp = new Date(message.timestamp);
+       
             return (
-              <div key={index} className={`messenger-message ${message.sender_id === userId ? 'messenger-message-right' : 'messenger-message-left'}`}>
+              <div key={index} className={`messenger-message ${(message.sender_id == userId && message.rolesender==role) ? 'message-left' : 'message-right'}`}>
                 {message && message.message && (
                   <div className="messenger-message-content">{message.message}</div>
                 )}
@@ -179,7 +184,7 @@ function EnvoyeeMailClient() {
       console.log("New message received:", message);
       setMessages((prevMessages) => [...prevMessages, message]);
     });
-    fetchMessages();
+  
   }, [id]);
 
   return (

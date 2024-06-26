@@ -4,7 +4,11 @@ import TopBar from "../../components/sidenav/TopNav";
 import '../../style/viewsStyle/MessengerPage.css';
 import axios from 'axios';
 import io from "socket.io-client";
-import { format, isValid } from 'date-fns';
+import { format, isToday, isYesterday, isThisWeek, isValid } from 'date-fns';
+import { Link } from 'react-router-dom';
+import { GiHamburgerMenu } from "react-icons/gi";
+
+
 
 
 function MessengerPage() {
@@ -18,7 +22,7 @@ function MessengerPage() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [allUsers, setAllUsers] = useState([]); // State to store all users
+  const [allUsers, setAllUsers] = useState([]); 
 
 
   const config = useMemo(() => {
@@ -42,12 +46,7 @@ function MessengerPage() {
 
 
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+ 
 
 
   useEffect(() => {
@@ -76,7 +75,6 @@ function MessengerPage() {
   }, []);
 
 
-  // Fetch all users who haven't been part of conversations yet
   const fetchAllUsers = async () => {
     try {
       const response = await axios.get('http://127.0.0.1:5000/api/allUsers', config);
@@ -130,28 +128,47 @@ function MessengerPage() {
     fetchMessages(conversation.id);
   };*/
 
-const handleConversationClick = (data) => {
-  if (data.hasOwnProperty('id')) {
-    // Handle conversation click
-    setSelectedConversation(data);
-    setFormData({
-      ...formData,
-      receiver_id: data.id,
-      rolereciever: data.role,
-    });
-    fetchMessages(data.id);
-  } else {
-    // Handle user click
-    // Here you can implement the logic to start a new conversation or do any other action
-    console.log('Clicked on user:', data);
-  }
-};
-
+  const handleConversationClick = (data) => {
+    if (data.hasOwnProperty('id')) {
+      // Handle conversation click
+      setSelectedConversation(data);
+      setFormData({
+        ...formData,
+        receiver_id: data.id,
+        rolereciever: data.role,
+      });
+      fetchMessages(data.id);
+    } else {
+      // Handle user click - Start a new conversation
+      const newConversation = {
+        id: data.userId, // You can set a temporary ID for new conversations
+        role: data.role,
+        name: `${data.name} ${data.prenom}`,
+        photo: data.photo,
+      };
+      console.log(' newConversation  newConversation ', newConversation )
+      setSelectedConversation(newConversation);
+      setFormData({
+        ...formData,
+        receiver_id: null,
+        rolereciever: data.role,
+      });
+      // You may choose to fetch initial messages for new conversations here
+      setMessages([]); // Clear messages for new conversation
+    }
+  };
+  
 
 
   const handleSendMessage = () => {
+    if (!selectedConversation || !selectedConversation.id) {
+      // Handle case where there is no selected conversation
+      console.error('No conversation selected');
+      return;
+    }
+  
     if (newMessage.trim() === '') return;
-
+  
     const message = {
       sender_id: userId,
       rolesender: role,
@@ -159,14 +176,37 @@ const handleConversationClick = (data) => {
       rolereciever: selectedConversation.role,
       message: newMessage,
     };
-
+  
     socket.emit('sendMessage', message);
     setNewMessage('');
   };
+  
+
+
+
   // Filter out duplicate conversations based on their IDs
   const uniqueConversations = conversations.filter((conversation, index) => (
-    conversations.findIndex((c) => c.id === conversation.id) === index
+    conversations.findIndex((c) => 
+      c.id === conversation.id && 
+      c.name === conversation.name && 
+      c.prenom === conversation.prenom
+    ) === index
   ));
+  
+
+  const formatTimestamp = (timestamp) => {
+    if (!isValid(timestamp)) return 'Invalid date';
+
+    if (isToday(timestamp)) {
+      return `Today, ${format(timestamp, 'HH:mm')}`;
+    } else if (isYesterday(timestamp)) {
+      return `Yesterday, ${format(timestamp, 'HH:mm')}`;
+    } else if (isThisWeek(timestamp)) {
+      return format(timestamp, 'EEEE, HH:mm'); 
+    } else {
+      return format(timestamp, 'dd MMM yyyy, HH:mm'); 
+    }
+  };
 
 
   if (!userId) {
@@ -188,11 +228,15 @@ const handleConversationClick = (data) => {
                 </span>
               </div>
   </div>
+
+
   <div className='uniqueConversations'>
   <ul>
+  <GiHamburgerMenu />
   {uniqueConversations.map((conversation, index) => (
     <li key={index} onClick={() => handleConversationClick(conversation)}>
-      <img src={conversation.photo} alt={`${conversation.name} ${conversation.prenom}`} />
+      <img src={conversation.photo} />
+      <span> {`${conversation.name} ${conversation.prenom}`}  </span>
       <span>{conversation.role}</span>
       {conversation.message && (
         <span>{conversation.message.slice(0, 5)}</span>
@@ -203,17 +247,19 @@ const handleConversationClick = (data) => {
   </div>
 
 
-{/* Section for displaying all users */}
 <div className="all-users">
   <h3>All Users</h3>
   <ul>
-    {/* Loop through all users not in conversations */}
-    {allUsers.map((user, index) => (
-      <li key={index} onClick={() => handleConversationClick(user)}>
-        <img src={user.photo} alt={`${user.name} ${user.prenom}`} />
-        <span>{user.role}</span>
-      </li>
-    ))}
+    {allUsers
+  .filter((user) => !conversations.find((conversation) => conversation.id === user.userId))
+  .map((user, index) => (
+    <li key={index} onClick={() => handleConversationClick(user)}>
+      <img src={user.photo} alt={`${user.name} ${user.prenom}`} />
+      <span>{user.role}</span>
+      
+    </li>
+))}
+
   </ul>
 </div>
 
@@ -224,7 +270,7 @@ const handleConversationClick = (data) => {
 
            
 
-          {selectedConversation && (
+            {selectedConversation && (
             <div className="conversation">
               <div className="conversation-header">
                 <span>{selectedConversation.rolereciever}</span>
@@ -233,10 +279,10 @@ const handleConversationClick = (data) => {
                 {messages.map((message, index) => {
                   const timestamp = new Date(message.timestamp);
                   return (
-                    <div key={index} className={`message ${message.sender_id === userId ? 'message-right' : 'message-left'}`}>
+                    <div key={index} className={`message ${message.sender_id == userId ? 'message-right' : 'message-left'}`}>
                       <span>{message.message}</span>
                       <span className="messenger-timestamp">
-                        {isValid(timestamp) ? format(timestamp, 'HH:mm') : 'Invalid date'}
+                        {formatTimestamp(timestamp)}
                       </span>
                     </div>
                   );

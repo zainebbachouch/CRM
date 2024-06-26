@@ -7,7 +7,7 @@
 
 # testing
 /coverage
-
+/backend/document/tokens.json
 # production
 /build
 
