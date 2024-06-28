@@ -4,7 +4,7 @@ import axios from 'axios';
 import io from "socket.io-client"
 import '../../style/viewsStyle/messenger.css';
 
-import { format, isValid } from 'date-fns'; // Assurez-vous d'importer isValid
+import { format, isValid } from 'date-fns'; 
 
 function EnvoyeeMailEmploye() {
   const { id, email } = useParams();
@@ -50,6 +50,13 @@ function EnvoyeeMailEmploye() {
       });
       setMessages(response.data.messages);
       console.log('Messages fetched:', response.data.messages);
+      // Vérifier que l'élément chat existe avant d'essayer de faire défiler
+    const chatElement = document.getElementsByClassName("messenger-body")[0];
+    if (chatElement) {
+      chatElement.scrollTop = chatElement.scrollHeight;
+    } else {
+      console.warn('Chat element not found');
+    }
     } catch (error) {
       console.error('Error fetching Messages:', error);
     }
@@ -60,15 +67,20 @@ function EnvoyeeMailEmploye() {
     socket.emit("sendMessage", formData);
     setFormData({ ...formData, message: '' }); 
   };
+
+
 useEffect(()=>{
   fetchMessages();
 }, [id, userId])
+
+
+
   useEffect(() => {
     socket.on("connect", () => {
       console.log("client connected");
     });
     socket.on("receiveMessage", (message) => {
-      console.log("New message received:", message); 
+      //console.log("New message received:", message); 
 
       fetchMessages()
       
@@ -181,7 +193,7 @@ function EnvoyeeMailClient() {
       console.log("client connected");
     });
     socket.on("receiveMessage", (message) => {
-      console.log("New message received:", message);
+      //console.log("New message received:", message);
       setMessages((prevMessages) => [...prevMessages, message]);
     });
   

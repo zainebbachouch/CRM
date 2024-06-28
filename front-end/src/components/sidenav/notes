@@ -25,3 +25,7 @@ si dans page produit {autorisation.deleteproduit=="true" &&
 j'ai deja commente dans route listAdminAuthorized
   erruer si j'ai commentais assi en backend 
  
+
+
+controller function email reciper avec message  table notification 
+id email_destinataire message date 

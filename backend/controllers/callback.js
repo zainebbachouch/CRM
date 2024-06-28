@@ -10,15 +10,15 @@ const saveToHistory = async (description, actionPerformerId, role) => {
 
         // Selon le rôle de l'utilisateur, définissez l'ID et la requête SQL appropriés
         switch (role) {
-            case 'admin':               
+            case 'admin':
                 sqlQuery = 'INSERT INTO historique (date_action, heure_action, description_action, admin_idadmin) VALUES (NOW(), NOW(), ?, ?)';
                 break;
 
-           case 'client':              
+            case 'client':
                 sqlQuery = 'INSERT INTO historique (date_action, heure_action, description_action, client_idclient) VALUES (NOW(), NOW(), ?, ?)';
                 break;
 
-            case 'employe':             
+            case 'employe':
                 sqlQuery = 'INSERT INTO historique (date_action, heure_action, description_action,employe_idemploye) VALUES (NOW(), NOW(), ?, ?)';
                 break;
 
@@ -165,4 +165,40 @@ const updateInformationOfRole = async (role, id, updatedData) => {
     }
 };
 
-module.exports = {saveToHistory , getInformationOfRole ,updateInformationOfRole};
+
+const saveNotification = async (email_destinataire, message) => {
+    try {
+        const sqlQuery = 'INSERT INTO notification (email_destinataire, message, date) VALUES (?, ?, NOW())';
+        const result = await db.query(sqlQuery, [email_destinataire, message]);
+        console.log("Notification enregistrée avec succès");
+        return result;
+    } catch (error) {
+        console.error("Erreur lors de l'enregistrement de la notification:", error);
+        throw error;
+    }
+};
+
+
+
+
+const getEmailByRole = async (role, id) => {
+    let emailQuery = '';
+    switch (role) {
+      case 'admin':
+        emailQuery = 'SELECT email_admin FROM admin WHERE idadmin = ?';
+        break;
+      case 'client':
+        emailQuery = 'SELECT email_client FROM client WHERE idclient = ?';
+        break;
+      case 'employe':
+        emailQuery = 'SELECT email_employe FROM employe WHERE idemploye = ?';
+        break;
+      default:
+        throw new Error("Invalid user role");
+    }
+  
+    const result = await db.query(emailQuery, [id]);
+    return result[0][`email_${role}`];
+  };
+
+module.exports = { saveToHistory, getInformationOfRole, updateInformationOfRole, saveNotification ,getEmailByRole };

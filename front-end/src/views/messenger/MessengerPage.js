@@ -51,7 +51,7 @@ function MessengerPage() {
 
   useEffect(() => {
     fetchConversations();
-    fetchAllUsers(); // Fetch all users when component mounts
+    fetchAllUsers(); 
   }, []);
 
 
@@ -130,7 +130,6 @@ function MessengerPage() {
 
   const handleConversationClick = (data) => {
     if (data.hasOwnProperty('id')) {
-      // Handle conversation click
       setSelectedConversation(data);
       setFormData({
         ...formData,
@@ -139,9 +138,8 @@ function MessengerPage() {
       });
       fetchMessages(data.id);
     } else {
-      // Handle user click - Start a new conversation
       const newConversation = {
-        id: data.userId, // You can set a temporary ID for new conversations
+        id: data.userId, 
         role: data.role,
         name: `${data.name} ${data.prenom}`,
         photo: data.photo,
@@ -153,8 +151,7 @@ function MessengerPage() {
         receiver_id: null,
         rolereciever: data.role,
       });
-      // You may choose to fetch initial messages for new conversations here
-      setMessages([]); // Clear messages for new conversation
+      setMessages([]); 
     }
   };
   
@@ -162,7 +159,6 @@ function MessengerPage() {
 
   const handleSendMessage = () => {
     if (!selectedConversation || !selectedConversation.id) {
-      // Handle case where there is no selected conversation
       console.error('No conversation selected');
       return;
     }
@@ -184,7 +180,6 @@ function MessengerPage() {
 
 
 
-  // Filter out duplicate conversations based on their IDs
   const uniqueConversations = conversations.filter((conversation, index) => (
     conversations.findIndex((c) => 
       c.id === conversation.id && 

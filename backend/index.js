@@ -8,9 +8,11 @@ const baskeRoute = require("./routes/baskeRoute");
 const commandsRoute = require("./routes/commandsRoute");
 const factureRoute = require("./routes/factureRoute");
 const autorisationRoute = require("./routes/autorisationRoute");
+const messengerRoute = require("./routes/messengerRoutes");
 const http = require('http');
 const socketIo = require('socket.io');
 const db = require('./config/dbConnection');
+const { saveNotification, getInformationOfRole } = require('./controllers/callback'); // Importer la fonction saveNotification
 
 
 const cookieParser = require("cookie-parser");
@@ -69,6 +71,8 @@ app.use('/api', baskeRoute);
 app.use('/api', commandsRoute);
 app.use('/api', factureRoute);
 app.use('/api', autorisationRoute);
+app.use('/api', messengerRoute);
+
 
 app.get('/api/listMessages', (req, res) => {
   const { sender_id, receiver_id } = req.query;
@@ -151,30 +155,69 @@ app.get('/api/allUsers', (req, res) => {
 
 
 
-
+const userSocketMap = {};
 
 io.on('connection', (socket) => {
   console.log('New client connected');
 
-  socket.on('sendMessage', (message) => {
-    console.log('Message received:', message);
+  // Assuming you have a way to get the userId, for example through a query parameter or an event
+  const userId = socket.handshake.query.userId; // or through an authentication event
+  if (userId) {
+    userSocketMap[userId] = socket.id;
+  }
+
+  socket.on('sendMessage', async (message) => {
     const query = `INSERT INTO messages (sender_id, rolesender, receiver_id, rolereciever, message) VALUES (?, ?, ?, ?, ?)`;
-    console.log
-    db.query(query, [message.sender_id, message.rolesender, message.receiver_id, message.rolereciever, message.message], (err, result) => {
-      if (err) {
-        console.error('Error inserting message:', err);
-        return;
-      }
+
+    try {
+      await db.query(query, [message.sender_id, message.rolesender, message.receiver_id, message.rolereciever, message.message]);
       console.log('Message inserted into database:', message);
+
+      // Retrieve sender and receiver information
+      const senderInfo = await getInformationOfRole(message.rolesender, message.sender_id);
+      const receiverInfo = await getInformationOfRole(message.rolereciever, message.receiver_id);
+
+      if (senderInfo && receiverInfo) {
+        let senderName;
+        if (message.rolesender === 'admin') {
+          senderName = `${senderInfo.nom_admin} ${senderInfo.prenom_admin} ${senderInfo.photo_admin}`;
+        } else if (message.rolesender === 'client') {
+          senderName = `${senderInfo.nom_client} ${senderInfo.prenom_client} ${senderInfo.photo_client}`;
+        } else if (message.rolesender === 'employe') {
+          senderName = `${senderInfo.nom_employe} ${senderInfo.prenom_employe} ${senderInfo.photo_employe}`;
+        }
+
+        const notificationMessage = `New message from ${senderName} (${message.sender_id}) to ${message.receiver_id}: ${message.message}`;
+
+        const email_destinataire = receiverInfo[`email_${message.rolereciever}`];
+        await saveNotification(email_destinataire, notificationMessage);
+
+        // Emit notification only to the receiver
+        const receiverSocketId = userSocketMap[message.receiver_id];
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit('receiveNotification', {
+            message: notificationMessage,
+            timestamp: new Date().toISOString(),
+            sender_id: message.sender_id
+          });
+        }
+      }
+
       const emittedMessage = { ...message, timestamp: new Date().toISOString() };
       io.emit('receiveMessage', emittedMessage);
 
-
-    });
+    } catch (err) {
+      console.error('Error inserting message or saving notification:', err);
+    }
   });
 
-
   socket.on('disconnect', () => {
+    for (let userId in userSocketMap) {
+      if (userSocketMap[userId] === socket.id) {
+        delete userSocketMap[userId];
+        break;
+      }
+    }
     console.log('Client disconnected');
   });
 });
