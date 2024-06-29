@@ -24,6 +24,8 @@ import { EnvoyeeMailClient, EnvoyeeMailEmploye } from './views/adminstration/Env
 import MakeCall from './views/adminstration/MakeCall';
 import Historique from './views/adminstration/Historique';
 import MessengerPage from './views/messenger/MessengerPage';
+import { NotificationProvider } from './views/context/NotificationContext';
+import TopNav from './components/sidenav/TopNav';
 
 
 
@@ -37,8 +39,9 @@ function App() {
       <Router>
         <AuthProvider>
           <UserPermissionsPage>
+           <NotificationProvider>          
             <Routes>
-              <Route path="/">
+              <Route path="/">            
                 <Route index element={<Home />} />
                 <Route path="login">
                   <Route index element={<Login />} />
@@ -107,6 +110,7 @@ function App() {
 
               </Route>
             </Routes>
+            </NotificationProvider> 
           </UserPermissionsPage>
         </AuthProvider>
       </Router>

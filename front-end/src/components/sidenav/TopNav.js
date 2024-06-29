@@ -1,38 +1,13 @@
-import React, { useState, useEffect, useReducer, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaBell, FaArrowDown, FaShoppingBasket } from 'react-icons/fa';
 import { CiSettings } from "react-icons/ci";
 import flag from "../../images/flag.png";
 import profile from "../../images/profile.png";
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 import axios from 'axios';
+import { useNotificationContext } from '../../views/context/NotificationContext';
 import './TopNav.css';
-
-const notificationsReducer = (state, action) => {
-    switch (action.type) {
-        case 'ADD_NOTIFICATION':
-            const newNotifications = [action.payload, ...state.notifications];
-            localStorage.setItem('notifications', JSON.stringify(newNotifications));
-            return {
-                notifications: newNotifications,
-                unreadCount: state.unreadCount + 1
-            };
-        case 'MARK_AS_READ':
-            localStorage.setItem('unreadCount', 0);
-            return {
-                ...state,
-                unreadCount: 0
-            };
-        case 'SET_NOTIFICATIONS':
-            localStorage.setItem('notifications', JSON.stringify(action.payload));
-            return {
-                notifications: action.payload,
-                unreadCount: state.unreadCount
-            };
-        default:
-            return state;
-    }
-};
 
 function TopNav() {
     const currentUser = localStorage.getItem('username');
@@ -42,54 +17,81 @@ function TopNav() {
     const [isOpen, setIsOpen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
 
-    const [{ notifications, unreadCount }, dispatch] = useReducer(notificationsReducer, {
-        notifications: JSON.parse(localStorage.getItem('notifications')) || [],
-        unreadCount: parseInt(localStorage.getItem('unreadCount'), 10) || 0
-    });
-
     const socketRef = useRef();
+    const location = useLocation();
+    const { state: { notifications, unreadCount }, dispatch } = useNotificationContext();
 
     useEffect(() => {
-        const userId = localStorage.getItem('userId');
-        socketRef.current = io('http://localhost:3300', {
-          query: { userId }
-        });
-      
-        socketRef.current.on('connect', () => {
-          console.log('Connected to server');
-        });
-      
-        socketRef.current.on('disconnect', () => {
-          console.log('Disconnected from server');
-        });
-      
-        socketRef.current.on('receiveNotification', (notification) => {
-          console.log('New notification received:', notification);
-          dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
-        });
-      
-        socketRef.current.on('connect_error', (error) => {
-          console.error('Connection error:', error);
-        });
-      
-        return () => {
-          socketRef.current.disconnect();
-        };
-      }, []);
-      
+        // Charger les notifications depuis le local storage
+        const storedNotifications = localStorage.getItem('notifications');
+        const storedUnreadCount = localStorage.getItem('unreadCount');
 
-    const fetchNotifications = async () => {
-        try {
-            const response = await axios.get('http://127.0.0.1:5000/api/getNotification', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            dispatch({ type: 'SET_NOTIFICATIONS', payload: response.data.notifications });
-        } catch (error) {
-            console.error('Error fetching notifications:', error);
+        if (storedNotifications) {
+            dispatch({ type: 'SET_NOTIFICATIONS', payload: JSON.parse(storedNotifications) });
         }
-    };
+
+        if (storedUnreadCount) {
+            dispatch({ type: 'SET_UNREAD_COUNT', payload: parseInt(storedUnreadCount, 10) });
+        }
+    }, [dispatch]);
+
+    useEffect(() => {
+        // Stocker les notifications dans le local storage
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+    }, [notifications]);
+
+    useEffect(() => {
+        // Stocker le nombre de notifications non lues dans le local storage
+        localStorage.setItem('unreadCount', unreadCount.toString());
+    }, [unreadCount]);
+
+    useEffect(() => {
+        socketRef.current = io('http://localhost:3300', {
+            query: { userId }
+        });
+
+        socketRef.current.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socketRef.current.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+
+        socketRef.current.on('receiveNotification', (notification) => {
+            console.log('New notification received:', notification);
+            dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
+        });
+
+        socketRef.current.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+        });
+
+        return () => {
+            socketRef.current.disconnect();
+        };
+    }, [dispatch, userId]);
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const response = await axios.get('http://127.0.0.1:5000/api/getNotification', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                dispatch({ type: 'SET_NOTIFICATIONS', payload: response.data.notifications });
+            } catch (error) {
+                console.error('Error fetching notifications:', error);
+            }
+        };
+
+        fetchNotifications();
+    }, [token, dispatch]);
+
+    useEffect(() => {
+        dispatch({ type: 'MARK_AS_READ' });
+    }, [location, dispatch]);
 
     const toggleDropdown = () => {
         setIsOpen(!isOpen);
@@ -100,6 +102,7 @@ function TopNav() {
         setShowNotifications(!showNotifications);
         if (!showNotifications) {
             dispatch({ type: 'MARK_AS_READ' });
+            localStorage.setItem('unreadCount', '0');
         }
     };
 
