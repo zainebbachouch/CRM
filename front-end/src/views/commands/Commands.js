@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo,useContext} from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import axios from 'axios';
 //import { useLocation } from 'react-router-dom';
 import CompleteCommand from '../../components/sidenav/completeCommand';
@@ -7,6 +7,7 @@ import TopBar from '../../components/sidenav/TopNav';
 import { Link } from 'react-router-dom';
 import { UserPermissionsContext } from '../context/UserPermissionsPage'; // Correction de l'import
 
+import io from "socket.io-client";
 
 
 
@@ -18,12 +19,13 @@ function Commands() {
   const [error, setError] = useState(null);
   const isAdmin = localStorage.getItem('role') === 'admin';
   const userPermissions = useContext(UserPermissionsContext);
+  const socket = io.connect("http://localhost:3300");
 
 
 
- // const location = useLocation();
+  // const location = useLocation();
   //const searchParams = new URLSearchParams(location.search);
- // const id = searchParams.get('idcommand');
+  // const id = searchParams.get('idcommand');
   const role = localStorage.getItem('role');
   const token = localStorage.getItem('token');
 
@@ -73,7 +75,7 @@ function Commands() {
       return updatedCommands; // Réaffectez la copie mise à jour à l'état
     });
   };
-  
+
 
   const updateCommandStatus = async (idcommande, newStatus) => {
     try {
@@ -82,16 +84,24 @@ function Commands() {
     } catch (error) {
       console.error('Error updating command status:', error);
     }
+    // Prepare the data to be emitted via socket
+    const commandData = {
+      idcommande,
+      newStatus,
+    };
+
+    // Emit the updateCommandStatus event with the prepared data
+    socket.emit('updateCommandStatus', commandData);
   };
-  
+
 
   return (
     <div>
-      {loading? (
+      {loading ? (
         <div>Loading...</div>
-      ) : error? (
+      ) : error ? (
         <div>Error: {error}</div>
-      ) : commandData? (
+      ) : commandData ? (
         <CompleteCommand commandData={commandData} />
       ) : (
         <div className="d-flex">
@@ -115,54 +125,54 @@ function Commands() {
                   </tr>
                 </thead>
                 <tbody>
-                    {commands.map((command, key) => (
+                  {commands.map((command, key) => (
                     <tr key={key}>
-                        <td>{command.idcommande}</td>
-                        <td>{command.description_commande}</td>
-                        <td>{command.date_commande}</td>
-                        <td>{command.montant_total_commande}</td>
-                        <td>{command.adresselivraison_commande}</td>
-                        <td>{command.modepaiement_commande}</td>
-                        <td>
+                      <td>{command.idcommande}</td>
+                      <td>{command.description_commande}</td>
+                      <td>{command.date_commande}</td>
+                      <td>{command.montant_total_commande}</td>
+                      <td>{command.adresselivraison_commande}</td>
+                      <td>{command.modepaiement_commande}</td>
+                      <td>
                         <select
-                            className="form-control"
-                            id="statut_commande"
-                            name="statut_commande"
-                            value={commands[key].statut_commande}
+                          className="form-control"
+                          id="statut_commande"
+                          name="statut_commande"
+                          value={commands[key].statut_commande}
 
-                            onChange={(event) => handleInputChange(event, key)}
+                          onChange={(event) => handleInputChange(event, key)}
                         >
-                            <option value="enattente">enattente</option>
-                            <option value="traitement">traitement</option>
-                            <option value="expédié">expédié</option>
-                            <option value="livré">livré</option>
+                          <option value="enattente">enattente</option>
+                          <option value="traitement">traitement</option>
+                          <option value="expédié">expédié</option>
+                          <option value="livré">livré</option>
                         </select>
-                        </td>
-                        <td>{command.date_livraison_commande}</td>
-                        <td>{command.metho_delivraison_commande}</td>
-                        <td>
+                      </td>
+                      <td>{command.date_livraison_commande}</td>
+                      <td>{command.metho_delivraison_commande}</td>
+                      <td>
                         {(isAdmin || (userPermissions && userPermissions.updateCommande === 1)) && ( // Add parentheses here
 
-                            <button
-                                className="btn btn-primary mr-2"
-                                onClick={() => updateCommandStatus(command.idcommande, command.statut_commande)}
-                                >
-                                Update
-                            </button>
+                          <button
+                            className="btn btn-primary mr-2"
+                            onClick={() => updateCommandStatus(command.idcommande, command.statut_commande)}
+                          >
+                            Update
+                          </button>
                         )}
-                         {(isAdmin || (userPermissions && userPermissions.deleteCommande === 1)) && ( // Add parentheses here
-                           <button> delete</button>
-                         )}
-                            <button className="btn btn-primary p-0">
-                                <Link to={`/commands/${command.idcommande}`} className="text-white btn-link">
-                                Show Details
-                                </Link>
+                        {(isAdmin || (userPermissions && userPermissions.deleteCommande === 1)) && ( // Add parentheses here
+                          <button> delete</button>
+                        )}
+                        <button className="btn btn-primary p-0">
+                          <Link to={`/commands/${command.idcommande}`} className="text-white btn-link">
+                            Show Details
+                          </Link>
 
-                            </button>
-                        </td>
-                     </tr>  
-                        ))}
-                 </tbody>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
           </div>

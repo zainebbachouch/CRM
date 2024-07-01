@@ -14,6 +14,8 @@ const socketIo = require('socket.io');
 const db = require('./config/dbConnection');
 const { saveNotification, getInformationOfRole } = require('./controllers/callback'); // Importer la fonction saveNotification
 const { createProduct } = require('./controllers/productController');
+const { passCommand } = require('./controllers/basketController');
+const { updateCommandStatus } = require('./controllers/commandsContoller')
 
 
 
@@ -214,21 +216,42 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Function to save notification for each email
+  const saveNotifications = async (email_destinataires, message) => {
+    try {
+      const sqlQuery = 'INSERT INTO notification (email_destinataire, message, date) VALUES (?, ?, NOW())';
+      const results = [];
+
+      // Iterate through each email and save notification
+      for (const email of email_destinataires) {
+        const result = await db.query(sqlQuery, [email, message]);
+        console.log("Notification enregistrée avec succès pour:", email);
+        results.push(result);
+      }
+
+      return results;
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement de la notification:", error);
+      throw error;
+    }
+  };
+
   // Handle newProduct event
   socket.on('newProduct', async (product) => {
     console.log('New product added:', product);
- 
+
     try {
       const req = { body: product }; // Simulating req object
       await createProduct(req, {
         status: (code) => ({
           json: (data) => {
             console.log(`Response sent: ${code} ${JSON.stringify(data)}`);
-            // Emit response back to the client (if needed)
+            // Handle response if needed
           }
         }),
       });
 
+      // Query all users (admins, employees, clients)
       const queryPromise = (sql) => {
         return new Promise((resolve, reject) => {
           db.query(sql, (error, results) => {
@@ -254,39 +277,171 @@ io.on('connection', (socket) => {
       const notificationMessage = `A new product has been added: ${product.nom_produit}`;
 
       // Send notifications to admins (excluding the sender)
-      for (const admin of admins) {
-        if (admin.idadmin !== userId) {
-          const email_destinataires = [admin.email_admin];
-          await saveNotification(email_destinataires, notificationMessage);
-        }
-      }
+      const adminEmails = admins
+        .filter(admin => admin.idadmin !== userId)
+        .map(admin => admin.email_admin);
+      await saveNotifications(adminEmails, notificationMessage);
 
       // Send notifications to employees (excluding the sender)
-      for (const employee of employees) {
-        if (employee.idemploye !== userId) {
-          const email_destinataires = [employee.email_employe];
-          await saveNotification(email_destinataires, notificationMessage);
-        }
-      }
+      const employeeEmails = employees
+        .filter(employee => employee.idemploye !== userId)
+        .map(employee => employee.email_employe);
+      await saveNotifications(employeeEmails, notificationMessage);
 
       // Send notifications to clients
-      for (const client of clients) {
-        const email_destinataires = [client.email_client];
-        await saveNotification(email_destinataires, notificationMessage);
-      }
+      const clientEmails = clients
+        .map(client => client.email_client);
+      await saveNotifications(clientEmails, notificationMessage);
 
-      // Notify all users about the new product
-      for (const userId in userSocketMap) {
-        io.to(userSocketMap[userId]).emit('receiveNotification', {
-          message: notificationMessage,
-          timestamp: new Date().toISOString(),
-          product_id: product.id
-        });
+      // Notify all users about the new product, excluding the sender
+      const senderSocketId = userSocketMap[userId];
+      for (const socketId in userSocketMap) {
+        if (socketId !== senderSocketId) {
+          io.to(userSocketMap[socketId]).emit('receiveNotification', {
+            message: notificationMessage,
+            timestamp: new Date().toISOString(),
+            product_id: product.id
+          });
+        }
       }
     } catch (error) {
       console.error('Error creating product in index.js:', error);
     }
   });
+
+  // Handle newProduct event
+  socket.on('passCommand', async (commandData) => {
+    console.log('passCommand received', commandData);
+    try {
+      const req = { body: commandData }; // Simulating req object
+      await passCommand(req, {
+        status: (code) => ({
+          json: (data) => {
+            console.log(`Response sent: ${code} ${JSON.stringify(data)}`);
+            // Handle response if needed
+          }
+        }),
+      });
+
+      // Query all users (admins, employees, clients)
+      const queryPromise = (sql) => {
+        return new Promise((resolve, reject) => {
+          db.query(sql, (error, results) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(results);
+            }
+          });
+        });
+      };
+
+      const [admins, employees, clients] = await Promise.all([
+        queryPromise('SELECT * FROM admin'),
+        queryPromise('SELECT * FROM employe'),
+      ]);
+
+      console.log('Admins:', admins);
+      console.log('Employees:', employees);
+
+      const notificationMessage = `A new passCommand has been added by client `;
+
+      // Send notifications to admins (excluding the sender)
+      const adminEmails = admins
+        .filter(admin => admin.idadmin !== userId)
+        .map(admin => admin.email_admin);
+      await saveNotifications(adminEmails, notificationMessage);
+
+      // Send notifications to employees (excluding the sender)
+      const employeeEmails = employees
+        .filter(employee => employee.idemploye !== userId)
+        .map(employee => employee.email_employe);
+      await saveNotifications(employeeEmails, notificationMessage);
+
+      // Notify all users about the new product, excluding the sender
+      const senderSocketId = userSocketMap[userId];
+      for (const socketId in userSocketMap) {
+        if (socketId !== senderSocketId) {
+          io.to(userSocketMap[socketId]).emit('receiveNotification', {
+            message: notificationMessage,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error  passCommand in index.js:', error);
+    }
+  });
+  // Handle updateCommandStatus event
+  socket.on('updateCommandStatus', async (commandData) => {
+    console.log('updateCommandStatus received', commandData);
+    try {
+      const req = { body: commandData }; // Simulating req object
+      await updateCommandStatus(req, {
+        status: (code) => ({
+          json: (data) => {
+            console.log(`Response sent: ${code} ${JSON.stringify(data)}`);
+          }
+        }),
+      });
+
+      // Query all users (admins, employees) and specific clients related to the command
+      const queryPromise = (sql, params = []) => {
+        return new Promise((resolve, reject) => {
+          db.query(sql, params, (error, results) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(results);
+            }
+          });
+        });
+      };
+
+      const [admins, employees, relatedClients] = await Promise.all([
+        queryPromise('SELECT * FROM admin'),
+        queryPromise('SELECT * FROM employe'),
+        queryPromise('SELECT client.email_client FROM client JOIN commande ON client.idclient = commande.client_idclient WHERE commande.idcommande = ?', [commandData.idcommande])]);
+
+      console.log('Admins:', admins);
+      console.log('Employees:', employees);
+      console.log('Related Clients:', relatedClients);
+
+      const notificationMessage = `A new command status update has been made`;
+
+      // Send notifications to admins (excluding the sender)
+      const adminEmails = admins
+        .filter(admin => admin.idadmin !== commandData.userId)
+        .map(admin => admin.email_admin);
+      await saveNotifications(adminEmails, notificationMessage);
+
+      // Send notifications to employees (excluding the sender)
+      const employeeEmails = employees
+        .filter(employee => employee.idemploye !== commandData.userId)
+        .map(employee => employee.email_employe);
+      await saveNotifications(employeeEmails, notificationMessage);
+
+      // Send notifications to related clients
+      const clientEmails = relatedClients.map(client => client.email_client);
+      await saveNotifications(clientEmails, notificationMessage);
+
+      // Notify all users about the new status update, excluding the sender
+      const senderSocketId = userSocketMap[commandData.userId];
+      for (const socketId in userSocketMap) {
+        if (socketId !== senderSocketId) {
+          io.to(userSocketMap[socketId]).emit('receiveNotification', {
+            message: notificationMessage,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error in updateCommandStatus in index.js:', error);
+    }
+  });
+
+
+
 
   socket.on('disconnect', () => {
     for (let userId in userSocketMap) {

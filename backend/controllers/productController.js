@@ -1,6 +1,6 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ')
-const { saveToHistory} = require('./callback');
+const { saveToHistory } = require('./callback');
 
 
 
@@ -80,7 +80,7 @@ const createProduct = async (req, res) => {
         const userId = authResult.decode.id;
         const userRole = authResult.decode.role;
         saveToHistory('Statut de la produit ajouter', userId, userRole);
-        res.json({ message: "Produit créé avec succès" });
+        res.json({ message: "Produit créé avec succès", nom_produit });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -299,6 +299,6 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-module.exports = {createProduct, getProductById, getAllProducts, updateProduct, deleteProduct };
+module.exports = { createProduct, getProductById, getAllProducts, updateProduct, deleteProduct };
 
 

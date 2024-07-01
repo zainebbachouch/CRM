@@ -30,7 +30,7 @@ const createCategorie = async (req, res) => {
         if (result) {
             console.log("Catégorie insérée avec succès");
             console.log(result);
-            res.json({ message: "Insertion réussie" });
+            res.json({ message: "Insertion réussie" ,nom_categorie});
             const userId = authResult.decode.id;
             const userRole = authResult.decode.role;
             console.log('qui connecte', userId)

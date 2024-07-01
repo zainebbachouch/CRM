@@ -1,9 +1,10 @@
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import './TopNav.css';
 import SideBar from '../sidebar/SideBar';
 import TopBar from "./TopNav";
+import io from "socket.io-client";
 
 
 
@@ -19,6 +20,7 @@ function CompleteCommand(props) {
 
     const commandId = localStorage.getItem('commandId');
 
+    const socket = io.connect("http://localhost:3300");
 
 
 
@@ -73,7 +75,7 @@ function CompleteCommand(props) {
             //  const trimmedModePaiementCommande = command.modepaiement_commande.slice(0, 19); // Trim the value to 19 characters
             //  console.log("Length of modepaiement_commande:", command.modepaiement_commande.length);
 
-            await axios.put(`http://127.0.0.1:5000/api/passCommand`, {
+            const commandData = {
                 currentCommandeId: id,
                 description_commande: command.description_commande,
                 adresselivraison_commande: command.adresselivraison_commande,
@@ -81,7 +83,9 @@ function CompleteCommand(props) {
                 date_livraison_commande: command.date_livraison_commande,
                 metho_delivraison_commande: command.metho_delivraison_commande,
                 montant_total_commande: command.montantTotalCommande,
-            }, config);
+              };
+            await axios.put(`http://127.0.0.1:5000/api/passCommand`, commandData, config);
+            socket.emit('passCommand',commandData);
 
             alert("Command passed successfully!");
         } catch (error) {
@@ -109,7 +113,7 @@ function CompleteCommand(props) {
                             <div className="row">
                                 <div className="col-md-4">
                                     <div className="form-group">
-                                        <label htmlFor="idcommande">Command ID:</label>
+                                        <label htmlFor="idcommande">Command IDgg:</label>
                                         <span className="form-control" id="idcommande" name="idcommande">{command.idcommande}</span>
                                     </div>
                                 </div>
@@ -185,10 +189,10 @@ function CompleteCommand(props) {
 
 
 
-                           <button className="btn btn-primary" onClick={handlePassCommand}>Pass Command</button>
-                            
-                            </div>
-                        
+                            <button className="btn btn-primary" onClick={handlePassCommand}>Pass Command</button>
+
+                        </div>
+
                     ) : (
                         <div>Command details not found.</div>
                     )}
