@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import io from "socket.io-client";
+
+
+
 function AddProduct({ addProduct, selectedProduct, products, setProducts, setSelectedProduct, fetchProducts, categories, setCategories, loading, setLoading }) {
     const [formData, setFormData] = useState({
         nom_produit: '',
@@ -9,17 +13,18 @@ function AddProduct({ addProduct, selectedProduct, products, setProducts, setSel
         photo_produit: '',
         remise_produit: ''
     });
-const [refresh,setRefresh]=useState("no")
+    const [refresh, setRefresh] = useState("no")
     const [errors, setErrors] = useState({
         productNameError: '',
         productPriceError: '',
         productDescriptionError: '',
         productCategoryError: '',
         productImageError: '',
-        productRemiseError:'',
+        productRemiseError: '',
         general: ''
     });
     const [successMessage, setSuccessMessage] = useState('');
+    const socket = io.connect("http://localhost:3300");
 
     const fetchCategories = useCallback(async () => {
         setLoading(true);
@@ -43,7 +48,7 @@ const [refresh,setRefresh]=useState("no")
         } finally {
             setLoading(false);
         }
-    }, [setCategories, setLoading,refresh]);
+    }, [setCategories, setLoading, refresh]);
 
     useEffect(() => {
         fetchCategories();
@@ -85,11 +90,11 @@ const [refresh,setRefresh]=useState("no")
 
                 const updatedProducts = products.map((product) => {
                     if (product.idproduit === selectedProduct.idproduit) {
-                        return response.data; 
+                        return response.data;
                     }
                     return product;
                 });
-                setProducts(updatedProducts); 
+                setProducts(updatedProducts);
                 //2
                 setSuccessMessage('');
                 document.getElementById("closeButton").click()
@@ -98,6 +103,8 @@ const [refresh,setRefresh]=useState("no")
             } else {
                 const response = await axios.post('http://127.0.0.1:5000/api/createProduct', formData, config);
                 addProduct(response.data);
+                // Emit a newProduct event to notify users
+                socket.emit('newProduct', response.data);
                 setSuccessMessage(response.data.message);
                 fetchProducts();
                 setFormData({
@@ -108,9 +115,11 @@ const [refresh,setRefresh]=useState("no")
                     photo_produit: '',
                     remise_produit: ''
                 });
+
                 setSuccessMessage("");
                 document.getElementById("closeButton").click()
                 setRefresh("yes")
+
             }
         } catch (err) {
             console.error('Error:', err);
@@ -126,116 +135,116 @@ const [refresh,setRefresh]=useState("no")
 
     return (
         <>
-        {/* fade */ }
-<div className="modal fade h-80" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div className="modal-dialog" role="document">
-    <div className="modal-content">
-      <div className="modal-header">
-        <h5 className="modal-title" id="exampleModalLabel">{selectedProduct ? 'Update Product' : 'Add New Product'}</h5>
-     
-      </div>
-      <div className="modal-body">
-        <div className="container">
-          {successMessage && <div className="alert alert-success">{successMessage}</div>}
-          {errors.general && <div className="alert alert-danger">{errors.general}</div>}
-          <form id="productForm" onSubmit={handleSubmit}>
-              <div className="form-group">
-                  <label htmlFor="nom_produit">Product Name:</label>
-                  <input
-                      type="text"
-                      className="form-control"
-                      id="nom_produit"
-                      name="nom_produit"
-                      value={formData.nom_produit}
-                      onChange={handleChange}
-                      required
-                  />
-              </div>
+            {/* fade */}
+            <div className="modal fade h-80" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title" id="exampleModalLabel">{selectedProduct ? 'Update Product' : 'Add New Product'}</h5>
 
-              <div className="form-group">
-                  <label htmlFor="prix_produit">Price:</label>
-                  <input
-                      type="number"
-                      className="form-control"
-                      id="prix_produit"
-                      name="prix_produit"
-                      value={formData.prix_produit}
-                      onChange={handleChange}
-                      required
-                  />
-              </div>
+                        </div>
+                        <div className="modal-body">
+                            <div className="container">
+                                {successMessage && <div className="alert alert-success">{successMessage}</div>}
+                                {errors.general && <div className="alert alert-danger">{errors.general}</div>}
+                                <form id="productForm" onSubmit={handleSubmit}>
+                                    <div className="form-group">
+                                        <label htmlFor="nom_produit">Product Name:</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            id="nom_produit"
+                                            name="nom_produit"
+                                            value={formData.nom_produit}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
 
-              <div className="form-group">
-                  <label htmlFor="description_produit">Description:</label>
-                  <textarea
-                      className="form-control"
-                      id="description_produit"
-                      name="description_produit"
-                      value={formData.description_produit}
-                      onChange={handleChange}
-                      required
-                  />
-              </div>
+                                    <div className="form-group">
+                                        <label htmlFor="prix_produit">Price:</label>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            id="prix_produit"
+                                            name="prix_produit"
+                                            value={formData.prix_produit}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
 
-              <div className="form-group">
-                  <label htmlFor="categorie_idcategorie">Category:</label>
-                  <select
-                      className="form-control"
-                      id="categorie_idcategorie"
-                      name="categorie_idcategorie"
-                      value={formData.categorie_idcategorie}
-                      onChange={handleChange}
-                      required
-                  >
-                      <option value="">Select Category</option>
-                      {Array.isArray(categories) && categories.map((category, index) => (
-                          <option key={index} value={category.idcategorie}>
-                              {category.nom_categorie}
-                          </option>
-                      ))}
-                  </select>
-              </div>
+                                    <div className="form-group">
+                                        <label htmlFor="description_produit">Description:</label>
+                                        <textarea
+                                            className="form-control"
+                                            id="description_produit"
+                                            name="description_produit"
+                                            value={formData.description_produit}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
 
-              <div className="form-group">
-                  <label htmlFor="remise_produit">Discount:</label>
-                  <input
-                      type="number"
-                      className="form-control"
-                      id="remise_produit"
-                      name="remise_produit"
-                      value={formData.remise_produit}
-                      onChange={handleChange}
-                      required
-                  />
-              </div>
+                                    <div className="form-group">
+                                        <label htmlFor="categorie_idcategorie">Category:</label>
+                                        <select
+                                            className="form-control"
+                                            id="categorie_idcategorie"
+                                            name="categorie_idcategorie"
+                                            value={formData.categorie_idcategorie}
+                                            onChange={handleChange}
+                                            required
+                                        >
+                                            <option value="">Select Category</option>
+                                            {Array.isArray(categories) && categories.map((category, index) => (
+                                                <option key={index} value={category.idcategorie}>
+                                                    {category.nom_categorie}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-              <div className="form-group">
-                  <label htmlFor="photo_produit">Image:</label>
-                  <input
-                      type="file"
-                      className="form-control-file"
-                      id="photo_produit"
-                      name="photo_produit"
-                      onChange={handleChange}
-                      
-                  />
-              </div>
-              <div className="modal-footer d-flex column-gap-2">
-              <button type="button" className="btn btn-danger" data-bs-dismiss="modal" id="closeButton">Cancel</button>
-              <button type="submit" className="btn btn-primary">{selectedProduct ? 'Update Product' : 'Add Product'}</button>
-              </div>
-          </form>
-          {loading && <div className="spinner-border text-primary" role="status"><span className="sr-only">Loading...</span></div>}
-     
-      </div>
-      </div>
-    
-    </div>
-  </div>
-</div>
+                                    <div className="form-group">
+                                        <label htmlFor="remise_produit">Discount:</label>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            id="remise_produit"
+                                            name="remise_produit"
+                                            value={formData.remise_produit}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="photo_produit">Image:</label>
+                                        <input
+                                            type="file"
+                                            className="form-control-file"
+                                            id="photo_produit"
+                                            name="photo_produit"
+                                            onChange={handleChange}
+
+                                        />
+                                    </div>
+                                    <div className="modal-footer d-flex column-gap-2">
+                                        <button type="button" className="btn btn-danger" data-bs-dismiss="modal" id="closeButton">Cancel</button>
+                                        <button type="submit" className="btn btn-primary">{selectedProduct ? 'Update Product' : 'Add Product'}</button>
+                                    </div>
+                                </form>
+                                {loading && <div className="spinner-border text-primary" role="status"><span className="sr-only">Loading...</span></div>}
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
         </>
 
-        
+
     );
 }
 
