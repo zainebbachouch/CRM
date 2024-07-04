@@ -29,6 +29,10 @@ function SideBar() {
       path: "/messenger",
       name: "messenger",
       icon: <FaCommentAlt />
+    },  {
+      path: "/task",
+      name: "task",
+      icon: <FaCommentAlt />
     }
   ];
   const adminstration = {

@@ -9,6 +9,8 @@ const commandsRoute = require("./routes/commandsRoute");
 const factureRoute = require("./routes/factureRoute");
 const autorisationRoute = require("./routes/autorisationRoute");
 const messengerRoute = require("./routes/messengerRoutes");
+const taskRoute = require("./routes/taskRoute");
+
 const http = require('http');
 const socketIo = require('socket.io');
 const db = require('./config/dbConnection');
@@ -78,6 +80,8 @@ app.use('/api', commandsRoute);
 app.use('/api', factureRoute);
 app.use('/api', autorisationRoute);
 app.use('/api', messengerRoute);
+app.use('/api', taskRoute);
+
 
 
 app.get('/api/listMessages', (req, res) => {
@@ -454,18 +458,6 @@ io.on('connection', (socket) => {
   });
 });
 
-
-/*   const selectQuery = 'SELECT * FROM messages WHERE rolesender = ? AND sender_id = ? ORDER BY timestamp ASC';
-   
-   db.query(selectQuery, [message.rolesender, message.sender_id], (err, results) => {
-     if (err) {
-       console.error('Error fetching messages:', err);
-       return;
-     }
-   
-     console.log('Sending updated messages to clients');
-     io.emit('receiveMessage', results);
-   });*/
 
 
 

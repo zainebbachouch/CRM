@@ -149,7 +149,7 @@ const createInvoice = async (req, res) => {
         const { montant_total_commande, metho_delivraison_commande } = await getTotalAmountAndDeliveryMethod(idcommande);
 
         if (existingInvoice) {
-            // Wrap the query in a promise for asynchronous handling
+
             await new Promise((resolve, reject) => {
                 db.query(
                     'UPDATE facture SET date_facture = NOW(), etat_facture = ?, statut_paiement_facture = ?, montant_total_facture = ?, methode_paiment_facture = ?, date_echeance = ?, mode_livraison_facture = ? WHERE idcommande = ?',
@@ -157,9 +157,9 @@ const createInvoice = async (req, res) => {
                     (err, result) => {
                         if (err) {
                             console.error(err);
-                            reject(err); // Reject the promise with the error
+                            reject(err); 
                         } else {
-                            resolve(result); // Resolve the promise with the result
+                            resolve(result); 
                         }
                     }
                 );

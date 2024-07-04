@@ -25,7 +25,7 @@ import MakeCall from './views/adminstration/MakeCall';
 import Historique from './views/adminstration/Historique';
 import MessengerPage from './views/messenger/MessengerPage';
 import { NotificationProvider } from './views/context/NotificationContext';
-import TopNav from './components/sidenav/TopNav';
+import Task from './views/task/Task';
 
 
 
@@ -92,6 +92,10 @@ function App() {
                   <Route index element={<MessengerPage/>} />
                 </Route>
 
+              
+                <Route path="task">
+                  <Route index element={<Task/>} />
+                </Route>
 
 
                 <Route path="Pageemployes/:id" element={<Pageemployes />}>
