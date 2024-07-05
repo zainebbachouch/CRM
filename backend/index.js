@@ -315,8 +315,13 @@ io.on('connection', (socket) => {
   
 
 
+  
   socket.on('passCommand', async (commandData) => {
     console.log('passCommand received', commandData);
+    senderEmail = commandData.email;
+    iduser = commandData.userid;
+    role = commandData.role;
+
     try {
       const req = { body: commandData };
       await passCommand(req, {
@@ -330,52 +335,52 @@ io.on('connection', (socket) => {
       const queryPromise = (sql) => {
         return new Promise((resolve, reject) => {
           db.query(sql, (error, results) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(results);
-            }
+            if (error) reject(error);
+            else resolve(results);
           });
         });
       };
 
-      const [admins, employees, clients] = await Promise.all([
+      const [admins, employees] = await Promise.all([
         queryPromise('SELECT * FROM admin'),
-        queryPromise('SELECT * FROM employe'),
+        queryPromise('SELECT * FROM employe')
       ]);
 
       console.log('Admins:', admins);
       console.log('Employees:', employees);
 
-      const notificationMessage = `A new passCommand has been added by client `;
+      const notificationMessage = `A new passCommand has been added by client`;
 
       const adminEmails = admins
-        .filter(admin => admin.idadmin !== userId)
+        .filter(admin => admin.idadmin !== iduser)
         .map(admin => admin.email_admin);
-      await saveNotifications(adminEmails, notificationMessage);
+      await saveNotifications(adminEmails, notificationMessage, senderEmail);
 
       const employeeEmails = employees
-        .filter(employee => employee.idemploye !== userId)
+        .filter(employee => employee.idemploye !== iduser)
         .map(employee => employee.email_employe);
-      await saveNotifications(employeeEmails, notificationMessage);
+      await saveNotifications(employeeEmails, notificationMessage, senderEmail);
 
-      const senderSocketId = userSocketMap[userId];
-      for (const socketId in userSocketMap) {
-        if (socketId !== senderSocketId) {
-          io.to(userSocketMap[socketId]).emit('receiveNotification', {
+      const senderSocketId = userSocketMap[iduser];
+      for (const userId in userSocketMap) {
+        if (userId !== iduser) {
+          io.to(userSocketMap[userId]).emit('receiveNotification', {
             message: notificationMessage,
             timestamp: new Date().toISOString(),
           });
         }
       }
     } catch (error) {
-      console.error('Error  passCommand in index.js:', error);
+      console.error('Error in passCommand in index.js:', error);
     }
   });
 
-
   socket.on('updateCommandStatus', async (commandData) => {
     console.log('updateCommandStatus received', commandData);
+    senderEmail = commandData.email;
+    iduser = commandData.userid;
+    role = commandData.role;
+
     try {
       const req = { body: commandData };
       await updateCommandStatus(req, {
@@ -389,11 +394,8 @@ io.on('connection', (socket) => {
       const queryPromise = (sql, params = []) => {
         return new Promise((resolve, reject) => {
           db.query(sql, params, (error, results) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(results);
-            }
+            if (error) reject(error);
+            else resolve(results);
           });
         });
       };
@@ -401,7 +403,8 @@ io.on('connection', (socket) => {
       const [admins, employees, relatedClients] = await Promise.all([
         queryPromise('SELECT * FROM admin'),
         queryPromise('SELECT * FROM employe'),
-        queryPromise('SELECT client.email_client FROM client JOIN commande ON client.idclient = commande.client_idclient WHERE commande.idcommande = ?', [commandData.idcommande])]);
+        queryPromise('SELECT client.email_client FROM client JOIN commande ON client.idclient = commande.client_idclient WHERE commande.idcommande = ?', [commandData.idcommande])
+      ]);
 
       console.log('Admins:', admins);
       console.log('Employees:', employees);
@@ -410,22 +413,22 @@ io.on('connection', (socket) => {
       const notificationMessage = `A new command status update has been made`;
 
       const adminEmails = admins
-        .filter(admin => admin.idadmin !== commandData.userId)
+        .filter(admin => admin.idadmin !== iduser)
         .map(admin => admin.email_admin);
-      await saveNotifications(adminEmails, notificationMessage);
+      await saveNotifications(adminEmails, notificationMessage, senderEmail);
 
       const employeeEmails = employees
-        .filter(employee => employee.idemploye !== commandData.userId)
+        .filter(employee => employee.idemploye !== iduser)
         .map(employee => employee.email_employe);
-      await saveNotifications(employeeEmails, notificationMessage);
+      await saveNotifications(employeeEmails, notificationMessage, senderEmail);
 
       const clientEmails = relatedClients.map(client => client.email_client);
-      await saveNotifications(clientEmails, notificationMessage);
+      await saveNotifications(clientEmails, notificationMessage, senderEmail);
 
-      const senderSocketId = userSocketMap[commandData.userId];
-      for (const socketId in userSocketMap) {
-        if (socketId !== senderSocketId) {
-          io.to(userSocketMap[socketId]).emit('receiveNotification', {
+      const senderSocketId = userSocketMap[iduser];
+      for (const userId in userSocketMap) {
+        if (userId !== iduser) {
+          io.to(userSocketMap[userId]).emit('receiveNotification', {
             message: notificationMessage,
             timestamp: new Date().toISOString(),
           });

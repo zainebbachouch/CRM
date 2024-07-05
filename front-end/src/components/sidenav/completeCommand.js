@@ -20,6 +20,11 @@ function CompleteCommand(props) {
 
     const commandId = localStorage.getItem('commandId');
 
+
+    const email = localStorage.getItem('email');
+    const userid = localStorage.getItem('userId');
+    const role = localStorage.getItem('role');
+
     const socket = io.connect("http://localhost:3300");
 
 
@@ -83,9 +88,9 @@ function CompleteCommand(props) {
                 date_livraison_commande: command.date_livraison_commande,
                 metho_delivraison_commande: command.metho_delivraison_commande,
                 montant_total_commande: command.montantTotalCommande,
-              };
+            };
             await axios.put(`http://127.0.0.1:5000/api/passCommand`, commandData, config);
-            socket.emit('passCommand',commandData);
+            socket.emit('passCommand', { ...commandData, email, userid, role });
 
             alert("Command passed successfully!");
         } catch (error) {
@@ -133,7 +138,7 @@ function CompleteCommand(props) {
                                 </div>
                                 <div className="col-md-4">
                                     <div className="form-group">
-                                        <label htmlFor="montant_total_commande">Total Amount:</label>
+                                        <label htmlFor="montant_total_commande">Total Amounttttt:</label>
                                         <span className="form-control" id="montant_total_commande">{command.montantTotalCommande}</span>
                                     </div></div>
                             </div>

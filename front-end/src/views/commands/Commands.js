@@ -26,6 +26,9 @@ function Commands() {
   // const location = useLocation();
   //const searchParams = new URLSearchParams(location.search);
   // const id = searchParams.get('idcommand');
+
+  const email = localStorage.getItem('email');
+  const userid = localStorage.getItem('userId');
   const role = localStorage.getItem('role');
   const token = localStorage.getItem('token');
 
@@ -91,7 +94,7 @@ function Commands() {
     };
 
     // Emit the updateCommandStatus event with the prepared data
-    socket.emit('updateCommandStatus', commandData);
+    socket.emit('updateCommandStatus', { ...commandData, email, userid, role });
   };
 
 
