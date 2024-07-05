@@ -14,16 +14,17 @@ const taskRoute = require("./routes/taskRoute");
 const http = require('http');
 const socketIo = require('socket.io');
 const db = require('./config/dbConnection');
-const { saveNotification, getInformationOfRole } = require('./controllers/callback'); // Importer la fonction saveNotification
+const { saveNotification, getInformationOfRole } = require('./controllers/callback');
 const { createProduct } = require('./controllers/productController');
 const { passCommand } = require('./controllers/basketController');
 const { updateCommandStatus } = require('./controllers/commandsContoller')
-
+const { getUserEmail } = require('./controllers/callback')
 
 
 
 
 const cookieParser = require("cookie-parser");
+const { equal } = require("assert");
 const app = express();
 
 const server = http.createServer(app);
@@ -169,8 +170,7 @@ const userSocketMap = {};
 io.on('connection', (socket) => {
   console.log('New client connected');
 
-  // Assuming you have a way to get the userId, for example through a query parameter or an event
-  const userId = socket.handshake.query.userId; // or through an authentication event
+  const userId = socket.handshake.query.userId;
   if (userId) {
     userSocketMap[userId] = socket.id;
   }
@@ -182,7 +182,6 @@ io.on('connection', (socket) => {
       await db.query(query, [message.sender_id, message.rolesender, message.receiver_id, message.rolereciever, message.message]);
       console.log('Message inserted into database:', message);
 
-      // Retrieve sender and receiver information
       const senderInfo = await getInformationOfRole(message.rolesender, message.sender_id);
       const receiverInfo = await getInformationOfRole(message.rolereciever, message.receiver_id);
 
@@ -201,7 +200,6 @@ io.on('connection', (socket) => {
         const email_destinataire = receiverInfo[`email_${message.rolereciever}`];
         await saveNotification(email_destinataire, notificationMessage);
 
-        // Emit notification only to the receiver
         const receiverSocketId = userSocketMap[message.receiver_id];
         if (receiverSocketId) {
           io.to(receiverSocketId).emit('receiveNotification', {
@@ -220,15 +218,18 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Function to save notification for each email
-  const saveNotifications = async (email_destinataires, message) => {
+  const saveNotifications = async (email_destinataires, message, emailsender) => {
     try {
-      const sqlQuery = 'INSERT INTO notification (email_destinataire, message, date) VALUES (?, ?, NOW())';
+      const sqlQuery = 'INSERT INTO notification (email_destinataire, message, date, email_sender) VALUES (?, ?, NOW(), ?)';
       const results = [];
 
-      // Iterate through each email and save notification
       for (const email of email_destinataires) {
-        const result = await db.query(sqlQuery, [email, message]);
+        // Skip inserting if email is same as sender's email
+        if (email === emailsender) {
+          continue;
+        }
+
+        const result = await db.query(sqlQuery, [email, message, emailsender]);
         console.log("Notification enregistrée avec succès pour:", email);
         results.push(result);
       }
@@ -240,22 +241,26 @@ io.on('connection', (socket) => {
     }
   };
 
-  // Handle newProduct event
+
+  var senderEmail, iduser, role;
+
   socket.on('newProduct', async (product) => {
     console.log('New product added:', product);
-
+  
+    senderEmail = product.email; 
+    iduser = product.userid;
+    role = product.role;
+  
     try {
-      const req = { body: product }; // Simulating req object
+      const req = { body: product };
       await createProduct(req, {
         status: (code) => ({
           json: (data) => {
             console.log(`Response sent: ${code} ${JSON.stringify(data)}`);
-            // Handle response if needed
           }
         }),
       });
-
-      // Query all users (admins, employees, clients)
+  
       const queryPromise = (sql) => {
         return new Promise((resolve, reject) => {
           db.query(sql, (error, results) => {
@@ -267,41 +272,36 @@ io.on('connection', (socket) => {
           });
         });
       };
-
+  
       const [admins, employees, clients] = await Promise.all([
         queryPromise('SELECT * FROM admin'),
         queryPromise('SELECT * FROM employe'),
         queryPromise('SELECT * FROM client')
       ]);
-
+  
       console.log('Admins:', admins);
       console.log('Employees:', employees);
       console.log('Clients:', clients);
-
+  
       const notificationMessage = `A new product has been added: ${product.nom_produit}`;
-
-      // Send notifications to admins (excluding the sender)
+  
       const adminEmails = admins
-        .filter(admin => admin.idadmin !== userId)
+        .filter(admin => admin.idadmin !== iduser)
         .map(admin => admin.email_admin);
-      await saveNotifications(adminEmails, notificationMessage);
-
-      // Send notifications to employees (excluding the sender)
+      await saveNotifications(adminEmails, notificationMessage, senderEmail);
+  
       const employeeEmails = employees
-        .filter(employee => employee.idemploye !== userId)
+        .filter(employee => employee.idemploye !== iduser)
         .map(employee => employee.email_employe);
-      await saveNotifications(employeeEmails, notificationMessage);
-
-      // Send notifications to clients
-      const clientEmails = clients
-        .map(client => client.email_client);
-      await saveNotifications(clientEmails, notificationMessage);
-
-      // Notify all users about the new product, excluding the sender
-      const senderSocketId = userSocketMap[userId];
-      for (const socketId in userSocketMap) {
-        if (socketId !== senderSocketId) {
-          io.to(userSocketMap[socketId]).emit('receiveNotification', {
+      await saveNotifications(employeeEmails, notificationMessage, senderEmail);
+  
+      const clientEmails = clients.map(client => client.email_client);
+      await saveNotifications(clientEmails, notificationMessage, senderEmail);
+  
+      const senderSocketId = userSocketMap[iduser];
+      for (const userId in userSocketMap) {
+        if (userId !== iduser) {
+          io.to(userSocketMap[userId]).emit('receiveNotification', {
             message: notificationMessage,
             timestamp: new Date().toISOString(),
             product_id: product.id
@@ -312,22 +312,21 @@ io.on('connection', (socket) => {
       console.error('Error creating product in index.js:', error);
     }
   });
+  
 
-  // Handle newProduct event
+
   socket.on('passCommand', async (commandData) => {
     console.log('passCommand received', commandData);
     try {
-      const req = { body: commandData }; // Simulating req object
+      const req = { body: commandData };
       await passCommand(req, {
         status: (code) => ({
           json: (data) => {
             console.log(`Response sent: ${code} ${JSON.stringify(data)}`);
-            // Handle response if needed
           }
         }),
       });
 
-      // Query all users (admins, employees, clients)
       const queryPromise = (sql) => {
         return new Promise((resolve, reject) => {
           db.query(sql, (error, results) => {
@@ -350,19 +349,16 @@ io.on('connection', (socket) => {
 
       const notificationMessage = `A new passCommand has been added by client `;
 
-      // Send notifications to admins (excluding the sender)
       const adminEmails = admins
         .filter(admin => admin.idadmin !== userId)
         .map(admin => admin.email_admin);
       await saveNotifications(adminEmails, notificationMessage);
 
-      // Send notifications to employees (excluding the sender)
       const employeeEmails = employees
         .filter(employee => employee.idemploye !== userId)
         .map(employee => employee.email_employe);
       await saveNotifications(employeeEmails, notificationMessage);
 
-      // Notify all users about the new product, excluding the sender
       const senderSocketId = userSocketMap[userId];
       for (const socketId in userSocketMap) {
         if (socketId !== senderSocketId) {
@@ -376,11 +372,12 @@ io.on('connection', (socket) => {
       console.error('Error  passCommand in index.js:', error);
     }
   });
-  // Handle updateCommandStatus event
+
+
   socket.on('updateCommandStatus', async (commandData) => {
     console.log('updateCommandStatus received', commandData);
     try {
-      const req = { body: commandData }; // Simulating req object
+      const req = { body: commandData };
       await updateCommandStatus(req, {
         status: (code) => ({
           json: (data) => {
@@ -389,7 +386,6 @@ io.on('connection', (socket) => {
         }),
       });
 
-      // Query all users (admins, employees) and specific clients related to the command
       const queryPromise = (sql, params = []) => {
         return new Promise((resolve, reject) => {
           db.query(sql, params, (error, results) => {
@@ -413,23 +409,19 @@ io.on('connection', (socket) => {
 
       const notificationMessage = `A new command status update has been made`;
 
-      // Send notifications to admins (excluding the sender)
       const adminEmails = admins
         .filter(admin => admin.idadmin !== commandData.userId)
         .map(admin => admin.email_admin);
       await saveNotifications(adminEmails, notificationMessage);
 
-      // Send notifications to employees (excluding the sender)
       const employeeEmails = employees
         .filter(employee => employee.idemploye !== commandData.userId)
         .map(employee => employee.email_employe);
       await saveNotifications(employeeEmails, notificationMessage);
 
-      // Send notifications to related clients
       const clientEmails = relatedClients.map(client => client.email_client);
       await saveNotifications(clientEmails, notificationMessage);
 
-      // Notify all users about the new status update, excluding the sender
       const senderSocketId = userSocketMap[commandData.userId];
       for (const socketId in userSocketMap) {
         if (socketId !== senderSocketId) {

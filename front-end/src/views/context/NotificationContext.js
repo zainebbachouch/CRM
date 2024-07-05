@@ -1,4 +1,3 @@
-// NotificationContext.js
 import React, { createContext, useReducer, useContext } from 'react';
 
 const NotificationContext = createContext();

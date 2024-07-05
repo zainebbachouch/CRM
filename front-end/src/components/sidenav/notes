@@ -27,5 +27,8 @@ j'ai deja commente dans route listAdminAuthorized
  
 
 
-controller function email reciper avec message  table notification 
+controller function email reciper avec message  table notification add notification sender (systeme/usermail) add columm seen boolean handlckiet allupdate 
 id email_destinataire message date 
+
+
+task ->> prioter sort (dapres enum) ou mis a jour dapres nombre 

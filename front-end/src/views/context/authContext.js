@@ -27,11 +27,13 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('userId', response.data.user.id);
       localStorage.setItem('username', response.data.user.username);
       console.log('userIduserIduserId', response.data.user.id);
-      
+
       localStorage.setItem('refreshToken', response.data.refreshToken);
       console.log('Refresh token:', response.data.refreshToken);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('role', response.data.role);
+      localStorage.setItem('email', response.data.user.email);
+
 
       console.log(response.data)
 

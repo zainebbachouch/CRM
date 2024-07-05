@@ -7,7 +7,7 @@ import { useAuth } from '../../views/context/authContext';
 import { GiHamburgerMenu } from "react-icons/gi";
 
 function SideBar() {
-  const [isOpen, setIsOpen] = useState(true); // État pour contrôler la visibilité de la barre latérale
+  const [isOpen, setIsOpen] = useState(true); 
   const role = localStorage.getItem("role");
   const menuItem = [
     {
@@ -66,7 +66,7 @@ function SideBar() {
   const { currentUser } = useAuth();
 
   const toggleSidebar = () => {
-    setIsOpen(!isOpen); // Fonction pour basculer l'état de la barre latérale
+    setIsOpen(!isOpen); 
   };
 
   return (

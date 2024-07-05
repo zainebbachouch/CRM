@@ -42,8 +42,8 @@ function Task() {
   }, [config]);
 
   useEffect(() => {
-    fetchTasks(); // Fetch tasks when component mounts
-  }, [fetchTasks]); // Depend on fetchTasks to avoid infinite loop
+    fetchTasks(); 
+  }, [fetchTasks]); 
 
   const handleOnDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
@@ -62,7 +62,7 @@ function Task() {
 
     updatedTasks[source.droppableId] = sourceList;
     updatedTasks[destination.droppableId] = destinationList;
-
+// redendance filter 
     setTasks(updatedTasks);
 
     try {

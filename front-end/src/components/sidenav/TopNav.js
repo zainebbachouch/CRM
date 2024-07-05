@@ -13,6 +13,7 @@ function TopNav() {
     const currentUser = localStorage.getItem('username');
     const userId = localStorage.getItem('userId');
     const token = localStorage.getItem('token');
+    const email = localStorage.getItem('email');
 
     const [isOpen, setIsOpen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -22,7 +23,6 @@ function TopNav() {
     const { state: { notifications, unreadCount }, dispatch } = useNotificationContext();
 
     useEffect(() => {
-        // Charger les notifications depuis le local storage
         const storedNotifications = localStorage.getItem('notifications');
         const storedUnreadCount = localStorage.getItem('unreadCount');
 
@@ -36,12 +36,10 @@ function TopNav() {
     }, [dispatch]);
 
     useEffect(() => {
-        // Stocker les notifications dans le local storage
         localStorage.setItem('notifications', JSON.stringify(notifications));
     }, [notifications]);
 
     useEffect(() => {
-        // Stocker le nombre de notifications non lues dans le local storage
         localStorage.setItem('unreadCount', unreadCount.toString());
     }, [unreadCount]);
 
@@ -54,9 +52,7 @@ function TopNav() {
             console.log('Connected to server');
         });
 
-        socketRef.current.on('disconnect', () => {
-            console.log('Disconnected from server');
-        });
+
 
         socketRef.current.on('receiveNotification', (notification) => {
             console.log('New notification received:', notification);

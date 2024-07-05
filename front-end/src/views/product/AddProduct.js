@@ -13,6 +13,12 @@ function AddProduct({ addProduct, selectedProduct, products, setProducts, setSel
         photo_produit: '',
         remise_produit: ''
     });
+
+    const email = localStorage.getItem('email');
+    const userid = localStorage.getItem('userId');
+ const role = localStorage.getItem('role');
+
+
     const [refresh, setRefresh] = useState("no")
     const [errors, setErrors] = useState({
         productNameError: '',
@@ -103,8 +109,9 @@ function AddProduct({ addProduct, selectedProduct, products, setProducts, setSel
             } else {
                 const response = await axios.post('http://127.0.0.1:5000/api/createProduct', formData, config);
                 addProduct(response.data);
-                // Emit a newProduct event to notify users
-                socket.emit('newProduct', response.data);
+                //ajoyter les adresse mail conntecte now
+
+                socket.emit('newProduct', { ...response.data, email, userid ,role });
                 setSuccessMessage(response.data.message);
                 fetchProducts();
                 setFormData({

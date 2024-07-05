@@ -181,7 +181,7 @@ const saveNotification = async (email_destinataire, message) => {
 
 
 
-const getEmailByRole = async (role, id) => {
+const getUserEmail = async (id) => {
     let emailQuery = '';
     switch (role) {
       case 'admin':
@@ -201,4 +201,4 @@ const getEmailByRole = async (role, id) => {
     return result[0][`email_${role}`];
   };
 
-module.exports = { saveToHistory, getInformationOfRole, updateInformationOfRole, saveNotification ,getEmailByRole };
+module.exports = { saveToHistory, getInformationOfRole, updateInformationOfRole, saveNotification ,getUserEmail };
