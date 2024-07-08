@@ -3,7 +3,7 @@ import { FaBell, FaArrowDown, FaShoppingBasket } from 'react-icons/fa';
 import { CiSettings } from "react-icons/ci";
 import flag from "../../images/flag.png";
 import profile from "../../images/profile.png";
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import io from 'socket.io-client';
 import axios from 'axios';
 import { useNotificationContext } from '../../views/context/NotificationContext';
@@ -19,29 +19,7 @@ function TopNav() {
     const [showNotifications, setShowNotifications] = useState(false);
 
     const socketRef = useRef();
-    const location = useLocation();
     const { state: { notifications, unreadCount }, dispatch } = useNotificationContext();
-
-    useEffect(() => {
-        const storedNotifications = localStorage.getItem('notifications');
-        const storedUnreadCount = localStorage.getItem('unreadCount');
-
-        if (storedNotifications) {
-            dispatch({ type: 'SET_NOTIFICATIONS', payload: JSON.parse(storedNotifications) });
-        }
-
-        if (storedUnreadCount) {
-            dispatch({ type: 'SET_UNREAD_COUNT', payload: parseInt(storedUnreadCount, 10) });
-        }
-    }, [dispatch]);
-
-    useEffect(() => {
-        localStorage.setItem('notifications', JSON.stringify(notifications));
-    }, [notifications]);
-
-    useEffect(() => {
-        localStorage.setItem('unreadCount', unreadCount.toString());
-    }, [unreadCount]);
 
     useEffect(() => {
         socketRef.current = io('http://localhost:3300', {
@@ -51,8 +29,6 @@ function TopNav() {
         socketRef.current.on('connect', () => {
             console.log('Connected to server');
         });
-
-
 
         socketRef.current.on('receiveNotification', (notification) => {
             console.log('New notification received:', notification);
@@ -67,6 +43,23 @@ function TopNav() {
             socketRef.current.disconnect();
         };
     }, [dispatch, userId]);
+
+    useEffect(() => {
+        const fetchUnreadCount = async () => {
+            try {
+                const response = await axios.get(`http://127.0.0.1:5000/api/getUnreadCount/${email}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                dispatch({ type: 'SET_UNREAD_COUNT', payload: response.data.unreadCount });
+            } catch (error) {
+                console.error('Error fetching unread count:', error);
+            }
+        };
+
+        fetchUnreadCount();
+    }, [email, token, dispatch]);
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -85,20 +78,26 @@ function TopNav() {
         fetchNotifications();
     }, [token, dispatch]);
 
-    useEffect(() => {
-        dispatch({ type: 'MARK_AS_READ' });
-    }, [location, dispatch]);
+
 
     const toggleDropdown = () => {
         setIsOpen(!isOpen);
         setShowNotifications(false);
     };
 
-    const handleNotificationClick = () => {
+    const handleNotificationClick = async () => {
         setShowNotifications(!showNotifications);
         if (!showNotifications) {
-            dispatch({ type: 'MARK_AS_READ' });
-            localStorage.setItem('unreadCount', '0');
+            try {
+                await axios.put('http://127.0.0.1:5000/api/updateSeenNotification', { email }, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                dispatch({ type: 'MARK_AS_READ' });
+            } catch (error) {
+                console.error('Error updating notifications:', error);
+            }
         }
     };
 

@@ -220,8 +220,9 @@ io.on('connection', (socket) => {
 
   const saveNotifications = async (email_destinataires, message, emailsender) => {
     try {
-      const sqlQuery = 'INSERT INTO notification (email_destinataire, message, date, email_sender) VALUES (?, ?, NOW(), ?)';
+      const sqlQuery = 'INSERT INTO notification (email_destinataire, message, date, email_sender,seen ,unreadCount ) VALUES (?, ?, NOW(), ?,?,1)';
       const results = [];
+      //const updateQuery = 'UPDATE notification SET unreadCount = unreadCount + 1 WHERE email_destinataire = ?';
 
       for (const email of email_destinataires) {
         // Skip inserting if email is same as sender's email
@@ -229,9 +230,12 @@ io.on('connection', (socket) => {
           continue;
         }
 
-        const result = await db.query(sqlQuery, [email, message, emailsender]);
+        const result = await db.query(sqlQuery, [email, message, emailsender, true]);
         console.log("Notification enregistrée avec succès pour:", email);
         results.push(result);
+
+      //  const updateResult = await db.query(updateQuery, [email]);
+       // console.log(`Unread count mis à jour pour ${email}:`, updateResult);
       }
 
       return results;
@@ -246,11 +250,11 @@ io.on('connection', (socket) => {
 
   socket.on('newProduct', async (product) => {
     console.log('New product added:', product);
-  
-    senderEmail = product.email; 
+
+    senderEmail = product.email;
     iduser = product.userid;
     role = product.role;
-  
+
     try {
       const req = { body: product };
       await createProduct(req, {
@@ -260,7 +264,7 @@ io.on('connection', (socket) => {
           }
         }),
       });
-  
+
       const queryPromise = (sql) => {
         return new Promise((resolve, reject) => {
           db.query(sql, (error, results) => {
@@ -272,32 +276,32 @@ io.on('connection', (socket) => {
           });
         });
       };
-  
+
       const [admins, employees, clients] = await Promise.all([
         queryPromise('SELECT * FROM admin'),
         queryPromise('SELECT * FROM employe'),
         queryPromise('SELECT * FROM client')
       ]);
-  
+
       console.log('Admins:', admins);
       console.log('Employees:', employees);
       console.log('Clients:', clients);
-  
+
       const notificationMessage = `A new product has been added: ${product.nom_produit}`;
-  
+
       const adminEmails = admins
         .filter(admin => admin.idadmin !== iduser)
         .map(admin => admin.email_admin);
       await saveNotifications(adminEmails, notificationMessage, senderEmail);
-  
+
       const employeeEmails = employees
         .filter(employee => employee.idemploye !== iduser)
         .map(employee => employee.email_employe);
       await saveNotifications(employeeEmails, notificationMessage, senderEmail);
-  
+
       const clientEmails = clients.map(client => client.email_client);
       await saveNotifications(clientEmails, notificationMessage, senderEmail);
-  
+
       const senderSocketId = userSocketMap[iduser];
       for (const userId in userSocketMap) {
         if (userId !== iduser) {
@@ -312,10 +316,10 @@ io.on('connection', (socket) => {
       console.error('Error creating product in index.js:', error);
     }
   });
-  
 
 
-  
+
+
   socket.on('passCommand', async (commandData) => {
     console.log('passCommand received', commandData);
     senderEmail = commandData.email;

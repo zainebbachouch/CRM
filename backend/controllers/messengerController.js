@@ -50,7 +50,60 @@ const deleteNotification = async (req, res) => {
     }
 };
 
+
+const updateSeenNotification = async (req, res) => {
+    try {
+        const updateQuery = `
+            UPDATE notification 
+            SET seen = true 
+            WHERE email_destinataire = ? AND seen = false
+        `;
+
+        const updateResult = await new Promise((resolve, reject) => {
+            db.query(updateQuery, [req.body.email_destinataire], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        res.json({ notificationsUpdated: updateResult });
+
+    } catch (error) {
+        console.error('Error updating notifications:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+
+const getUnreadCount = async (req, res) => {
+    try {
+        const { email_destinataire } = req.params;
+        const query = 'SELECT COUNT(*) as unreadCount FROM notification WHERE email_destinataire = ? AND seen = false';
+
+        const unreadCount = await new Promise((resolve, reject) => {
+            db.query(query, [email_destinataire], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result[0].unreadCount);
+                }
+            });
+        });
+
+        res.json({ unreadCount });
+
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
 module.exports = {
     getNotifications,
-    deleteNotification
+    deleteNotification,
+    updateSeenNotification,
+    getUnreadCount
 };
