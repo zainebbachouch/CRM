@@ -42,47 +42,67 @@ function Task() {
   }, [config]);
 
   useEffect(() => {
-    fetchTasks(); 
-  }, [fetchTasks]); 
+    fetchTasks();
+  }, [fetchTasks]);
+
 
   const handleOnDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
-    console.log('Drag result:', result);
+    console.log('resultresult', result);
 
+    // If there's no destination, do nothing
     if (!destination) return;
 
-    const updatedTasks = { ...tasks };
-    const sourceList = Array.from(updatedTasks[source.droppableId]);
-    const destinationList = Array.from(updatedTasks[destination.droppableId]);
-
-    const [movedTask] = sourceList.splice(source.index, 1);
-
-    movedTask.statut = destination.droppableId;
-    destinationList.splice(destination.index, 0, movedTask);
-
-    updatedTasks[source.droppableId] = sourceList;
-    updatedTasks[destination.droppableId] = destinationList;
-// redendance filter 
-    setTasks(updatedTasks);
+    // If the task is dropped in the same position, do nothing
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+        return;
+    }
 
     try {
-      const formattedDeadline = format(movedTask.deadline, 'yyyy-MM-dd HH:mm:ss');
-      const response = await axios.put(      
-        `http://127.0.0.1:5000/api/updateTask/${draggableId}`,   
-        {      
-          messageTache: movedTask.messageTache,      
-          deadline: formattedDeadline,      
-          statut: movedTask.statut,      
-          priorite: movedTask.priorite      
-        },      
-        config      
-      );
-      
-            console.log('Task status updated:', response.data);
+        // Deep clone the tasks to avoid direct state mutation
+        const updatedTasks = JSON.parse(JSON.stringify(tasks));
+        const sourceList = updatedTasks[source.droppableId];
+        const destinationList = updatedTasks[destination.droppableId];
+
+        // Remove the task from the source list
+        const [movedTask] = sourceList.splice(source.index, 1);
+
+        // Update the task's status if it was moved to a different column
+        if (source.droppableId !== destination.droppableId) {
+            movedTask.statut = destination.droppableId;
+        }
+
+        // Insert the task into the destination list at the specified index
+        destinationList.splice(destination.index, 0, movedTask);
+
+        // Update the tasks state
+        setTasks(updatedTasks);
+
+        // Prepare the data for the PUT request
+        const formattedDeadline = format(new Date(movedTask.deadline), 'yyyy-MM-dd HH:mm:ss');
+        await axios.put(
+            `http://127.0.0.1:5000/api/updateTask/${draggableId}`,
+            {
+                messageTache: movedTask.messageTache,
+                deadline: formattedDeadline,
+                statut: movedTask.statut,
+                priorite: movedTask.priorite
+            },
+            config
+        );
+
+        console.log('Task status updated successfully');
     } catch (error) {
-      console.error('Error updating task status:', error.response ? error.response.data : error.message);
+        console.error('Error updating task status:', error);
+
+        // Optionally handle error state or revert local state changes
+        fetchTasks(); // Re-fetch tasks to revert to the previous state
     }
-  };
+};
+
+
+  
+
 
   console.log('Rendering Task component with state:', tasks);
 
@@ -103,7 +123,7 @@ function Task() {
                   >
                     <h2>{status.replace('-', ' ')}</h2>
                     {tasks[status].map((task, taskIndex) => (
-                      <Draggable key={task.id} draggableId={task.id.toString()} index={taskIndex}>
+                      <Draggable key={task.id.toString()} draggableId={task.id.toString()} index={taskIndex}>
                         {(provided) => (
                           <div
                             ref={provided.innerRef}
