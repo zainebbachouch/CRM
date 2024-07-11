@@ -17,30 +17,59 @@ const createTask = async (req, res) => {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
-        const { idEmploye, messageTache, deadline, statut, priorite } = req.body;
+        const { idEmployes, title, messageTache, deadline, statut, priorite } = req.body;
 
+        // Validate status and priority
         if (!['To-Do', 'In-Progress', 'Done'].includes(statut)) {
-            return res.status(400).json({ message: "Invalid  status" });
+            return res.status(400).json({ message: "Invalid status" });
         }
         if (!['urgence', 'importance', 'routine'].includes(priorite)) {
-            return res.status(400).json({ message: "Invalid priorite" });
+            return res.status(400).json({ message: "Invalid priority" });
         }
 
+        // Log the received data
+        console.log('Received data:', req.body);
 
-        const query = 'INSERT INTO tache (idEmploye, messageTache, deadline, statut, priorite) VALUES (?, ?, ?, ?, ?)';
-        db.query(query, [idEmploye, messageTache, deadline, statut, priorite], (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
-            const userId = authResult.decode.id;
-            console.log('Connected user:', userId);
-            const userRole = authResult.decode.role;
-            saveToHistory('task created', userId, userRole);
-            res.status(201).json({ message: 'Tâche créée avec succès', id: result.insertId });
+        // Check for required fields
+        if (!idEmployes || !title || !messageTache || !deadline || !statut || !priorite) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        // Insert the task into the database
+        const query = 'INSERT INTO tache (title, messageTache, deadline, statut, priorite) VALUES (?, ?, ?, ?, ?)';
+        db.query(query, [title, messageTache, deadline, statut, priorite], (err, result) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ error: err.message });
+            }
+            const taskId = result.insertId;
+
+            // Insert employees for the task
+            const tacheEmployeQuery = 'INSERT INTO tache_employe (idTache, idEmploye) VALUES ?';
+            const tacheEmployeValues = idEmployes.map(idEmploye => [taskId, idEmploye]);
+            db.query(tacheEmployeQuery, [tacheEmployeValues], (err) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).json({ error: err.message });
+                }
+
+                const userId = authResult.decode.id;
+                const userRole = authResult.decode.role;
+                saveToHistory('task created', userId, userRole);
+                res.status(201).json({ message: 'Tâche créée avec succès', id: taskId });
+            });
         });
     } catch (error) {
         console.error('Error creating task:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+
+
+
+
+
 
 const getAllTasks = async (req, res) => {
     try {
@@ -95,43 +124,43 @@ const getTaskById = async (req, res) => {
 
 const updateTask = async (req, res) => {
     try {
-      const authResult = await isAuthorize(req, res);
-      if (authResult.message !== 'authorized') {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-  
-      if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe') {
-        return res.status(403).json({ message: "Insufficient permissions" });
-      }
-  
-      const { id } = req.params;
-      const { messageTache, deadline, statut, priorite, order } = req.body;
-  
-      if (!['To-Do', 'In-Progress', 'Done'].includes(statut)) {
-        return res.status(400).json({ message: "Invalid status" });
-      }
-      if (!['urgence', 'importance', 'routine'].includes(priorite)) {
-        return res.status(400).json({ message: "Invalid priority" });
-      }
-  
-      const updateQuery = 'UPDATE tache SET messageTache = ?, deadline = ?, statut = ?, priorite = ?, `order` = ? WHERE id = ?';
-      db.query(updateQuery, [messageTache, deadline, statut, priorite, order, id], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(200).json({ message: 'Task updated successfully' });
-  
-        const userId = authResult.decode.id;
-        console.log('Connected user:', userId);
-        const userRole = authResult.decode.role;
-        saveToHistory('task updated', userId, userRole);
-      });
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe') {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const { id } = req.params;
+        const { messageTache, title, deadline, statut, priorite, order } = req.body;
+
+        if (!['To-Do', 'In-Progress', 'Done'].includes(statut)) {
+            return res.status(400).json({ message: "Invalid status" });
+        }
+        if (!['urgence', 'importance', 'routine'].includes(priorite)) {
+            return res.status(400).json({ message: "Invalid priority" });
+        }
+
+        const updateQuery = 'UPDATE tache SET messageTache = ?, title=? , deadline = ?, statut = ?, priorite = ?, `order` = ? WHERE id = ?';
+        db.query(updateQuery, [messageTache, title, deadline, statut, priorite, order, id], (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.status(200).json({ message: 'Task updated successfully' });
+
+            const userId = authResult.decode.id;
+            console.log('Connected user:', userId);
+            const userRole = authResult.decode.role;
+            saveToHistory('task updated', userId, userRole);
+        });
     } catch (error) {
-      console.error('Error updating task:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error updating task:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-  };
+};
 
 
-  const updateTasksOrder = async (req, res) => {
+const updateTasksOrder = async (req, res) => {
     try {
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
@@ -204,4 +233,4 @@ const deleteTask = async (req, res) => {
     }
 };
 
-module.exports = { createTask, getAllTasks, getTaskById, updateTask, deleteTask ,updateTasksOrder };
+module.exports = { createTask, getAllTasks, getTaskById, updateTask, deleteTask, updateTasksOrder };

@@ -5,12 +5,16 @@ import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
 import { format } from 'date-fns';
 import orderBy from 'lodash/orderBy';
+import AddTask from './AddTask';
+
+
+
 
 function Task() {
   const token = localStorage.getItem('token');
-  const [tasks, setTasks] = useState({
+  const [tasks, setTasks] = useState([]);
+  const [selectedTask, setSelectedTask] = useState(null);
 
-  });
 
   const config = useMemo(() => ({
     headers: {
@@ -128,6 +132,21 @@ function Task() {
     }
   };
 
+  const handleUpdate = (task, action) => {
+    if (action === "update") {
+      setSelectedTask(task);
+    }
+  };
+
+  const parseMessageTache = (messageTache) => {
+    try {
+      const parsedData = JSON.parse(messageTache);
+      return parsedData.blocks.map(block => block.text).join(' ');
+    } catch (error) {
+      console.error('Invalid JSON in messageTache:', error);
+      return '';
+    }
+  };
 
 
   return (
@@ -135,6 +154,19 @@ function Task() {
       <SideBar />
       <div className="container-fluid flex-column">
         <TopBar />
+        {/* Button to open add task modal */}
+        <button className="btn btn-success mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate('val', 'ajouter')}>
+          Add Task
+        </button>
+
+        {/* AddTask modal */}
+        <AddTask
+          selectedTask={selectedTask}
+          setSelectedTask={setSelectedTask}
+          fetchTasks={fetchTasks}
+          tasks={tasks}
+          setTasks={setTasks}
+        />
         <DragDropContext onDragEnd={handleOnDragEnd}>
           <div className="columns-container d-flex flex-wrap">
             {Object.keys(tasks).map((status) => (
@@ -157,7 +189,8 @@ function Task() {
                           >
                             <p>ID: {task.id}</p>
                             <p>Employé ID: {task.idEmploye}</p>
-                            <p>Message: {task.messageTache}</p>
+                            <p>Title: {task.title}</p>
+                            <p>Message: {parseMessageTache(task.messageTache)}</p>
                             <p>Deadline: {task.deadline}</p>
                             <p>Statut: {task.statut}</p>
                             <p>Priorité: {task.priorite}</p>

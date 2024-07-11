@@ -109,7 +109,7 @@ function AddProduct({ addProduct, selectedProduct, products, setProducts, setSel
             } else {
                 const response = await axios.post('http://127.0.0.1:5000/api/createProduct', formData, config);
                 addProduct(response.data);
-                //ajoyter les adresse mail conntecte now
+                //ajouter les adresse mail conntecte now
 
                 socket.emit('newProduct', { ...response.data, email, userid ,role });
                 setSuccessMessage(response.data.message);
