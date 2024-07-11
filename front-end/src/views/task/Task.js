@@ -147,7 +147,10 @@ function Task() {
       return '';
     }
   };
-
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    return dateString.slice(0, 10);
+  };
 
   return (
     <div className="d-flex">
@@ -188,10 +191,12 @@ function Task() {
                             className="task-item"
                           >
                             <p>ID: {task.id}</p>
-                            <p>Employé ID: {task.idEmploye}</p>
+                            <p>Employé: {task.nom_employe} {task.prenom_employe}</p>
+                            {console.log("Nom et prénom:", task.nom_employe, task.prenom_employe)}
+
                             <p>Title: {task.title}</p>
                             <p>Message: {parseMessageTache(task.messageTache)}</p>
-                            <p>Deadline: {task.deadline}</p>
+                            <p>Deadline: {formatDate(task.deadline)}</p>
                             <p>Statut: {task.statut}</p>
                             <p>Priorité: {task.priorite}</p>
                           </div>

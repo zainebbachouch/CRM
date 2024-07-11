@@ -82,11 +82,27 @@ const getAllTasks = async (req, res) => {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
-        const query = 'SELECT * FROM tache';
+        /*   const query = `
+           SELECT t.id,t.title, t.messageTache, t.deadline, t.statut, t.priorite, t.order, te.idEmploye, e.nom_employe, e.prenom_employe , e.photo_employe
+           FROM tache t
+           JOIN tache_employe te ON t.id = te.idTache
+           JOIN employe e ON te.idEmploye = e.idemploye;
+
+           
+         `; */
+        const query = `SELECT t.id, t.title, t.messageTache, t.deadline, t.statut, t.priorite, t.order, GROUP_CONCAT(e.nom_employe SEPARATOR ', ') AS nom_employe, GROUP_CONCAT(e.prenom_employe SEPARATOR ', ') AS prenom_employe
+        FROM tache t
+        JOIN tache_employe te ON t.id = te.idTache
+        JOIN employe e ON te.idEmploye = e.idemploye
+        GROUP BY t.id;
+        `
+
+
         db.query(query, (err, results) => {
             if (err) return res.status(500).json({ error: err.message });
             res.status(200).json(results);
         });
+
     } catch (error) {
         console.error('Error fetching tasks:', error);
         res.status(500).json({ error: 'Internal Server Error' });
