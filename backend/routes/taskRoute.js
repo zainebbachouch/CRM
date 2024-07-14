@@ -8,6 +8,7 @@ router.get('/getAllTasks', taskController.getAllTasks);
 router.put('/updateTask/:id', taskController.updateTask);
 router.delete('/deleteTask/:id', taskController.deleteTask);
 router.put('/updateTasksOrder', taskController.updateTasksOrder); // Correct the path if it's differentmodule.exports = router;
+router.put('/updateTaskStatus/:id', taskController.updateTaskStatus); // Correct the path if it's differentmodule.exports = router;
 
 
 

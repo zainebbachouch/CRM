@@ -16,15 +16,7 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
     statut: '',
     messageTache: ''
   });
-  const [errors, setErrors] = useState({
-    idEmploye: '',
-    title: '',
-    deadline: '',
-    priorite: '',
-    statut: '',
-    messageTache: '',
-    general: ''
-  });
+  const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -32,33 +24,11 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
   const token = localStorage.getItem('token');
   const [employees, setEmployees] = useState([]);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
-  const config = useMemo(() => {
-    return {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      withCredentials: true,
-    };
-  }, [token]);
 
-  useEffect(() => {
-    if (selectedTask) {
-      try {
-        const parsedContent = JSON.parse(selectedTask.messageTache);
-        setEditorState(EditorState.createWithContent(convertFromRaw(parsedContent)));
-        setFormData({
-          idEmploye: selectedTask.idEmploye,
-          title: selectedTask.title,
-          deadline: selectedTask.deadline,
-          priorite: selectedTask.priorite,
-          statut: selectedTask.statut,
-          messageTache: selectedTask.messageTache
-        });
-      } catch (error) {
-        console.error("Invalid JSON in messageTache:", error);
-      }
-    }
-  }, [selectedTask]);
+  const config = useMemo(() => ({
+    headers: { Authorization: `Bearer ${token}` },
+    withCredentials: true,
+  }), [token]);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -75,6 +45,50 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
     }
   }, [config, role]);
 
+  useEffect(() => {
+    if (selectedTask) {
+      const parsedContent = JSON.parse(selectedTask.messageTache);
+      setEditorState(EditorState.createWithContent(convertFromRaw(parsedContent)));
+
+      console.log('Selected Task:', selectedTask); // Log task details
+      setFormData({
+        id: selectedTask.id,
+        title: selectedTask.title,
+        deadline: selectedTask.deadline,
+        priorite: selectedTask.priorite,
+        statut: selectedTask.statut,
+        messageTache: selectedTask.messageTache
+      });
+
+      // Set selected employees from the task (assuming `employe_names` is a string of names)
+      const employeeIds = selectedTask.employe_names.split(',').map(name => {
+        const emp = employees.find(emp => `${emp.nom_employe} ${emp.prenom_employe}` === name.trim());
+        return emp ? emp.idemploye : null;
+      }).filter(id => id);
+
+      setSelectedEmployees(employeeIds);
+      setSearchTerm(''); // Reset search term on task load
+    } else {
+      // Reset form data when no task is selected
+      setFormData({
+        id: '',
+        title: '',
+        deadline: '',
+        priorite: '',
+        statut: '',
+        messageTache: ''
+      });
+      setEditorState(EditorState.createEmpty());
+      setSelectedEmployees([]);
+      setSearchTerm('');
+    }
+  }, [selectedTask, employees]);
+
+
+  const handleRemoveEmployee = (idEmploye) => {
+    setSelectedEmployees(selectedEmployees.filter((id) => id !== idEmploye));
+  };
+
   const handleEditorChange = (state) => {
     setEditorState(state);
     const rawContentState = convertToRaw(state.getCurrentContent());
@@ -86,11 +100,13 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSelect = (val) => {
-    const selected = employees.find((employee) => employee.idemploye.toString() === val);
-    if (selected) {
-      setSearchTerm('');
-      setSelectedEmployees([...selectedEmployees, selected.idemploye]);
+  const handleSelect = (value) => {
+    const selectedEmp = employees.find(emp => emp.idemploye.toString() === value);
+    if (selectedEmp && !selectedEmployees.includes(selectedEmp.idemploye)) {
+      setSelectedEmployees([...selectedEmployees, selectedEmp.idemploye]);
+      setSearchTerm(''); // Clear search term after selection
+    } else if (selectedEmp && selectedEmployees.includes(selectedEmp.idemploye)) {
+      setSelectedEmployees(selectedEmployees.filter((id) => id !== selectedEmp.idemploye));
     }
   };
 
@@ -137,7 +153,6 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
     } catch (err) {
       console.error('Error:', err);
       if (err.response) {
-        console.error('Server response:', err.response);
         setErrors(err.response.data);
       } else {
         setErrors({ general: 'An error occurred. Please try again later.' });
@@ -146,8 +161,6 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
       setLoading(false);
     }
   };
-
-
 
   return (
     <div className="modal fade h-80 v-80" id="exampleModal" tabIndex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -191,12 +204,12 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
                   inputProps={{ className: 'form-control' }}
                 />
                 <div>
-                  {selectedEmployees.map((idEmploye, index) => {
+                  {selectedEmployees.map((idEmploye) => {
                     const employee = employees.find((emp) => emp.idemploye === idEmploye);
                     return (
-                      <div key={index}>
-                        {employee.nom_employe} {employee.prenom_employe}
-                        <button type="button" onClick={() => setSelectedEmployees(selectedEmployees.filter(id => id !== idEmploye))}>
+                      <div key={idEmploye} style={{ marginTop: '5px' }}>
+                        {employee ? `${employee.nom_employe} ${employee.prenom_employe}` : 'Employee not found'}
+                        <button type="button" className="btn btn-danger btn-sm ml-2" onClick={() => handleRemoveEmployee(idEmploye)}>
                           Remove
                         </button>
                       </div>
@@ -204,55 +217,21 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
                   })}
                 </div>
               </div>
-              <div className="row">
-                <div className="form-group col">
-                  <label htmlFor="deadline">Deadline:</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    id="deadline"
-                    name="deadline"
-                    value={formData.deadline}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
               <div className="form-group">
-                <label htmlFor="messageTache">Description:</label>
-                <div className="editor-container">
-                  <Editor
-                    editorState={editorState}
-                    onEditorStateChange={handleEditorChange}
-                    wrapperClassName="demo-wrapper"
-                    editorClassName="demo-editor"
-                    toolbar={{
-                      options: ['inline', 'blockType', 'fontSize', 'list', 'textAlign', 'colorPicker', 'link', 'embedded', 'emoji', 'image', 'remove', 'history'],
-                      inline: { inDropdown: false, options: ['bold', 'italic', 'underline', 'strikethrough', 'monospace'] },
-                      blockType: { inDropdown: true },
-                      fontSize: { inDropdown: true },
-                      list: { inDropdown: true, options: ['unordered', 'ordered'] },
-                      textAlign: { inDropdown: true, options: ['left', 'center', 'right', 'justify'] },
-                      colorPicker: { inDropdown: true },
-                      link: { inDropdown: true },
-                      embedded: { inDropdown: true },
-                      emoji: { inDropdown: false },
-                      image: { inDropdown: true },
-                      remove: { inDropdown: true },
-                      history: { inDropdown: true },
-                    }}
-                  />
-                </div>
+                <label htmlFor="deadline">Deadline:</label>
+                <input
+                  type="datetime-local"
+                  className="form-control"
+                  id="deadline"
+                  name="deadline"
+                  value={formData.deadline}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="priorite">Priority:</label>
-                <select
-                  className="form-control"
-                  id="priorite"
-                  name="priorite"
-                  value={formData.priorite}
-                  onChange={handleChange}
-                  required
-                >
+                <select className="form-control" id="priorite" name="priorite" value={formData.priorite} onChange={handleChange} required>
                   <option value="">Select Priority</option>
                   <option value="urgence">Urgent</option>
                   <option value="importance">Important</option>
@@ -261,25 +240,23 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
               </div>
               <div className="form-group">
                 <label htmlFor="statut">Status:</label>
-                <select
-                  className="form-control"
-                  id="statut"
-                  name="statut"
-                  value={formData.statut}
-                  onChange={handleChange}
-                  required
-                >
+                <select className="form-control" id="statut" name="statut" value={formData.statut} onChange={handleChange} required>
                   <option value="">Select Status</option>
-                  <option value="To-Do">To Do</option>
-                  <option value="In-Progress">In Progress</option>
+                  <option value="To-Do">To-Do</option>
+                  <option value="In-Progress">In-Progress</option>
                   <option value="Done">Done</option>
                 </select>
               </div>
               <div className="form-group">
-                <button type="submit" className="btn btn-primary" disabled={loading}>
-                  {selectedTask ? 'Update' : 'Add'}
-                </button>
+                <label htmlFor="messageTache">Task Message:</label>
+                <Editor
+                  editorState={editorState}
+                  onEditorStateChange={handleEditorChange}
+                />
               </div>
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Task'}
+              </button>
             </form>
           </div>
           <div className="modal-footer">

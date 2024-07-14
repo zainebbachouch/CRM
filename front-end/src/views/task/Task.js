@@ -6,6 +6,10 @@ import TopBar from '../../components/sidenav/TopNav';
 import { format } from 'date-fns';
 import orderBy from 'lodash/orderBy';
 import AddTask from './AddTask';
+import { CiMenuKebab } from "react-icons/ci";
+import '../../style/viewsStyle/task.css';
+import { RiDeleteBinLine } from "react-icons/ri";
+import { FaDoorOpen } from "react-icons/fa6";
 
 
 
@@ -14,6 +18,7 @@ function Task() {
   const token = localStorage.getItem('token');
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [isOpen, setIsOpen] = useState({});
 
 
   const config = useMemo(() => ({
@@ -33,6 +38,11 @@ function Task() {
 
       response.data.forEach(task => {
         tasksByStatus[task.statut].push(task);
+        // Initialize isOpen state for each task
+        setIsOpen(prevState => ({
+          ...prevState,
+          [task.id]: false
+        }));
       });
 
       console.log('Fetched tasks:', tasksByStatus);
@@ -105,7 +115,7 @@ function Task() {
       console.log('PUT data for single task:', putData);
       // Update the single task
       await axios.put(
-        `http://127.0.0.1:5000/api/updateTask/${draggableId}`,
+        `http://127.0.0.1:5000/api/updateTaskStatus/${draggableId}`,
         putData,
         config
       );
@@ -132,11 +142,7 @@ function Task() {
     }
   };
 
-  const handleUpdate = (task, action) => {
-    if (action === "update") {
-      setSelectedTask(task);
-    }
-  };
+
 
   const parseMessageTache = (messageTache) => {
     try {
@@ -151,6 +157,32 @@ function Task() {
     if (!dateString) return '';
     return dateString.slice(0, 10);
   };
+
+  const toggleDropdown = (taskId) => {
+    setIsOpen(prevState => ({
+      ...prevState,
+      [taskId]: !prevState[taskId]
+    }));
+  };
+
+
+  const handleDelete = async (taskId) => {
+    try {
+      await axios.delete(`http://127.0.0.1:5000/api/deleteTask/${taskId}`, config);
+      console.log('Task deleted successfully');
+      fetchTasks(); // Re-fetch tasks after deletion
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  };
+
+
+  const handleUpdate = (task, action) => {
+    if (action === "update") {
+      setSelectedTask(task);
+    }
+  };
+
 
   return (
     <div className="d-flex">
@@ -184,16 +216,28 @@ function Task() {
                     {orderBy(tasks[status], ['order'], ['asc']).map((task, taskIndex) => (
                       <Draggable key={task.id.toString()} draggableId={task.id.toString()} index={taskIndex}>
                         {(provided) => (
+
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                             className="task-item"
                           >
+                            <div className="dropdown">
+                              <div className="icon1" onClick={() => toggleDropdown(task.id)}>
+                                <CiMenuKebab />
+                              </div>
+                              {isOpen[task.id] && (
+                                <div className="dropdown-menu">
+                                  <div className="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate(task, 'update')}>
+                                    <FaDoorOpen />
+                                  </div>
+                                  <div className="dropdown-item" onClick={() => handleDelete(task.id)}><RiDeleteBinLine /></div>
+                                </div>
+                              )}
+                            </div>
                             <p>ID: {task.id}</p>
-                            <p>Employé: {task.nom_employe} {task.prenom_employe}</p>
-                            {console.log("Nom et prénom:", task.nom_employe, task.prenom_employe)}
-
+                            <p>Employé: {task.employe_names}</p>
                             <p>Title: {task.title}</p>
                             <p>Message: {parseMessageTache(task.messageTache)}</p>
                             <p>Deadline: {formatDate(task.deadline)}</p>
