@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaBell, FaArrowDown, FaShoppingBasket } from 'react-icons/fa';
 import { CiSettings } from "react-icons/ci";
 import flag from "../../images/flag.png";
-import profile from "../../images/profile.png";
 import { Link } from 'react-router-dom';
 import io from 'socket.io-client';
 import axios from 'axios';
@@ -14,6 +13,8 @@ function TopNav() {
     const userId = localStorage.getItem('userId');
     const token = localStorage.getItem('token');
     const email = localStorage.getItem('email');
+    const photo = localStorage.getItem('photo');
+    console.log('immmmmmag', photo);
 
     const [isOpen, setIsOpen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -124,7 +125,9 @@ function TopNav() {
                     <div className="icon1"><CiSettings /></div>
                     <div className="icon1"><img src={flag} alt="flag" className='flag' /></div>
                     <div className='d-flex'>
-                        <div className="icon1"><img src={profile} alt="profile" className='profile' /></div>
+                        <div className="icon1">
+                            {photo && <img src={`data:image/png;base64,${photo}`} alt="profile" className='profile' />}
+                        </div>
 
                         <div className="dropdown">
                             <div className="icon1" onClick={toggleDropdown}>

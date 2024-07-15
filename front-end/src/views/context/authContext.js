@@ -26,18 +26,21 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(response.data.user);
       localStorage.setItem('userId', response.data.user.id);
       localStorage.setItem('username', response.data.user.username);
-      console.log('userIduserIduserId', response.data.user.id);
+      //console.log('userIduserIduserId', response.data.user.id);
 
       localStorage.setItem('refreshToken', response.data.refreshToken);
-      console.log('Refresh token:', response.data.refreshToken);
+      //console.log('Refresh token:', response.data.refreshToken);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('role', response.data.role);
       localStorage.setItem('email', response.data.user.email);
+      localStorage.setItem('photo', response.data.user.photo);
 
 
       console.log(response.data)
 
-      document.cookie = "cookie:" + response.data.token;
+      //document.cookie = "cookie:" + response.data.token;
+      document.cookie = `cookie=${response.data.token}; SameSite=None; Secure`;
+
 
     } catch (error) {
       console.error("Login failed:", error);

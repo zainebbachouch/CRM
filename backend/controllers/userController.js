@@ -123,7 +123,11 @@ const loginAdmin = async (email, password) => {
         return {
             success: true, message: "Login successful", token: token,
             refreshToken: refreshToken,
-            role: 'admin', user: { username: user.nom_admin, id: user.idadmin, email: user.email_admin }
+            role: 'admin', user: {
+                username: user.nom_admin, id: user.idadmin, email: user.email_admin,
+                photo: user.photo_admin ? user.photo_admin.toString('base64') : null // Convert photo to base64
+
+            }
         };
     }
     catch (error) {
@@ -156,7 +160,8 @@ const loginEmploye = async (email, password) => {
             return { success: false, message: "Invalid password" };
         }
 
-        const token = await createToken("employe", user.idemploye, user.email_employe, process.env.JWT_SECRET);
+        const token = await createToken("employe", user.idemploye, user.email_employe,
+            process.env.JWT_SECRET);
 
 
         /*  res.cookie("accessToken", token, {
@@ -173,7 +178,14 @@ const loginEmploye = async (email, password) => {
         console.log('User connected:', userId);
         await saveToHistory('Statut connecter pour employe ', userId, userRole);
 
-        return { success: true, message: "Login successful", token: token, role: 'employe', user: { username: user.nom_employe, id: user.idemploye, email: user.email_employe } };
+        return {
+            success: true, message: "Login successful", token: token, role: 'employe',
+            user: {
+                username: user.nom_employe, id: user.idemploye, email: user.email_employe,
+                photo: user.photo_employe ? user.photo_employe.toString('base64') : null // Convert photo to base64
+
+            }
+        };
     } catch (error) {
         console.error(error);
         return { success: false, message: "Internal server error" };
@@ -225,7 +237,12 @@ const loginClient = async (email, password) => {
 
         //saveToHistory('Statut connecter', userId, userRole);
         return {
-            success: true, message: "Login successful", token: token, role: 'client', user: { username: user.nom_client, id: user.idemploye, email: user.email_client }
+            success: true, message: "Login successful", token: token, role: 'client',
+            user: {
+                username: user.nom_client, id: user.idemploye, email: user.email_client,
+                photo: user.photo_client ? user.photo_client.toString('base64') : null // Convert photo to base64
+
+            }
         };
 
     } catch (error) {
@@ -306,8 +323,7 @@ const registerA = async (req, res) => {
 
 
 const registerE = async (req, res) => {
-    const { nom, prenom, email, password, telephone, adresse, dateDeNaissance, genre } = req.body;
-
+    const { nom, prenom, email, password, telephone, adresse, dateDeNaissance, genre, photo } = req.body;
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -321,7 +337,7 @@ const registerE = async (req, res) => {
             prenom_employe: prenom,
             email_employe: email,
             mdp: hashedPassword,
-            photo_employe: null,
+            photo_employe: Buffer.from(photo, 'base64'),
             telephone_employe: telephone,
             adresse_employe: adresse,
             //datede_naissance_employe: dateDeNaissance , 
@@ -350,8 +366,7 @@ const registerE = async (req, res) => {
 };
 
 const registerC = async (req, res) => {
-    const { nom, prenom, email, password, telephone, adresse, dateDeNaissance, genre } = req.body;
-
+    const { nom, prenom, email, password, telephone, adresse, dateDeNaissance, genre, photo } = req.body;
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -364,7 +379,7 @@ const registerC = async (req, res) => {
             prenom_client: prenom,
             email_client: email,
             mdp: hashedPassword,
-            photo_client: null,
+            photo_client: Buffer.from(photo, 'base64'),
             telephone_client: telephone,
             adresse_client: adresse,
             datede_naissance_client: dateDeNaissance,

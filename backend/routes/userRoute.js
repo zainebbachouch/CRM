@@ -1,11 +1,31 @@
 const express = require("express");
 const userController = require("../controllers/userController");
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+
+
+/*
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, '../document/uploads/'); // Directory for all images
+    },
+    filename: (req, file, cb) => {
+        const genderPrefix = req.body.genre === 'femme' ? 'female_avatar' : 'male_avatar';
+        cb(null, genderPrefix + path.extname(file.originalname)); // Use gender-specific filename
+    }
+});
+
+const upload = multer({ storage: storage }); upload.single('photo'),*/
+
+router.post('/registerUser', userController.registerUser);
+
+
 
 //authentificatin 
 router.post('/login', userController.loginUser);
 router.post('/registerA', userController.registerA);
-router.post('/registerUser', userController.registerUser);
+
 
 router.get('/getUserById/:id', userController.getUserById);
 
@@ -43,7 +63,7 @@ router.delete('/deleteClient/:id', userController.deleteClient);
 
 
 //envoie mail
-router.post('/sendMailEmploye',userController.sendMailEmploye)
-router.get('/listEmails',userController.listEmails)
+router.post('/sendMailEmploye', userController.sendMailEmploye)
+router.get('/listEmails', userController.listEmails)
 
 module.exports = router;

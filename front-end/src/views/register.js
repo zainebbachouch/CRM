@@ -1,9 +1,15 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "../style/viewsStyle/registerStyle.css";
+import femaleAvatar from '../images/uploads/female_avatar.png';
+import maleAvatar from '../images/uploads/male_avatar.png';
 
 const emailValidator = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-const passwordValidator = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/;
+//const passwordValidator = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/;
+//const passwordValidator = /^(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+const passwordValidator = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+
 //? . presente carectere * existe  ou pas ou exite plusueur fois + existe ou existe plus
 export default function Register() {
     const [formData, setFormData] = useState({
@@ -52,10 +58,37 @@ export default function Register() {
         setErrors({ ...errors, ...validationErrors });
     };
 
+    const getBase64 = (image) => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = image;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const dataURL = canvas.toDataURL('image/png');
+                resolve(dataURL.split(',')[1]); // Return base64 string
+            };
+        });
+    };
+
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-        setTouchedFields({ ...touchedFields, [name]: true });        
+        setFormData({
+            ...formData, [name]: value
+        });
+
+        setTouchedFields({ ...touchedFields, [name]: true });
+
+        // Set photo based on gender
+        if (name === 'genre') {
+            const photo = value === 'femme' ? femaleAvatar : maleAvatar;
+            setFormData((prev) => ({ ...prev, photo })); // Set photo path
+        }
+
         setErrors((prevErrors) => ({
             ...prevErrors,
             [`${name}Error`]: "", // Effacer l'erreur du champ modifié
@@ -65,7 +98,7 @@ export default function Register() {
 
 
     const handleSubmit = async (e) => {
-        e.preventDefault();    
+        e.preventDefault();
         setTouchedFields({
             nom: true,
             prenom: true,
@@ -79,9 +112,14 @@ export default function Register() {
 
         const validationErrors = validateForm(formData);
         if (Object.keys(validationErrors).length === 0) {
+            const photo = formData.photo; // Get the path
+            const base64Photo = await getBase64(photo); // Convert to base64
+
+            const dataToSend = { ...formData, photo: base64Photo }; // Include base64 photo
+
             try {
 
-                const response = await axios.post("http://127.0.0.1:5000/api/registerUser", formData);
+                const response = await axios.post("http://127.0.0.1:5000/api/registerUser", dataToSend);
 
                 console.log("Response from server:", response.data);
             } catch (err) {
@@ -105,13 +143,25 @@ export default function Register() {
 
         if (touchedFields.prenom && !data.prenom.trim()) errors.prenomError = "Le prénom est requis";
 
-        if (touchedFields.email && !data.email.trim()) errors.emailAddressError = "L'adresse e-mail est requise";
-        else if (touchedFields.email && !emailValidator.test(data.email.trim())) errors.emailAddressError = "L'adresse e-mail n'est pas valide";
-        
-        if (touchedFields.password && !data.password.trim()) errors.passwordError = "Le mot de passe est requis";
-        else if (touchedFields.password && !passwordValidator.test(data.password)) errors.passwordError = "Le mot de passe doit contenir au moins 8 caractères, 1 chiffre, 1 majuscule et 1 minuscule";
-        if (touchedFields.passwordConfirmation && data.password !== data.passwordConfirmation) errors.passwordConfirmationError = "Les mots de passe ne correspondent pas";
-       
+        if (touchedFields.email) {
+            const email = data.email.trim();
+            if (!email) {
+                errors.emailAddressError = "L'adresse e-mail est requise";
+            } else if (!emailValidator.test(email)) {
+                errors.emailAddressError = "L'adresse e-mail n'est pas valide";
+            }
+        }
+
+        if (touchedFields.password && !data.password.trim()) {
+            errors.passwordError = "Le mot de passe est requis";
+        } else if (touchedFields.password && !passwordValidator.test(data.password)) {
+            errors.passwordError = "Le mot de passe doit contenir au moins 8 caractères, 1 chiffre, 1 majuscule et 1 minuscule";
+        }
+
+        if (touchedFields.passwordConfirmation && data.password !== data.passwordConfirmation) {
+            errors.passwordConfirmationError = "Les mots de passe ne correspondent pas";
+        }
+
         if (touchedFields.telephone && !data.telephone.trim()) errors.telephoneError = "Le numéro de téléphone est requis";
         if (touchedFields.adresse && !data.adresse.trim()) errors.adresseError = "L'adresse est requise";
         if (touchedFields.dateDeNaissance && !data.dateDeNaissance) errors.dateDeNaissanceError = "La date de naissance est requise";
@@ -171,7 +221,6 @@ export default function Register() {
                                 />
                                 {errors.emailAddressError && touchedFields.email && <div className="errorMsg">{errors.emailAddressError}</div>}
                             </div>
-
                             <div className="form-group">
                                 <label htmlFor="password">Mot de passe</label>
                                 <input
@@ -186,6 +235,7 @@ export default function Register() {
                                 />
                                 {errors.passwordError && touchedFields.password && <div className="errorMsg">{errors.passwordError}</div>}
                             </div>
+
 
                             <div className="form-group">
                                 <label htmlFor="passwordConfirmation">Confirmer le mot de passe</label>
