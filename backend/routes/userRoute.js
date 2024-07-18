@@ -41,11 +41,24 @@ router.get('/client/:id', userController.getClientInformation);
 router.get('/employe/:id', userController.getEmployeInformation);
 
 
-// update by id 
-router.put('/updateadmin/:id', userController.updateAdminInformation);
-router.put('/updateclient/:id', userController.updateClientInformation);
-router.put('/updateemploye/:id', userController.updateEmployeInformation);
+// update by id by photo also 
 
+
+// Configure Multer storage and file naming
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, '../document/uploads'); // Set the directory for file uploads
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`); // Generate a unique file name
+    }
+});
+
+const upload = multer({ storage: storage });
+
+router.put('/updateadmin/:id',  upload.single('photo_admin'),  userController.updateAdminInformation);
+router.put('/updateclient/:id',  upload.single('photo_client') , userController.updateClientInformation);
+router.put('/updateemploye/:id',(req,res)=>{upload.single('photo_employe');userController.updateEmployeInformation(req,res)}  );
 
 //list for adminsration
 router.get('/employees', userController.listEmployees);

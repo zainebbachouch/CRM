@@ -58,21 +58,7 @@ export default function Register() {
         setErrors({ ...errors, ...validationErrors });
     };
 
-    const getBase64 = (image) => {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.src = image;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                const dataURL = canvas.toDataURL('image/png');
-                resolve(dataURL.split(',')[1]); // Return base64 string
-            };
-        });
-    };
+   
 
 
     const handleChange = (e) => {
@@ -82,12 +68,40 @@ export default function Register() {
         });
 
         setTouchedFields({ ...touchedFields, [name]: true });
-
-        // Set photo based on gender
         if (name === 'genre') {
-            const photo = value === 'femme' ? femaleAvatar : maleAvatar;
-            setFormData((prev) => ({ ...prev, photo })); // Set photo path
+            if(value=='femme')
+            {
+ // Set photo based on gender
+ const formData1=new FormData();
+ formData1.append('file',femaleAvatar);
+ formData1.append('upload_preset','xlcnkdgy');
+ axios.post('https://api.cloudinary.com/v1_1/dik98v16k/image/upload/',formData1)
+ .then(response=>{
+  setFormData((prev) => ({ ...prev, photo:response.data.secure_url })); // Set photo path
+
+ })
+ .catch(error=>{console.log(error)})
+
+            }
+            else 
+            {
+ // Set photo based on gender
+ const formData1=new FormData();
+ formData1.append('file',maleAvatar);
+ formData1.append('upload_preset','xlcnkdgy');
+ axios.post('https://api.cloudinary.com/v1_1/dik98v16k/image/upload/',formData1)
+ .then(response=>{
+  console.log(response.data.secure_url)
+  setFormData((prev) => ({ ...prev, photo:response.data.secure_url })); // Set photo path
+
+ })
+ .catch(error=>{console.log(error)})
+
+            }
         }
+       
+
+
 
         setErrors((prevErrors) => ({
             ...prevErrors,
@@ -113,14 +127,9 @@ export default function Register() {
         const validationErrors = validateForm(formData);
         if (Object.keys(validationErrors).length === 0) {
             const photo = formData.photo; // Get the path
-            const base64Photo = await getBase64(photo); // Convert to base64
-
-            const dataToSend = { ...formData, photo: base64Photo }; // Include base64 photo
-
+            const dataToSend = { ...formData, photo: photo }; // Include base64 photo
             try {
-
                 const response = await axios.post("http://127.0.0.1:5000/api/registerUser", dataToSend);
-
                 console.log("Response from server:", response.data);
             } catch (err) {
                 console.error("Error object:", err);

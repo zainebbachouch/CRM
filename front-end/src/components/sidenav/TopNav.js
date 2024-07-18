@@ -14,7 +14,6 @@ function TopNav() {
     const token = localStorage.getItem('token');
     const email = localStorage.getItem('email');
     const photo = localStorage.getItem('photo');
-    console.log('immmmmmag', photo);
 
     const [isOpen, setIsOpen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -126,8 +125,7 @@ function TopNav() {
                     <div className="icon1"><img src={flag} alt="flag" className='flag' /></div>
                     <div className='d-flex'>
                         <div className="icon1">
-                            {photo && <img src={`data:image/png;base64,${photo}`} alt="profile" className='profile' />}
-                        </div>
+                            <img src={localStorage.getItem("photo")} alt="profile" className='profile' />                        </div>
 
                         <div className="dropdown">
                             <div className="icon1" onClick={toggleDropdown}>

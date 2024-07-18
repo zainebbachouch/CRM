@@ -6,12 +6,14 @@ import TopBar from '../../components/sidenav/TopNav';
 import '../../style/viewsStyle/profile.css';
 
 function Profile() {
-    const { id } = useParams(); // Utiliser le hook useParams pour obtenir les paramètres d'URL
+    const { id } = useParams();
     const [filterActive, setFilterActive] = useState(1); // Default to account setting
     const [profileData, setProfileData] = useState({});
     const [loading, setLoading] = useState(true);
-    
-
+    const [selectedFile, setSelectedFile] = useState('');
+    const [photo_employe, setEmploye] = useState(0)
+    const [photo_client, setClient] = useState(0)
+    const [photo_admin, setAdmin] = useState(0)
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
 
@@ -33,8 +35,16 @@ function Profile() {
                 } else if (role === 'employe') {
                     response = await axios.get(`http://127.0.0.1:5000/api/employe/${id}`, config);
                 }
-                setProfileData(response.data);
-                console.log(response.data);
+
+                setEmploye(response.data.photo_employe);
+                setAdmin(response.data.photo_admin);
+                setClient(response.data.photo_client);
+                console.log(response.data)
+                const data = { ...response.data };
+                setProfileData({
+                    ...data,
+                });
+                console.log(photo_employe)
             } catch (error) {
                 console.error("Error fetching profile data:", error);
             } finally {
@@ -48,17 +58,24 @@ function Profile() {
         setFilterActive(filter);
     };
 
+
     const updateProfileData = async (id) => {
+        const formData = new FormData();
+        for (const key in profileData) {
+            formData.append(key, profileData[key]);
+        }
+        formData.append('photo_employe', photo_employe);
         try {
             let response;
             if (role === 'admin') {
-                response = await axios.put(`http://127.0.0.1:5000/api/updateadmin/${id}`,profileData, config);
+                response = await axios.put(`http://127.0.0.1:5000/api/updateadmin/${id}`, formData, config);
             } else if (role === 'client') {
-                response = await axios.put(`http://127.0.0.1:5000/api/updateclient/${id}`,profileData, config);
+                response = await axios.put(`http://127.0.0.1:5000/api/updateclient/${id}`, formData, config);
             } else if (role === 'employe') {
-                response = await axios.put(`http://127.0.0.1:5000/api/updateemploye/${id}`,profileData, config);
+                response = await axios.put(`http://127.0.0.1:5000/api/updateemploye/${id}`, profileData, config);
             }
-            if (response.data.message.includes("information updated successfully")) {
+            if (response.data.message.includes("information updated successfully")) 
+            {
                 console.log("Profile updated successfully");
             }
         } catch (error) {
@@ -68,24 +85,40 @@ function Profile() {
         }
     };
 
-   /* const handleInputChange = (event) => {
-        const { name, value, type } = event.target;
-        setProfileData((prevState) => ({
-            ...prevState,
-            [name]: type === 'file' ? event.target.files[0] : value,
-        }));
-    };*/
-    const handleInputChange = (event) => {
-        const { name, value, type } = event.target;
-        setProfileData((prevState) => ({
-            ...prevState,
-            [name]: type === 'file' ? event.target.files[0] : (type === 'date' ? value.split('T')[0] : value),
-        }));
+    const handleInputChange =  (event) => {
+        const { name, value, type, files } = event.target;
+        if (type == 'file')
+            {
+            setSelectedFile(files[0]);
+            console.log(files[0]);
+            const formData1=new FormData();
+            formData1.append('file',files[0]);
+            formData1.append('upload_preset','xlcnkdgy');//nom environemnt cloud
+            axios.post('https://api.cloudinary.com/v1_1/dik98v16k/image/upload/',formData1)
+            .then(response=>{
+              setEmploye(response.data.secure_url)//lien d'accee
+              localStorage.setItem("photo",response.data.secure_url)
+              setProfileData((prevState) => ({
+                ...prevState,
+                ['photo_employe']: response.data.secure_url,
+            }));
+              console.log(profileData)
+              
+            })
+            .catch(error=>{console.log(error)})
+        } 
+        else {
+            setProfileData((prevState) => ({
+                ...prevState,
+                [name]: type === 'date' ? value.split('T')[0] : value,
+            }));
+        }
     };
+
     const formatDate = (dateString) => {
-        if (!dateString) return ''; 
+        if (!dateString) return '';
         return dateString.slice(0, 10);
-      };
+    };
 
     if (loading) {
         return <div>Loading...</div>;
@@ -99,8 +132,8 @@ function Profile() {
                 <div className="container-fluid p-2">
                     <div className="row m-0 p-0">
                         <div className="profile-card col-md-3">
-                            <img alt="Profile" className="profile-img" />
-                            <h2>{profileData.nom} {localStorage.getItem('username')}</h2>
+                        <img src={photo_employe} alt="Selected" style={{ width: '200px', height: '200px' }} />
+                        <h2>{profileData.nom || ''} {localStorage.getItem('username')}</h2>
                             <p>You are {role}</p>
                             <hr />
                             <ul className="list-unstyled">
@@ -138,7 +171,7 @@ function Profile() {
                             </ul>
                             <div className="tab-content" id="profileTabsContent">
                                 <div className={`tab-pane fade ${filterActive === 1 ? 'show active' : ''}`} role="tabpanel">
-                                    <form className="form mt-4">
+                                    <form className="form mt-4" encType="multipart/form-data">
                                         {role === 'admin' && (
                                             <div>
                                                 <div className="row">
@@ -171,26 +204,15 @@ function Profile() {
                                                         <input type="text" className="form-control" id="adresse_admin" name="adresse_admin" value={profileData.adresse_admin || ''} onChange={handleInputChange} />
                                                     </div>
                                                 </div>
-                                                  <div className="row">
-                                                    <div className="form-group col-md-6">
-                                                        <label htmlFor="date_de_naissance_admin">Date de naissance</label>
-                                                        <input type="date" className="form-control" id="date_de_naissance_admin" name="date_de_naissance_admin" value={formatDate(profileData.date_de_naissance_admin) || ''} onChange={handleInputChange} />
-                                                    </div>
-                                                    <div className="form-group col-md-6">
-                                                        <label htmlFor="date_inscription_admin">Date d'inscription</label>
-                                                        <span className="form-control" id="date_inscription_admin">
-                                                            {formatDate(profileData.date_inscription_admin) || ''}
-                                                        </span>
-                                                    </div>
-
-                                                  
-                                                </div>
-                                               
-                                               
                                                 <div className="row">
                                                     <div className="form-group col-md-6">
-                                                        <label htmlFor="genre">Genre</label>
-                                                        <select className="form-control" id="genre" name="genre" value={profileData.genre || ''} onChange={handleInputChange}>
+                                                        <label htmlFor="date_de_naissance_admin">Date de naissance</label>
+                                                        <input type="date" className="form-control" id="date_de_naissance_admin" name="date_de_naissance_admin" value={formatDate(profileData.date_de_naissance_admin)} onChange={handleInputChange} />
+                                                    </div>
+                                                    <div className="form-group col-md-6">
+                                                        <label htmlFor="genre_admin">Genre</label>
+                                                        <select className="form-control" id="genre_admin" name="genre_admin" value={profileData.genre_admin || ''} onChange={handleInputChange}>
+                                                            <option value="">Select Genre</option>
                                                             <option value="homme">Male</option>
                                                             <option value="femme">Female</option>
                                                         </select>
@@ -233,31 +255,19 @@ function Profile() {
                                                 <div className="row">
                                                     <div className="form-group col-md-6">
                                                         <label htmlFor="date_de_naissance_client">Date de naissance</label>
-                                                        <input type="date" className="form-control" id="date_de_naissance_client" name="date_de_naissance_client" value={formatDate(profileData.date_de_naissance_client) || ''} onChange={handleInputChange} />
+                                                        <input type="date" className="form-control" id="date_de_naissance_client" name="date_de_naissance_client" value={formatDate(profileData.date_de_naissance_client)} onChange={handleInputChange} />
                                                     </div>
-                                                    <div className="form-group col-md-6">
-                                                            <label htmlFor="date_inscription_client">Date d'inscription</label>
-                                                            <span className="form-control" id="date_inscription_client">
-                                                                {formatDate(profileData.date_inscription_client) || ''}
-                                                            </span>
-                                                        </div>
-
-                                                    
-                                                </div>
-                                                <div className="row">
                                                     <div className="form-group col-md-6">
                                                         <label htmlFor="genre_client">Genre</label>
                                                         <select className="form-control" id="genre_client" name="genre_client" value={profileData.genre_client || ''} onChange={handleInputChange}>
-                                                            <option value="homme">Male</option>
-                                                            <option value="femme">Female</option>
+                                                            <option value="">Select Genre</option>
+                                                            <option value="male">Male</option>
+                                                            <option value="female">Female</option>
                                                         </select>
                                                     </div>
                                                 </div>
                                             </div>
                                         )}
-
-
-
                                         {role === 'employe' && (
                                             <div>
                                                 <div className="row">
@@ -277,7 +287,13 @@ function Profile() {
                                                     </div>
                                                     <div className="form-group col-md-6">
                                                         <label htmlFor="photo_employe">Photo</label>
-                                                        <input type="file" className="form-control" id="photo_employe" name="photo_employe" onChange={handleInputChange} />
+                                                        <input
+                                                            type="file"
+                                                            className="form-control"
+                                                            id="photo_employe"
+                                                            name="photo_employe"
+                                                            onChange={handleInputChange}
+                                                        />
                                                     </div>
                                                 </div>
                                                 <div className="row">
@@ -292,37 +308,28 @@ function Profile() {
                                                 </div>
                                                 <div className="row">
                                                     <div className="form-group col-md-6">
-                                                        <label htmlFor="datede_naissance_employe">Date de naissance</label>
-                                                        <input type="date" className="form-control" id="datede_naissance_employe" name="datede_naissance_employe" value={formatDate(profileData.datede_naissance_employe) || ''} onChange={handleInputChange} />
+                                                        <label htmlFor="date_de_naissance_employe">Date de naissance</label>
+                                                        <input type="date" className="form-control" id="date_de_naissance_employe" name="date_de_naissance_employe" value={formatDate(profileData.date_de_naissance_employe)} onChange={handleInputChange} />
                                                     </div>
                                                     <div className="form-group col-md-6">
-                                                        <label htmlFor="date_inscription_employe">Date d'inscription</label>
-                                                        <span className="form-control" id="date_inscription_employe">
-                                                            {formatDate(profileData.date_inscription_employe) || ''}
-                                                        </span>
+                                                        <label htmlFor="genre_employe">Genre</label>
+                                                        <select className="form-control" id="genre_employe" name="genre_employe" value={profileData.genre_employe || ''} onChange={handleInputChange}>
+                                                            <option value="">Select Genre</option>
+                                                            <option value="male">Male</option>
+                                                            <option value="female">Female</option>
+                                                        </select>
                                                     </div>
-
-                                                </div>
-                                                <div className="row">
-                                                <div className="form-group col-md-6">
-                                                    <label htmlFor="genre_employe">Genre</label>
-                                                    <select className="form-control" id="genre_employe" name="genre_employe" value={profileData.genre_employe || ''} onChange={handleInputChange}>
-                                                        <option value="homme">Male</option>
-                                                        <option value="femme">Female</option>
-                                                    </select>
-                                                </div>
-
                                                 </div>
                                             </div>
                                         )}
-                                        <button type="button" className="btn btn-primary" onClick={() => updateProfileData(id)}>Save Changes</button>
+                                        <button type="button" className="btn btn-primary mt-4" onClick={() => updateProfileData(id)}>Update</button>
                                     </form>
                                 </div>
                                 <div className={`tab-pane fade ${filterActive === 2 ? 'show active' : ''}`} role="tabpanel">
-                                    {/* Company Settings Content */}
+                                    <p>Company Settings content goes here...</p>
                                 </div>
                                 <div className={`tab-pane fade ${filterActive === 3 ? 'show active' : ''}`} role="tabpanel">
-                                    {/* Notifications Content */}
+                                    <p>Notifications content goes here...</p>
                                 </div>
                             </div>
                         </div>

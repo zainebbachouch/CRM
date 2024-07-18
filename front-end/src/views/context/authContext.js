@@ -25,6 +25,10 @@ export const AuthProvider = ({ children }) => {
 
       setCurrentUser(response.data.user);
       localStorage.setItem('userId', response.data.user.id);
+      if(response.data.photo_employe)
+      {
+        localStorage.setItem('photo', response.data.photo_employe);
+      }
       localStorage.setItem('username', response.data.user.username);
       //console.log('userIduserIduserId', response.data.user.id);
 
@@ -62,13 +66,19 @@ export const AuthProvider = ({ children }) => {
         }
     };*/
 
-  /* const logout = () => {
-     setCurrentUser(null);
-     localStorage.removeItem('token');
-   };*/
+    const logout = () => {
+      setCurrentUser(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('role');
+      localStorage.removeItem('email');
+      localStorage.removeItem('photo');
+    };
 
   return (
-    <AuthContext.Provider value={{ currentUser, handleLogin }}>
+    <AuthContext.Provider value={{ currentUser, handleLogin ,logout}}>
       {children}
     </AuthContext.Provider>
   );

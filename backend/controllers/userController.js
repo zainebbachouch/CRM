@@ -18,7 +18,6 @@ const OAuth2 = google.auth.OAuth2;
 
 
 
-
 const getUserById = async (req, res) => {
 
     const id = req.params.id;
@@ -1138,7 +1137,10 @@ const getEmployeInformation = async (req, res) => {
             return res.status(404).json({ message: "Employe not found" });
         }
 
-        res.json(employeInfo);
+
+        const updatedEmployeInfo = { ...employeInfo, photo_employe: employeInfo.photo_employe };
+
+        res.json(updatedEmployeInfo);
     } catch (error) {
         console.error("Error retrieving employe information:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -1172,6 +1174,11 @@ const updateAdminInformation = async (req, res) => {
                 updatedAdminInfo[key] = req.body[key];
             }
         });
+
+        // Handle the file upload
+        if (req.file) {
+            updatedAdminInfo.photo_admin = req.file.buffer;
+        }
 
         // Update the database
         const result = await updateInformationOfRole('admin', id, updatedAdminInfo);
@@ -1212,7 +1219,10 @@ const updateClientInformation = async (req, res) => {
                 updatedClientInfo[key] = req.body[key];
             }
         });
-
+        // Handle the file upload
+        if (req.file) {
+            updatedClientInfo.photo_client = req.file.buffer;
+        }
         // Update the database
         const result = await updateInformationOfRole('client', id, updatedClientInfo);
         if (result) {
@@ -1228,8 +1238,13 @@ const updateClientInformation = async (req, res) => {
 
 
 
+
 const updateEmployeInformation = async (req, res) => {
+    console.log(req.body) 
     try {
+        console.log('Request body:', req.body);
+        console.log('Request file:', req.file);
+
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
@@ -1240,21 +1255,21 @@ const updateEmployeInformation = async (req, res) => {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
-        // Get existing employe information
         const existingEmployeInfo = await getInformationOfRole('employe', id);
         if (!existingEmployeInfo) {
             return res.status(404).json({ message: "Employe not found" });
         }
 
-        // Merge the request body with the existing data
         const updatedEmployeInfo = { ...existingEmployeInfo };
         Object.keys(req.body).forEach(key => {
             if (req.body[key] !== undefined) {
                 updatedEmployeInfo[key] = req.body[key];
             }
         });
+        if (req.body) {
+             updatedEmployeInfo.photo_employe = req.body.photo_employe; 
+        } 
 
-        // Update the database
         const result = await updateInformationOfRole('employe', id, updatedEmployeInfo);
         if (result) {
             res.json({ message: "Employe information updated successfully" });
@@ -1264,30 +1279,31 @@ const updateEmployeInformation = async (req, res) => {
     } catch (error) {
         console.error("Error updating employe information:", error);
         res.status(500).json({ message: "Internal server error" });
-    }
-};
+    } 
+}; 
+
 
 ///////////////////////////////////////**////////////////////////////
 /****************************************************************** */
 /*const sendMailEmploye = async (req, res) => {
-
+ 
     try {
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-
+ 
         if (authResult.decode.role !== 'admin') {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
    // Récupérer les données de l'email depuis la requête
    const { to, subject, message } = req.body;
-
+ 
    // Vérification des données
    if (!to || !subject || !message) {
        return res.status(400).json({ message: "Incomplete email data" });
    }
-
+ 
    // Envoyer l'email
    await sendEmail(to, subject, message);
     
@@ -1296,7 +1312,7 @@ const updateEmployeInformation = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
-
+ 
 */
 
 

@@ -91,6 +91,9 @@ const formatDateForMySQL = (date) => {
     return `${year}-${month}-${day}`;
 };
 
+
+
+
 const updateInformationOfRole = async (role, id, updatedData) => {
     try {
         let sqlQuery = '';
@@ -107,7 +110,7 @@ const updateInformationOfRole = async (role, id, updatedData) => {
                 params = [
                     updatedData.nom_admin, updatedData.prenom_admin, updatedData.email_admin,
                     updatedData.photo_admin, updatedData.telephone_admin, updatedData.adresse_admin,
-                    formatDateForMySQL(updatedData.date_de_naissance_admin), // Formatting the date here
+                    formatDateForMySQL(updatedData.date_de_naissance_admin),
                     updatedData.genre, updatedData.etat_compte, id
                 ];
                 break;
@@ -120,20 +123,22 @@ const updateInformationOfRole = async (role, id, updatedData) => {
                 params = [
                     updatedData.nom_client, updatedData.prenom_client, updatedData.email_client,
                     updatedData.photo_client, updatedData.telephone_client, updatedData.adresse_client,
-                    formatDateForMySQL(updatedData.datede_naissance_client), // Formatting the date here
+                    formatDateForMySQL(updatedData.datede_naissance_client),
                     updatedData.genre_client, updatedData.etat_compte, id
                 ];
                 break;
             case 'employe':
                 sqlQuery = `UPDATE employe SET 
                             nom_employe = ?, prenom_employe = ?, email_employe = ?, 
-                            photo_employe = ?, telephone_employe = ?, adresse_employe = ?, 
+                            ${updatedData.photo_employe ? 'photo_employe = ?, ' : ''}
+                            telephone_employe = ?, adresse_employe = ?, 
                             datede_naissance_employe = ?, genre_employe = ?, etat_compte = ? 
                             WHERE idemploye = ?`;
                 params = [
                     updatedData.nom_employe, updatedData.prenom_employe, updatedData.email_employe,
-                    updatedData.photo_employe, updatedData.telephone_employe, updatedData.adresse_employe,
-                    formatDateForMySQL(updatedData.datede_naissance_employe), // Formatting the date here
+                    ...(updatedData.photo_employe ? [updatedData.photo_employe] : []),
+                    updatedData.telephone_employe, updatedData.adresse_employe,
+                    formatDateForMySQL(updatedData.datede_naissance_employe),
                     updatedData.genre_employe, updatedData.etat_compte, id
                 ];
                 break;
@@ -150,6 +155,8 @@ const updateInformationOfRole = async (role, id, updatedData) => {
                     resolve(result);
                 }
             });
+            console.log("SQL Query:", sqlQuery);
+            console.log("Parameters:", params);
         });
 
         if (result.affectedRows === 0) {
@@ -164,6 +171,7 @@ const updateInformationOfRole = async (role, id, updatedData) => {
         throw error;
     }
 };
+
 
 
 const saveNotification = async (email_destinataire, message) => {
@@ -184,21 +192,21 @@ const saveNotification = async (email_destinataire, message) => {
 const getUserEmail = async (id) => {
     let emailQuery = '';
     switch (role) {
-      case 'admin':
-        emailQuery = 'SELECT email_admin FROM admin WHERE idadmin = ?';
-        break;
-      case 'client':
-        emailQuery = 'SELECT email_client FROM client WHERE idclient = ?';
-        break;
-      case 'employe':
-        emailQuery = 'SELECT email_employe FROM employe WHERE idemploye = ?';
-        break;
-      default:
-        throw new Error("Invalid user role");
+        case 'admin':
+            emailQuery = 'SELECT email_admin FROM admin WHERE idadmin = ?';
+            break;
+        case 'client':
+            emailQuery = 'SELECT email_client FROM client WHERE idclient = ?';
+            break;
+        case 'employe':
+            emailQuery = 'SELECT email_employe FROM employe WHERE idemploye = ?';
+            break;
+        default:
+            throw new Error("Invalid user role");
     }
-  
+
     const result = await db.query(emailQuery, [id]);
     return result[0][`email_${role}`];
-  };
+};
 
-module.exports = { saveToHistory, getInformationOfRole, updateInformationOfRole, saveNotification ,getUserEmail };
+module.exports = { saveToHistory, getInformationOfRole, updateInformationOfRole, saveNotification, getUserEmail };

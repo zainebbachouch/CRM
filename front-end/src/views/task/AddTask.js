@@ -23,6 +23,8 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
   const role = localStorage.getItem('role');
   const token = localStorage.getItem('token');
   const [employees, setEmployees] = useState([]);
+
+
   const [selectedEmployees, setSelectedEmployees] = useState([]);
 
   const config = useMemo(() => ({
@@ -35,6 +37,7 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
       try {
         const response = await axios.get('http://127.0.0.1:5000/api/employees', config);
         setEmployees(response.data);
+        console.log('(response.data)',response.data)
       } catch (err) {
         console.error('Error fetching employees:', err);
       }

@@ -445,7 +445,9 @@ io.on('connection', (socket) => {
 
 
 
-
+  app.use((error, req, res, next) => {
+    console.log('This is the rejected field ->', error.field);
+  });
   socket.on('disconnect', () => {
     for (let userId in userSocketMap) {
       if (userSocketMap[userId] === socket.id) {
