@@ -94,7 +94,7 @@ function Profile() {
 
         if (type === 'file') {
             setSelectedFile(files[0]);
-            console.log(files[0]);
+            console.log('file',files[0]);
 
             const formData1 = new FormData();
             formData1.append('file', files[0]);

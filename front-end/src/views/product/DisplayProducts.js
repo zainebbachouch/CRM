@@ -156,7 +156,8 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                                 <td>{val.description_produit}</td>
                                 <td>{getCategoryName(val.categorie_idcategorie)}</td>
                                 <td>{val.remise_produit}</td>
-                                <td>{val.photo_produit}</td>
+                                <img src={val.photo_produit} alt="product Photo" style={{ width: '120px', height: '120px' }} />
+
                                 <td>{val.date_ajout_produit}</td>
                                 <td>{val.date_modification_produit}</td>
                                 <td>

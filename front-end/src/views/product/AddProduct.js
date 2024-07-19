@@ -16,7 +16,7 @@ function AddProduct({ addProduct, selectedProduct, products, setProducts, setSel
 
     const email = localStorage.getItem('email');
     const userid = localStorage.getItem('userId');
- const role = localStorage.getItem('role');
+    const role = localStorage.getItem('role');
 
 
     const [refresh, setRefresh] = useState("no")
@@ -70,12 +70,35 @@ function AddProduct({ addProduct, selectedProduct, products, setProducts, setSel
         }
     }, [fetchCategories, selectedProduct]);
 
-    const handleChange = (e) => {
-        const { name, value, type } = e.target;
-        setFormData((prevFormData) => ({
-            ...prevFormData,
-            [name]: type === 'file' ? e.target.files[0] : value,
-        }));
+    const handleChange = async (e) => {
+        const { name, type, files } = e.target;
+
+        if (type === 'file' && files.length > 0) {
+            const file = files[0];
+            console.log('fileproduit', file);
+
+            const formData1 = new FormData();
+            formData1.append('file', file);
+            formData1.append('upload_preset', 'xlcnkdgy'); // Nom de l'environnement cloud
+
+            try {
+                const response = await axios.post('https://api.cloudinary.com/v1_1/dik98v16k/image/upload/', formData1);
+                const imageUrl = response.data.secure_url;
+
+                setFormData((prevFormData) => ({
+                    ...prevFormData,
+                    [name]: imageUrl,
+                }));
+            } catch (error) {
+                console.error("Error uploading file:", error);
+            }
+        } else {
+            const { value } = e.target;
+            setFormData((prevFormData) => ({
+                ...prevFormData,
+                [name]: value,
+            }));
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -83,7 +106,15 @@ function AddProduct({ addProduct, selectedProduct, products, setProducts, setSel
         setLoading(true);
         setErrors({});
         setSuccessMessage('');
-
+        // Préparer les données du formulaire
+        const formDataToSend = new FormData();
+        for (const key in formData) {
+            formDataToSend.append(key, formData[key]);
+        }
+        // Ajouter l'image seulement si elle existe
+        if (formData.photo_produit) {
+            formDataToSend.append('photo_produit', formData.photo_produit);
+        }
         try {
             const token = localStorage.getItem('token');
             const config = {
@@ -111,7 +142,7 @@ function AddProduct({ addProduct, selectedProduct, products, setProducts, setSel
                 addProduct(response.data);
                 //ajouter les adresse mail conntecte now
 
-                socket.emit('newProduct', { ...response.data, email, userid ,role });
+                socket.emit('newProduct', { ...response.data, email, userid, role });
                 setSuccessMessage(response.data.message);
                 fetchProducts();
                 setFormData({
