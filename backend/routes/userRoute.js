@@ -56,9 +56,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.put('/updateadmin/:id',  upload.single('photo_admin'),  userController.updateAdminInformation);
-router.put('/updateclient/:id',  upload.single('photo_client') , userController.updateClientInformation);
-router.put('/updateemploye/:id',(req,res)=>{upload.single('photo_employe');userController.updateEmployeInformation(req,res)}  );
+router.put('/updateadmin/:id', (req, res) => { upload.single('photo_admin'), userController.updateAdminInformation(req, res) });
+router.put('/updateclient/:id', (req, res) => { upload.single('photo_client'), userController.updateClientInformation(req, res) });
+router.put('/updateemploye/:id', (req, res) => { upload.single('photo_employe'); userController.updateEmployeInformation(req, res) });
 
 //list for adminsration
 router.get('/employees', userController.listEmployees);

@@ -39,12 +39,12 @@ function Profile() {
                 setEmploye(response.data.photo_employe);
                 setAdmin(response.data.photo_admin);
                 setClient(response.data.photo_client);
-                console.log(response.data)
+                console.log('profiledta', response.data)
                 const data = { ...response.data };
                 setProfileData({
                     ...data,
                 });
-                console.log(photo_employe)
+                console.log("admin", photo_admin)
             } catch (error) {
                 console.error("Error fetching profile data:", error);
             } finally {
@@ -64,18 +64,22 @@ function Profile() {
         for (const key in profileData) {
             formData.append(key, profileData[key]);
         }
-        formData.append('photo_employe', photo_employe);
-        try {
+        if (role === 'admin') {
+            formData.append('photo_admin', photo_admin);
+        } else if (role === 'client') {
+            formData.append('photo_client', photo_client);
+        } else if (role === 'employe') {
+            formData.append('photo_employe', photo_employe);
+        } try {
             let response;
             if (role === 'admin') {
-                response = await axios.put(`http://127.0.0.1:5000/api/updateadmin/${id}`, formData, config);
+                response = await axios.put(`http://127.0.0.1:5000/api/updateadmin/${id}`, profileData, config);
             } else if (role === 'client') {
-                response = await axios.put(`http://127.0.0.1:5000/api/updateclient/${id}`, formData, config);
+                response = await axios.put(`http://127.0.0.1:5000/api/updateclient/${id}`, profileData, config);
             } else if (role === 'employe') {
                 response = await axios.put(`http://127.0.0.1:5000/api/updateemploye/${id}`, profileData, config);
             }
-            if (response.data.message.includes("information updated successfully")) 
-            {
+            if (response.data.message.includes("information updated successfully")) {
                 console.log("Profile updated successfully");
             }
         } catch (error) {
@@ -85,29 +89,49 @@ function Profile() {
         }
     };
 
-    const handleInputChange =  (event) => {
+    const handleInputChange = (event) => {
         const { name, value, type, files } = event.target;
-        if (type == 'file')
-            {
+
+        if (type === 'file') {
             setSelectedFile(files[0]);
             console.log(files[0]);
-            const formData1=new FormData();
-            formData1.append('file',files[0]);
-            formData1.append('upload_preset','xlcnkdgy');//nom environemnt cloud
-            axios.post('https://api.cloudinary.com/v1_1/dik98v16k/image/upload/',formData1)
-            .then(response=>{
-              setEmploye(response.data.secure_url)//lien d'accee
-              localStorage.setItem("photo",response.data.secure_url)
-              setProfileData((prevState) => ({
-                ...prevState,
-                ['photo_employe']: response.data.secure_url,
-            }));
-              console.log(profileData)
-              
-            })
-            .catch(error=>{console.log(error)})
-        } 
-        else {
+
+            const formData1 = new FormData();
+            formData1.append('file', files[0]);
+            formData1.append('upload_preset', 'xlcnkdgy'); // nom de l'environnement cloud
+
+            axios.post('https://api.cloudinary.com/v1_1/dik98v16k/image/upload/', formData1)
+                .then(response => {
+                    const imageUrl = response.data.secure_url;
+                    localStorage.setItem("photo", imageUrl);
+
+                    // Mettre à jour l'état de la photo en fonction du rôle
+                    if (role === 'admin') {
+                        setAdmin(imageUrl);
+                        setProfileData((prevState) => ({
+                            ...prevState,
+                            ['photo_admin']: imageUrl,
+                        }));
+                    } else if (role === 'client') {
+                        setClient(imageUrl);
+                        setProfileData((prevState) => ({
+                            ...prevState,
+                            ['photo_client']: imageUrl,
+                        }));
+                    } else if (role === 'employe') {
+                        setEmploye(imageUrl);
+                        setProfileData((prevState) => ({
+                            ...prevState,
+                            ['photo_employe']: imageUrl,
+                        }));
+                    }
+
+                    console.log(profileData);
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+        } else {
             setProfileData((prevState) => ({
                 ...prevState,
                 [name]: type === 'date' ? value.split('T')[0] : value,
@@ -132,8 +156,20 @@ function Profile() {
                 <div className="container-fluid p-2">
                     <div className="row m-0 p-0">
                         <div className="profile-card col-md-3">
-                        <img src={photo_employe} alt="Selected" style={{ width: '200px', height: '200px' }} />
-                        <h2>{profileData.nom || ''} {localStorage.getItem('username')}</h2>
+                            <div>
+                                {role === 'admin' && photo_admin && (
+                                    <img src={photo_admin} alt="Admin Photo" style={{ width: '200px', height: '200px' }} />
+                                )}
+
+                                {role === 'client' && photo_client && (
+                                    <img src={photo_client} alt="Client Photo" style={{ width: '200px', height: '200px' }} />
+                                )}
+
+                                {role === 'employe' && photo_employe && (
+                                    <img src={photo_employe} alt="Employe Photo" style={{ width: '200px', height: '200px' }} />
+                                )}
+                            </div>
+                            <h2>{profileData.nom || ''} {localStorage.getItem('username')}</h2>
                             <p>You are {role}</p>
                             <hr />
                             <ul className="list-unstyled">

@@ -1089,7 +1089,10 @@ const getAdminInformation = async (req, res) => {
         if (!adminInfo) {
             return res.status(404).json({ message: "Admin not found" });
         }
-        res.json(adminInfo);
+
+        const updatedAdminInfo = { ...adminInfo, photo_admin: adminInfo.photo_admin };
+
+        res.json(updatedAdminInfo);
     } catch (error) {
         console.error("Error retrieving admin information:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -1113,7 +1116,9 @@ const getClientInformation = async (req, res) => {
             return res.status(404).json({ message: "Client not found" });
         }
 
-        res.json(clientInfo);
+        const updatedClientInfo = { ...clientInfo, photo_client: clientInfo.photo_client };
+
+        res.json(updatedClientInfo);
     } catch (error) {
         console.error("Error retrieving client information:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -1138,7 +1143,7 @@ const getEmployeInformation = async (req, res) => {
         }
 
 
-        const updatedEmployeInfo = { ...employeInfo, photo_employe: employeInfo.photo_employe };
+        const updatedEmployeInfo = { ...employeInfo, photo_employe: employeInfo.photo_client };
 
         res.json(updatedEmployeInfo);
     } catch (error) {
@@ -1176,8 +1181,8 @@ const updateAdminInformation = async (req, res) => {
         });
 
         // Handle the file upload
-        if (req.file) {
-            updatedAdminInfo.photo_admin = req.file.buffer;
+        if (req.body) {
+            updatedAdminInfo.photo_admin = req.body.photo_admin;
         }
 
         // Update the database
@@ -1220,8 +1225,8 @@ const updateClientInformation = async (req, res) => {
             }
         });
         // Handle the file upload
-        if (req.file) {
-            updatedClientInfo.photo_client = req.file.buffer;
+        if (req.body) {
+            updatedClientInfo.photo_client = req.body.photo_client;
         }
         // Update the database
         const result = await updateInformationOfRole('client', id, updatedClientInfo);
@@ -1240,10 +1245,9 @@ const updateClientInformation = async (req, res) => {
 
 
 const updateEmployeInformation = async (req, res) => {
-    console.log(req.body) 
+    console.log(req.body)
     try {
         console.log('Request body:', req.body);
-        console.log('Request file:', req.file);
 
         const authResult = await isAuthorize(req, res);
         if (authResult.message !== 'authorized') {
@@ -1267,8 +1271,8 @@ const updateEmployeInformation = async (req, res) => {
             }
         });
         if (req.body) {
-             updatedEmployeInfo.photo_employe = req.body.photo_employe; 
-        } 
+            updatedEmployeInfo.photo_employe = req.body.photo_employe;
+        }
 
         const result = await updateInformationOfRole('employe', id, updatedEmployeInfo);
         if (result) {
@@ -1279,8 +1283,8 @@ const updateEmployeInformation = async (req, res) => {
     } catch (error) {
         console.error("Error updating employe information:", error);
         res.status(500).json({ message: "Internal server error" });
-    } 
-}; 
+    }
+};
 
 
 ///////////////////////////////////////**////////////////////////////
