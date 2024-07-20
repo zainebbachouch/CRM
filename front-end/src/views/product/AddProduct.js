@@ -264,6 +264,7 @@ function AddProduct({ addProduct, selectedProduct, products, setProducts, setSel
                                             id="photo_produit"
                                             name="photo_produit"
                                             onChange={handleChange}
+                                            accept="image/*"
 
                                         />
                                     </div>

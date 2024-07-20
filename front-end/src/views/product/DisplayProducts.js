@@ -3,7 +3,6 @@ import axios from 'axios';
 import AddProduct from './addProduct';
 import { Link } from 'react-router-dom';
 import "../../style/products.css"
-//import UserPermissionsContext from '../context/UserPermissionsPage';
 import { UserPermissionsContext } from '../context/UserPermissionsPage'; // Correction de l'import
 
 function DisplayProducts({ products, setProducts, addProduct, setSelectedProductId }) {
@@ -11,6 +10,9 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [categories, setCategories] = useState([]);
     const userPermissions = useContext(UserPermissionsContext);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
     useEffect(() => {
 
         console.log('User Permissions in DisplayProducts:', userPermissions);
@@ -18,7 +20,7 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
     }, [userPermissions]);
 
 
-    const fetchProducts = useCallback(async () => {
+    const fetchProducts = useCallback(async (page = 1) => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
@@ -28,8 +30,10 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                     Authorization: `Bearer ${token}`,
                 },
             };
-            const response = await axios.get('http://127.0.0.1:5000/api/getAllProducts', config);
-            setProducts(response.data);
+            const response = await axios.get(`http://127.0.0.1:5000/api/getAllProducts?page=${page}&limit=10`, config);
+            setProducts(response.data.products);
+            setTotalPages(Math.ceil(response.data.total / 10)); // Use limit parameter here
+            setCurrentPage(page); // Update current page
         } catch (err) {
             console.error('Error fetching products:', err);
         } finally {
@@ -105,6 +109,13 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
             console.error('Error adding product to basket:', error);
         }
     };
+
+    const handlePageChange = (newPage) => {
+        if (newPage > 0 && newPage <= totalPages) {
+            fetchProducts(newPage); // Fetch products for the new page
+        }
+    };
+
     const isAdmin = localStorage.getItem('role') === 'admin';
     return (
         <div className="m-0 p-0">
@@ -205,8 +216,24 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                             </div>
                         </div>
                     ))}
-                </div>
+                  </div>
             )}
+
+            <nav aria-label="Page navigation">
+                <ul className="pagination">
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                        <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>Previous</button>
+                    </li>
+                    {[...Array(totalPages).keys()].map(page => (
+                        <li key={page + 1} className={`page-item ${page + 1 === currentPage ? 'active' : ''}`}>
+                            <button className="page-link" onClick={() => handlePageChange(page + 1)}>{page + 1}</button>
+                        </li>
+                    ))}
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                        <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>Next</button>
+                    </li>
+                </ul>
+            </nav>
         </div>
     );
 }

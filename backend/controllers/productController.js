@@ -29,24 +29,58 @@ const getProductById = (req, res) => {
 };
 
 const getAllProducts = async (req, res) => {
-    // Authorization check
-    const authResult = await isAuthorize(req, res);
-    if (authResult.message !== 'authorized') {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    // Check role
-    if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe' && authResult.decode.role !== 'client') {
-        return res.status(403).json({ message: "Insufficient permissions" });
-    }
-    db.query('SELECT * FROM produit', (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Erreur interne du serveur" });
+    try {
+        // Authorization check
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
         }
-        res.json(result);
-    });
+
+        // Role check
+        const { role } = authResult.decode;
+        if (!['admin', 'employe', 'client'].includes(role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        // Get pagination parameters
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10; // Default limit to 10
+        const offset = (page - 1) * limit;
+
+        // Query to get total number of products
+        const totalQuery = 'SELECT COUNT(*) as total FROM produit';
+        db.query(totalQuery, (err, totalResult) => {
+            if (err) {
+                console.error('Error fetching total count:', err);
+                return res.status(500).json({ message: "Internal server error" });
+            }
+
+            const total = totalResult[0].total;
+
+            // Query to get products with pagination
+            const productsQuery = 'SELECT * FROM produit LIMIT ? OFFSET ?';
+            db.query(productsQuery, [limit, offset], (err, productsResult) => {
+                if (err) {
+                    console.error('Error fetching products:', err);
+                    return res.status(500).json({ message: "Internal server error" });
+                }
+
+                res.json({
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit),
+                    products: productsResult
+                });
+            });
+        });
+    } catch (error) {
+        console.error('Server error:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
 };
+
+
 
 
 const createProduct = async (req, res) => {

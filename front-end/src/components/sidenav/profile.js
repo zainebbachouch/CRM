@@ -94,7 +94,7 @@ function Profile() {
 
         if (type === 'file') {
             setSelectedFile(files[0]);
-            console.log('file',files[0]);
+            console.log('file', files[0]);
 
             const formData1 = new FormData();
             formData1.append('file', files[0]);
@@ -227,7 +227,7 @@ function Profile() {
                                                     </div>
                                                     <div className="form-group col-md-6">
                                                         <label htmlFor="photo_admin">Photo</label>
-                                                        <input type="file" className="form-control" id="photo_admin" name="photo_admin" onChange={handleInputChange} />
+                                                        <input type="file" className="form-control" id="photo_admin" name="photo_admin" accept="image/*" onChange={handleInputChange} />
                                                     </div>
                                                 </div>
                                                 <div className="row">
@@ -275,7 +275,7 @@ function Profile() {
                                                     </div>
                                                     <div className="form-group col-md-6">
                                                         <label htmlFor="photo_client">Photo</label>
-                                                        <input type="file" className="form-control" id="photo_client" name="photo_client" onChange={handleInputChange} />
+                                                        <input type="file" className="form-control" id="photo_client" name="photo_client" accept="image/*" onChange={handleInputChange} />
                                                     </div>
                                                 </div>
                                                 <div className="row">
@@ -329,6 +329,7 @@ function Profile() {
                                                             id="photo_employe"
                                                             name="photo_employe"
                                                             onChange={handleInputChange}
+                                                            accept="image/*"
                                                         />
                                                     </div>
                                                 </div>
