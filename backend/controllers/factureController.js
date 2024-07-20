@@ -111,14 +111,37 @@ const getAllFactures = async (req, res) => {
         return res.status(403).json({ message: "Insufficient permissions" });
     }
 
-    const sqlQuery = 'SELECT * FROM facture';
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10; // Default limit to 10
+    const offset = (page - 1) * limit;
 
-    db.query(sqlQuery, (err, result) => {
-        if (err) {
-            console.error(err);
+    // Query to get the total number of records
+    const countQuery = 'SELECT COUNT(*) AS total FROM facture';
+    
+    db.query(countQuery, (countErr, countResult) => {
+        if (countErr) {
+            console.error(countErr);
             return res.status(500).json({ message: "Internal Server Error" });
         }
-        res.json(result);
+
+        const total = countResult[0].total;
+        const totalPages = Math.ceil(total / limit);
+
+        // Query to get the paginated records
+        const sqlQuery = 'SELECT * FROM facture LIMIT ? OFFSET ?';
+        db.query(sqlQuery, [limit, offset], (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: "Internal Server Error" });
+            }
+
+            res.json({
+                factures: result,
+                total,
+                totalPages,
+                currentPage: page
+            });
+        });
     });
 };
 

@@ -77,25 +77,56 @@ const getAllCategories = async (req, res) => {
         }
 
         // Check role
-        if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe' && authResult.decode.role !== 'client') {
+        if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
-        const categories = await new Promise((resolve, reject) => {
-            db.query('SELECT * FROM categorie', (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
 
-        res.json(categories);
+        // Pagination parameters
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10; // Default limit to 10
+        const offset = (page - 1) * limit;
+
+        // Queries for total count and paginated categories
+        const countQuery = 'SELECT COUNT(*) AS total FROM categorie';
+        const sqlQuery = 'SELECT * FROM categorie LIMIT ? OFFSET ?';
+
+        // Execute queries in parallel
+        const [countResult, categories] = await Promise.all([
+            new Promise((resolve, reject) => {
+                db.query(countQuery, (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            }),
+            new Promise((resolve, reject) => {
+                db.query(sqlQuery, [limit, offset], (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            })
+        ]);
+
+        const total = countResult[0].total;
+        const totalPages = Math.ceil(total / limit);
+
+        res.json({
+            categories,
+            total,
+            totalPages,
+            currentPage: page
+        });
     } catch (error) {
         console.error("Error fetching categories:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
 
 
 

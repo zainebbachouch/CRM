@@ -43,29 +43,56 @@ const getCustomerByIDCommand = async (req, res) => {
 
 
 const getAllCommands = async (req, res) => {
-    // Authorization check
-    const authResult = await isAuthorize(req, res);
-    if (authResult.message !== 'authorized') {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    // Check role
-    if (!['admin', 'employe'].includes(authResult.decode.role)) {
-        return res.status(403).json({ message: "Insufficient permissions" });
-    }
-
-    // Construct SQL query
-    const sqlQuery = 'SELECT * FROM commande ';
-
-    // Execute SQL query
-    db.query(sqlQuery, (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Internal Server Error" });
+    try {
+        // Authorization check
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
         }
-        res.json(result);
-    });
+
+        // Role check
+        if (!['admin', 'employe'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        // Get pagination parameters
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 1; // Set default limit to 1
+        const offset = (page - 1) * limit;
+
+        // Query to get total number of commands
+        const totalQuery = 'SELECT COUNT(*) as total FROM commande';
+        db.query(totalQuery, (err, totalResult) => {
+            if (err) {
+                console.error('Error fetching total count:', err);
+                return res.status(500).json({ message: "Internal server error" });
+            }
+
+            const total = totalResult[0].total;
+
+            // Query to get commands with pagination
+            const commandsQuery = 'SELECT * FROM commande LIMIT ? OFFSET ?';
+            db.query(commandsQuery, [limit, offset], (err, commandsResult) => {
+                if (err) {
+                    console.error('Error fetching commands:', err);
+                    return res.status(500).json({ message: "Internal server error" });
+                }
+
+                res.json({
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit),
+                    commands: commandsResult
+                });
+            });
+        });
+    } catch (error) {
+        console.error('Server error:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
 };
+
 
 const updateCommandStatus = async (req, res) => {
     // Authorization check

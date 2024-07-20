@@ -20,7 +20,8 @@ function Commands() {
   const isAdmin = localStorage.getItem('role') === 'admin';
   const userPermissions = useContext(UserPermissionsContext);
   const socket = io.connect("http://localhost:3300");
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
 
   // const location = useLocation();
@@ -39,37 +40,37 @@ function Commands() {
       },
     };
   }, [token]);
-
+  const fetchData = async (page = 1) => {
+    try {
+if (role === 'client') {
+  const currentCommandeId = localStorage.getItem('currentCommandeId');
+  if (currentCommandeId) {
+    const response = await axios.post('http://127.0.0.1:5000/api/completeCommand', { currentCommandeId }, config);
+    setCommandData(response.data);
+  }
+} else {
+  const response = await axios.get(`http://127.0.0.1:5000/api/getAllCommands?page=${page}&limit=1`, config);
+  setCommands(response.data.commands);
+  setTotalPages(Math.ceil(response.data.total / 1)); // Adjust based on your API response
+  setCurrentPage(page);
+}
+setLoading(false);
+} catch (error) {
+setError(error.message);
+setLoading(false);
+}
+};
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (role === 'client') {
-          const currentCommandeId = localStorage.getItem('currentCommandeId');
-          if (currentCommandeId) {
-            const response = await axios.post('http://127.0.0.1:5000/api/completeCommand', { currentCommandeId }, config);
-            setCommandData(response.data);
-          }
-        } else {
-          const response = await axios.get('http://127.0.0.1:5000/api/getAllCommands', config);
-          setCommands(response.data);
-        }
-        setLoading(false);
-      } catch (error) {
-        setError(error.message);
-        setLoading(false);
-      }
-    };
+ 
     fetchData();
   }, [role, config]);
 
-  /*const handleInputChange = (event, index) => {
-    const { name, value } = event.target;
-    setCommands((prevCommands) => {
-      const updatedCommands = [...prevCommands];
-      updatedCommands[index][name] = value;
-      return updatedCommands;
-    });
-  };*/
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      fetchData(newPage);
+    }
+  };
+
   const handleInputChange = (event, index) => {
     const { name, value } = event.target;
     setCommands((prevCommands) => {
@@ -115,7 +116,7 @@ function Commands() {
               <table>
                 <thead>
                   <tr>
-                    <th>ID</th>
+                    <th>IDd</th>
                     <th>Description</th>
                     <th>Date</th>
                     <th>Total Amount</th>
@@ -177,6 +178,21 @@ function Commands() {
                   ))}
                 </tbody>
               </table>
+             <nav aria-label="Page navigation">
+                <ul className="pagination">
+                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                    <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>Previous</button>
+                  </li>
+                  {[...Array(totalPages).keys()].map(page => (
+                    <li key={page + 1} className={`page-item ${page + 1 === currentPage ? 'active' : ''}`}>
+                      <button className="page-link" onClick={() => handlePageChange(page + 1)}>{page + 1}</button>
+                    </li>
+                  ))}
+                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                    <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>Next</button>
+                  </li>
+                </ul>
+              </nav>
             </div>
           </div>
         </div>

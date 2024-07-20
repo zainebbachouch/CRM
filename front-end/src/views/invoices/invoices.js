@@ -11,6 +11,11 @@ function Invoices() {
   const [factures, setFactures] = useState([]);
   const [invoices, setInvoices] = useState([]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(10); // You can adjust this value as needed
+
+
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
 
@@ -25,16 +30,17 @@ function Invoices() {
       },
     };
   }, [token]);
-  async function fetchInvoices() {
-    try {
+  const fetchInvoices = async (page = 1) => {
+        try {
       if (role === 'client') {
         const response = await axios.get('http://127.0.0.1:5000/api/getFactureOfClientAuthorized', config);
         setInvoices(response.data.facturesClient); // Assuming the data structure returned from the server
 
 
       } else {
-        const response = await axios.get('http://127.0.0.1:5000/api/getAllFactures', config);
-        setFactures(response.data);
+       const response = await axios.get(`http://127.0.0.1:5000/api/getAllFactures?page=${page}&limit=${itemsPerPage}`, config);
+        setFactures(response.data.factures);
+        setTotalPages(Math.ceil(response.data.total / itemsPerPage));
       }
     } catch (err) {
       console.error('Error fetching invoices:', err);
@@ -44,7 +50,11 @@ function Invoices() {
   
     fetchInvoices();
   }, [role, config]); // Fetch invoices when token or role changes
-
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      fetchInvoices(newPage);
+    }
+  };
 
   const handleDelete = async (id) => {
     try {
@@ -69,7 +79,7 @@ function Invoices() {
           <table className="table">
             <thead>
               <tr>
-                <th>idfacture</th>
+                <th>idfacturee</th>
                 <th>date_facture</th>
                 <th>etat_facture</th>
                 <th>montant_total_facture</th>
@@ -130,6 +140,21 @@ function Invoices() {
               </tbody>
             )}
           </table>
+          <nav aria-label="Page navigation">
+            <ul className="pagination">
+              <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>Previous</button>
+              </li>
+              {[...Array(totalPages).keys()].map(page => (
+                <li key={page + 1} className={`page-item ${page + 1 === currentPage ? 'active' : ''}`}>
+                  <button className="page-link" onClick={() => handlePageChange(page + 1)}>{page + 1}</button>
+                </li>
+              ))}
+              <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>Next</button>
+              </li>
+            </ul>
+          </nav>
         </div>
       </div>
     </div>
