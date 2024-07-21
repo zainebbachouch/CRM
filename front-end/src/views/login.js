@@ -23,7 +23,7 @@ export default function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("eeeeeeeeeeeeeeeee"+e.preventDefault())
+        console.log("eeeeeeeeeeeeeeeee" + e.preventDefault())
         try {
             await handleLogin(formData);
             navigate("/");
@@ -73,8 +73,7 @@ export default function Login() {
                                 <div className="form-group mt-1">
                                     <div className='d-flex justify-content-between'>
                                         <label htmlFor="passwordInput" className='text-muted'>Password</label>
-                                        <label className='forgotMessage'>Forgot Password</label>
-                                    </div>
+                                        <Link to="/forgot-password" className='forgotMessage'>Forgot Password</Link>                                    </div>
                                     <input
                                         type="password"
                                         className="form-control"

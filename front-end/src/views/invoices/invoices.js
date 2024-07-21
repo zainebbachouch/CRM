@@ -36,27 +36,27 @@ function Invoices() {
   const searchFactures = useCallback(async (searchCriteria, page = 1) => {
     setLoading(true);
     try {
-        const { dateType, startDate, endDate, ...criteria } = searchCriteria;
-        const params = {
-            ...criteria,
-            page,
-            limit: itemsPerPage,
-            ...(dateType && startDate && endDate && { [`${dateType}_start`]: startDate, [`${dateType}_end`]: endDate })
-        };
+      const { dateType, startDate, endDate, ...criteria } = searchCriteria;
+      const params = {
+        ...criteria,
+        page,
+        limit: itemsPerPage,
+        ...(dateType && startDate && endDate && { [`${dateType}_start`]: startDate, [`${dateType}_end`]: endDate })
+      };
 
-        const response = await axios.get('http://127.0.0.1:5000/api/searchFactures', {
-            ...config,
-            params,
-        });
-        setFactures(response.data.factures);
-        setTotalPages(response.data.totalPages);
-        setCurrentPage(response.data.currentPage);
+      const response = await axios.get('http://127.0.0.1:5000/api/searchFactures', {
+        ...config,
+        params,
+      });
+      setFactures(response.data.factures);
+      setTotalPages(response.data.totalPages);
+      setCurrentPage(response.data.currentPage);
     } catch (err) {
-        console.error('Error searching factures:', err);
+      console.error('Error searching factures:', err);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-}, [config, itemsPerPage]);
+  }, [config, itemsPerPage]);
 
 
   const fetchInvoices = useCallback(async (page = 1) => {
@@ -182,25 +182,55 @@ function Invoices() {
                   <th>Action</th>
                 </tr>
               </thead>
-              <tbody>
-                {factures.map(facture => (
-                  <tr key={facture.idfacture}>
-                    <td>{facture.etat_facture}</td>
-                    <td>{facture.methode_paiment_facture}</td>
-                    <td>{facture.statut_paiement_facture}</td>
-                    <td>{new Date(facture.date_facture).toLocaleDateString()}</td>
-                    <td>{new Date(facture.date_echeance).toLocaleDateString()}</td>
-                    <td>
-                      {isAdmin && (
-                        <>
-                          <button onClick={() => handleDelete(facture.idfacture)} className="btn btn-danger">Delete</button>
-                          <Link to={`/updateInvoice/${facture.idfacture}`} className="btn btn-primary">Update</Link>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+              {role !== 'client' ? (
+                <tbody>
+                  {factures.map((invoice, key) => (
+                    <tr key={invoice.idfacture}>
+                      <td>{invoice.idfacture}</td>
+                      <td>{invoice.date_facture}</td>
+                      <td>{invoice.etat_facture}</td>
+                      <td>{invoice.montant_total_facture}</td>
+                      <td>{invoice.methode_paiment_facture}</td>
+                      <td>{invoice.date_echeance}</td>
+                      <td>{invoice.statut_paiement_facture}</td>
+                      <td>{invoice.idcommande}</td>
+                      <td>
+                        <button className="btn btn-success">
+                          <Link to={`/invoices/${invoice.idcommande}`} className="text-white btn-link">
+                            show details
+                          </Link>
+                        </button>
+                        {(isAdmin || (userPermissions && userPermissions.deleteFacture === 1)) && ( // Add parentheses here
+
+                          <button className="btn btn-danger" onClick={() => handleDelete(invoice.idcommande)}>Delete</button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              ) : (
+                <tbody>
+                  {invoices && invoices.map((invoice, key) => (
+                    <tr key={invoice.idfacture}>
+                      <td>{invoice.idfacture}</td>
+                      <td>{invoice.date_facture}</td>
+                      <td>{invoice.etat_facture}</td>
+                      <td>{invoice.montant_total_facture}</td>
+                      <td>{invoice.methode_paiment_facture}</td>
+                      <td>{invoice.date_echeance}</td>
+                      <td>{invoice.statut_paiement_facture}</td>
+                      <td>{invoice.idcommande}</td>
+                      <td>
+                        <button className="btn btn-success">
+                          <Link to={`/invoices/${invoice.idcommande}`} className="text-white btn-link">
+                            show details
+                          </Link>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              )}
             </table>
           )}
           <div className="pagination">
