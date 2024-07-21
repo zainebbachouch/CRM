@@ -5,18 +5,12 @@ const multer = require('multer');
 const path = require('path');
 
 
-/*
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, '../document/uploads/'); // Directory for all images
-    },
-    filename: (req, file, cb) => {
-        const genderPrefix = req.body.genre === 'femme' ? 'female_avatar' : 'male_avatar';
-        cb(null, genderPrefix + path.extname(file.originalname)); // Use gender-specific filename
-    }
-});
+// Route pour demander un code de réinitialisation de mot de passe
+router.post('/forgot-password', userController.forgotPassword);
 
-const upload = multer({ storage: storage }); upload.single('photo'),*/
+// Route pour réinitialiser le mot de passe
+router.post('/reset-password', userController.resetPassword);
+
 
 router.post('/registerUser', userController.registerUser);
 

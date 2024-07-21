@@ -73,7 +73,7 @@ export default function Login() {
                                 <div className="form-group mt-1">
                                     <div className='d-flex justify-content-between'>
                                         <label htmlFor="passwordInput" className='text-muted'>Password</label>
-                                        <Link to="/forgot-password" className='forgotMessage'>Forgot Password</Link>                                    </div>
+                                        <Link to="/password" className='forgotMessage'>Forgot Password</Link>                                    </div>
                                     <input
                                         type="password"
                                         className="form-control"

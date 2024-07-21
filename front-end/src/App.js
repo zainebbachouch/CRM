@@ -26,6 +26,8 @@ import Historique from './views/adminstration/Historique';
 import MessengerPage from './views/messenger/MessengerPage';
 import { NotificationProvider } from './views/context/NotificationContext';
 import Task from './views/task/Task';
+import ForgotPassword from './views/ForgotPassword';
+import ResetPassword from './views/ResetPassword ';
 
 
 
@@ -45,6 +47,12 @@ function App() {
                 <Route index element={<Home />} />
                 <Route path="login">
                   <Route index element={<Login />} />
+                </Route>
+                <Route path="password">
+                  <Route index element={<ForgotPassword/>} />
+                </Route>
+                <Route path="/reset-password">
+                  <Route index element={<ResetPassword/>} />
                 </Route>
                 <Route path="register">
                   <Route index element={<Register />} />

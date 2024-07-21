@@ -122,10 +122,10 @@ const loginAdmin = async (email, password) => {
                 username: user.nom_admin, id: user.idadmin, email: user.email_admin,
                 photo: user.photo_admin ? user.photo_admin.toString('base64') : null // Convert photo to base64
 
-            }  
-          } 
+            }
         }
-        catch (error) {
+    }
+    catch (error) {
         console.error(error);
         return { success: false, message: "Internal server error" };
     }
@@ -317,6 +317,118 @@ const registerA = async (req, res) => {
     }
 };
 
+/*************************** FORGOTPASSWORD********************************************** */
+const forgotPassword = async (req, res) => {
+    const { email, userType } = req.body;  // Inclure userType dans la requête
+
+    // Vérifiez si l'utilisateur existe
+    const user = await db.query(
+        'SELECT email_employe AS email FROM employe WHERE email_employe = ? UNION SELECT email_client AS email FROM client WHERE email_client = ?',
+        [email, email]
+    );
+
+    if (user.length === 0) {
+        return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    // Générer un code de réinitialisation
+    const resetCode = crypto.randomBytes(32).toString('hex');
+
+    // Calculer l'expiration du code (1 heure à partir de maintenant)
+    const expiresAt = new Date(Date.now() + 3600000).toISOString().slice(0, 19).replace('T', ' ');
+
+    await db.query(
+        'INSERT INTO password_resets (email, reset_code, expires_at, user_type) VALUES (?, ?, ?, ?)',
+        [email, resetCode, expiresAt, userType]  // Inclure userType ici
+    );
+
+    const mailOptions = {
+        from: 'zaineb.bachouch@gmail.com',
+        to: email,
+        subject: 'Réinitialisation du mot de passe',
+        text: `Vous avez demandé une réinitialisation de mot de passe. Utilisez ce code : ${resetCode}`
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.log('Erreur d\'envoi d\'email:', error);
+            return res.status(500).json({ message: 'Erreur d\'envoi d\'email' });
+        }
+        res.status(200).json({ message: 'Code de réinitialisation envoyé' });
+    });
+}
+
+const resetPassword = async (req, res) => {
+    const { resetCode, newPassword } = req.body;
+
+    // Vérifiez que le code de réinitialisation et le nouveau mot de passe sont fournis
+    if (!resetCode || !newPassword) {
+        return res.status(400).json({ message: 'Code de réinitialisation et mot de passe requis' });
+    }
+    console.log('Requête reçue:', { resetCode, newPassword });
+
+    try {
+        const results = await new Promise((resolve, reject) => {
+            db.query(
+                'SELECT email, expires_at, NOW() AS current_time_now, user_type FROM password_resets WHERE reset_code = ?',
+                [resetCode],
+                (error, results) => {
+                    if (error) return reject(error);
+                    resolve(results);
+                }
+            );
+        });
+
+
+        // Assurez-vous qu'il y a des résultats
+        if (results.length === 0) {
+            return res.status(400).json({ message: 'Code de réinitialisation invalide ou expiré' });
+        }
+        console.log('Résultats de la requête:', results);
+
+        // Extraire les informations de l'utilisateur
+        const result = results[0];
+        if (!result) {
+            return res.status(400).json({ message: 'Code de réinitialisation invalide ou expiré' });
+        }
+
+        const { email, expires_at, user_type } = result;
+
+        // Vérifiez si le code a expiré
+        const currentTime = new Date();
+        const expiresAt = new Date(expires_at);
+
+        if (currentTime > expiresAt) {
+            return res.status(400).json({ message: 'Code de réinitialisation expiré' });
+        }
+
+        // Hasher le nouveau mot de passe
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Mettre à jour le mot de passe dans la base de données
+        if (user_type === 'employe') {
+            await db.query('UPDATE employe SET mdp = ? WHERE email_employe = ?', [hashedPassword, email]);
+        } else if (user_type === 'client') {
+            await db.query('UPDATE client SET mdp = ? WHERE email_client = ?', [hashedPassword, email]);
+        }
+
+        // Supprimer le code de réinitialisation
+        await db.query('DELETE FROM password_resets WHERE reset_code = ?', [resetCode]);
+
+        res.status(200).json({ message: 'Mot de passe réinitialisé avec succès' });
+    } catch (error) {
+        console.error('Erreur lors de la réinitialisation du mot de passe:', error);
+        res.status(500).json({ message: 'Erreur lors de la réinitialisation du mot de passe' });
+    }
+};
+
+
+
+
+
+
+
+/*************************** FORGOTPASSWORD********************************************** */
 
 const registerE = async (req, res) => {
     const { nom, prenom, email, password, telephone, adresse, dateDeNaissance, genre, photo } = req.body;
@@ -1140,5 +1252,6 @@ module.exports = {
 
     updateEmployeInformation, listAdminAuthorized, listEmployeAuthorized, listClientAuthorized,
 
-    listEmails
+    listEmails, forgotPassword,
+    resetPassword
 };

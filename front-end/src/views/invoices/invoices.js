@@ -16,7 +16,7 @@ function Invoices() {
     etat_facture: '',
     methode_paiment_facture: '',
     statut_paiement_facture: '',
-    dateType: '', // Added this line
+    dateType: '',
     startDate: '',
     endDate: ''
   });
@@ -57,7 +57,6 @@ function Invoices() {
       setLoading(false);
     }
   }, [config, itemsPerPage]);
-
 
   const fetchInvoices = useCallback(async (page = 1) => {
     console.log('Fetching invoices for page:', page);
@@ -107,7 +106,7 @@ function Invoices() {
     try {
       const response = await axios.delete(`http://127.0.0.1:5000/api/deleteInvoice/${id}`, config);
       if (response.status === 200) {
-        fetchInvoices();
+        fetchInvoices(currentPage); // Fetch current page after deletion
       } else {
         console.error('Failed to delete invoice:', response.data.message);
       }
@@ -174,70 +173,67 @@ function Invoices() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Etat</th>
-                  <th>Methode</th>
-                  <th>Statut</th>
+                  {role !== 'client' && <th>ID</th>}
                   <th>Date Facture</th>
+                  <th>Etat</th>
+                  <th>Montant Total</th>
+                  <th>Methode Paiement</th>
                   <th>Date Echeance</th>
+                  <th>Statut Paiement</th>
+                  {role !== 'client' && <th>ID Commande</th>}
                   <th>Action</th>
                 </tr>
               </thead>
-              {role !== 'client' ? (
-                <tbody>
-                  {factures.map((invoice, key) => (
-                    <tr key={invoice.idfacture}>
-                      <td>{invoice.idfacture}</td>
-                      <td>{invoice.date_facture}</td>
-                      <td>{invoice.etat_facture}</td>
-                      <td>{invoice.montant_total_facture}</td>
-                      <td>{invoice.methode_paiment_facture}</td>
-                      <td>{invoice.date_echeance}</td>
-                      <td>{invoice.statut_paiement_facture}</td>
-                      <td>{invoice.idcommande}</td>
-                      <td>
-                        <button className="btn btn-success">
-                          <Link to={`/invoices/${invoice.idcommande}`} className="text-white btn-link">
-                            show details
-                          </Link>
-                        </button>
-                        {(isAdmin || (userPermissions && userPermissions.deleteFacture === 1)) && ( // Add parentheses here
+              <tbody>
+                {(role === 'client' ? invoices : factures).map((invoice) => (
+                  <tr key={invoice.idfacture}>
+                    {role !== 'client' && <td>{invoice.idfacture}</td>}
+                    <td>{new Date(invoice.date_facture).toLocaleDateString()}</td>
+                    <td>{invoice.etat_facture}</td>
+                    <td>{invoice.montant_total_facture}</td>
+                    <td>{invoice.methode_paiment_facture}</td>
+                    <td>{new Date(invoice.date_echeance).toLocaleDateString()}</td>
+                    <td>{invoice.statut_paiement_facture}</td>
+                    {role !== 'client' && <td>{invoice.idcommande}</td>}
+                    <td>
+                      <button className="btn btn-success">
+                        <Link to={`/invoices/${invoice.idcommande}`} className="text-white btn-link">
+                          Show
+                        </Link>
 
-                          <button className="btn btn-danger" onClick={() => handleDelete(invoice.idcommande)}>Delete</button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              ) : (
-                <tbody>
-                  {invoices && invoices.map((invoice, key) => (
-                    <tr key={invoice.idfacture}>
-                      <td>{invoice.idfacture}</td>
-                      <td>{invoice.date_facture}</td>
-                      <td>{invoice.etat_facture}</td>
-                      <td>{invoice.montant_total_facture}</td>
-                      <td>{invoice.methode_paiment_facture}</td>
-                      <td>{invoice.date_echeance}</td>
-                      <td>{invoice.statut_paiement_facture}</td>
-                      <td>{invoice.idcommande}</td>
-                      <td>
-                        <button className="btn btn-success">
-                          <Link to={`/invoices/${invoice.idcommande}`} className="text-white btn-link">
-                            show details
-                          </Link>
+                      </button>
+                      {isAdmin && (
+                        <button onClick={() => handleDelete(invoice.idfacture)} className="btn btn-danger ms-2">
+                          Delete
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              )}
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           )}
-          <div className="pagination">
-            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</button>
-            <span>Page {currentPage} of {totalPages}</span>
-            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>Next</button>
-          </div>
+          <nav>
+            <ul className="pagination">
+              <li className="page-item">
+                <button onClick={() => handlePageChange(currentPage - 1)} className="page-link" disabled={currentPage === 1}>
+                  Previous
+                </button>
+              </li>
+              {[...Array(totalPages)].map((_, index) => (
+                <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+                  <button onClick={() => handlePageChange(index + 1)} className="page-link">
+                    {index + 1}
+                  </button>
+                </li>
+              ))}
+              <li className="page-item">
+                <button onClick={() => handlePageChange(currentPage + 1)} className="page-link" disabled={currentPage === totalPages}>
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
         </div>
       </div>
     </div>
