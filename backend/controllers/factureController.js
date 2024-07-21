@@ -117,7 +117,7 @@ const getAllFactures = async (req, res) => {
 
     // Query to get the total number of records
     const countQuery = 'SELECT COUNT(*) AS total FROM facture';
-    
+
     db.query(countQuery, (countErr, countResult) => {
         if (countErr) {
             console.error(countErr);
@@ -145,6 +145,90 @@ const getAllFactures = async (req, res) => {
     });
 };
 
+const searchFactures = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (!['admin', 'employe'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const {
+            etat_facture,
+            methode_paiment_facture,
+            statut_paiement_facture,
+            date_facture_start,
+            date_facture_end,
+            date_echeance_start,
+            date_echeance_end,
+            page = 1,
+            limit = 10
+        } = req.query;
+
+        const offset = (page - 1) * limit;
+
+        let conditions = [];
+        let values = [];
+
+        if (etat_facture) {
+            conditions.push('etat_facture = ?');
+            values.push(etat_facture);
+        }
+        if (methode_paiment_facture) {
+            conditions.push('methode_paiment_facture = ?');
+            values.push(methode_paiment_facture);
+        }
+        if (statut_paiement_facture) {
+            conditions.push('statut_paiement_facture = ?');
+            values.push(statut_paiement_facture);
+        }
+        if (date_facture_start && date_facture_end) {
+            conditions.push('date_facture BETWEEN ? AND ?');
+            values.push(date_facture_start, date_facture_end);
+        }
+        if (date_echeance_start && date_echeance_end) {
+            conditions.push('date_echeance BETWEEN ? AND ?');
+            values.push(date_echeance_start, date_echeance_end);
+        }
+
+        const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+        console.log('SQL WHERE CLAUSE:', whereClause); // Debugging line
+        console.log('SQL VALUES:', values); // Debugging line
+
+        const totalQuery = `SELECT COUNT(*) AS total FROM facture ${whereClause}`;
+        const totalResult = await new Promise((resolve, reject) => {
+            db.query(totalQuery, values, (err, result) => {
+                if (err) return reject(err);
+                resolve(result[0].total);
+            });
+        });
+
+        const searchQuery = `SELECT * FROM facture ${whereClause} LIMIT ? OFFSET ?`;
+        values.push(parseInt(limit), parseInt(offset));
+        const searchResult = await new Promise((resolve, reject) => {
+            db.query(searchQuery, values, (err, results) => {
+                if (err) return reject(err);
+                resolve(results);
+            });
+        });
+
+        res.json({
+            factures: searchResult,
+            total: totalResult,
+            totalPages: Math.ceil(totalResult / limit),
+            currentPage: parseInt(page)
+        });
+        console.log('date_echeance_start:', date_echeance_start);
+        console.log('date_echeance_end:', date_echeance_end);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error occurred while searching invoices' });
+    }
+};
 
 const createInvoice = async (req, res) => {
     try {
@@ -180,9 +264,9 @@ const createInvoice = async (req, res) => {
                     (err, result) => {
                         if (err) {
                             console.error(err);
-                            reject(err); 
+                            reject(err);
                         } else {
-                            resolve(result); 
+                            resolve(result);
                         }
                     }
                 );
@@ -265,7 +349,7 @@ const creatPDFInvoice = async (req, res) => {
             }
             console.log('PDF file saved successfully:', filePath);
 
-         
+
 
             res.json({ filePath }); // Send the file path in the response
         });
@@ -299,6 +383,7 @@ const fetchPDFInvoice = async (req, res) => {
 
 
 module.exports = {
+    searchFactures,
     getInvoiceDetailsByCommandId, getAllFactures, createInvoice,
     deleteInvoiceByCommandId, creatPDFInvoice, fetchPDFInvoice, getFactureOfClientAuthorized
 };

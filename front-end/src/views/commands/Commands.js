@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo, useContext } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback, useMemo, useContext } from 'react';import axios from 'axios';
 //import { useLocation } from 'react-router-dom';
 import CompleteCommand from '../../components/sidenav/completeCommand';
 import SideBar from '../../components/sidebar/SideBar';
@@ -22,6 +21,7 @@ function Commands() {
   const socket = io.connect("http://localhost:3300");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
 
 
   // const location = useLocation();
@@ -40,34 +40,81 @@ function Commands() {
       },
     };
   }, [token]);
-  const fetchData = async (page = 1) => {
+
+  const searchCommands = useCallback(async (searchTerm, page = 1) => {
+    setLoading(true);
     try {
-if (role === 'client') {
-  const currentCommandeId = localStorage.getItem('currentCommandeId');
-  if (currentCommandeId) {
-    const response = await axios.post('http://127.0.0.1:5000/api/completeCommand', { currentCommandeId }, config);
-    setCommandData(response.data);
-  }
-} else {
-  const response = await axios.get(`http://127.0.0.1:5000/api/getAllCommands?page=${page}&limit=1`, config);
-  setCommands(response.data.commands);
-  setTotalPages(Math.ceil(response.data.total / 1)); // Adjust based on your API response
-  setCurrentPage(page);
-}
-setLoading(false);
-} catch (error) {
-setError(error.message);
-setLoading(false);
-}
-};
+      const token = localStorage.getItem('token');
+      const config = {
+        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      // Make a request to the backend API to search for commands
+      const response = await axios.get(`http://127.0.0.1:5000/api/searchCommands/${searchTerm}?page=${page}&limit=10`, config);
+
+      // Update the state with the results from the API
+      setCommands(response.data.commands); // Update to set commands
+      setTotalPages(Math.ceil(response.data.total / 10)); // Use limit parameter here
+      setCurrentPage(page); // Update current page
+    } catch (err) {
+      console.error('Error searching commands:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [setCommands]);
+
+
+  const fetchData = useCallback(async (page = 1) => {
+    setLoading(true);
+    try {
+      if (localStorage.getItem('role') === 'client') {
+        const currentCommandeId = localStorage.getItem('currentCommandeId');
+        if (currentCommandeId) {
+          const response = await axios.post('http://127.0.0.1:5000/api/completeCommand', { currentCommandeId }, config);
+          setCommandData(response.data);
+        }
+      } else {
+        const response = await axios.get(`http://127.0.0.1:5000/api/getAllCommands?page=${page}&limit=10`, config);
+        setCommands(response.data.commands);
+        setTotalPages(Math.ceil(response.data.total / 10));
+        setCurrentPage(page);
+      }
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [config]);
+
+
+
   useEffect(() => {
- 
-    fetchData();
-  }, [role, config]);
+    if (searchTerm) {
+      searchCommands(searchTerm, currentPage);
+    } else {
+      fetchData(currentPage);
+    }
+
+  }, [searchTerm, currentPage, searchCommands, fetchData, role, config]);
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    searchCommands(searchTerm, currentPage);
+  };
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
 
   const handlePageChange = (newPage) => {
     if (newPage > 0 && newPage <= totalPages) {
-      fetchData(newPage);
+      if (searchTerm) {
+        searchCommands(searchTerm, newPage);
+      } else {
+        fetchData(newPage);
+      }
     }
   };
 
@@ -113,6 +160,15 @@ setLoading(false);
           <div className="container-fluid flex-column">
             <TopBar />
             <div className="container-fluid p-2">
+              <form onSubmit={handleSearchSubmit} className="d-flex">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="form-control me-2"
+                />
+              </form>
               <table>
                 <thead>
                   <tr>
@@ -178,7 +234,7 @@ setLoading(false);
                   ))}
                 </tbody>
               </table>
-             <nav aria-label="Page navigation">
+              <nav aria-label="Page navigation">
                 <ul className="pagination">
                   <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                     <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>Previous</button>

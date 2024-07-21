@@ -208,5 +208,10 @@ const getUserEmail = async (id) => {
     const result = await db.query(emailQuery, [id]);
     return result[0][`email_${role}`];
 };
-
-module.exports = { saveToHistory, getInformationOfRole, updateInformationOfRole, saveNotification, getUserEmail };
+// Fonction de recherche générique
+const search = async (tableName, searchTerm, fields = '*') => {
+    const query = `SELECT ${fields} FROM ${tableName} WHERE name LIKE ?`;
+    const [results] = await db.query(query, [`%${searchTerm}%`]);
+    return results;
+};
+module.exports = {search, saveToHistory, getInformationOfRole, updateInformationOfRole, saveNotification, getUserEmail };

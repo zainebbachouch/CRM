@@ -1,6 +1,6 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ');
-const {saveToHistory}=require('./callback')
+const { saveToHistory } = require('./callback')
 
 
 const getCustomerByIDCommand = async (req, res) => {
@@ -11,14 +11,14 @@ const getCustomerByIDCommand = async (req, res) => {
             return res.status(401).json({ message: "Unauthorized" });
         }
 
-        
+
         // Check role
-        if (!['admin', 'employe','client'].includes(authResult.decode.role)) {
+        if (!['admin', 'employe', 'client'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
-        const {CommandId} = req.params;
-        
+        const { CommandId } = req.params;
+
         const sqlQuery = 'SELECT client.* FROM commande INNER JOIN client ON commande.client_idclient = client.idclient WHERE commande.idcommande = ?';
         //console.log("Executing SQL query:", sqlQuery);
         console.log("CommandId:::::::::::::::::::::");
@@ -93,6 +93,56 @@ const getAllCommands = async (req, res) => {
     }
 };
 
+const searchCommands = async (req, res) => {
+    const { searchTerm } = req.params; // Ensure this matches the route parameter
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = (page - 1) * limit;
+
+    try {
+        // Authorization check
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        // Role check
+        if (!['admin', 'employe'].includes(authResult.decode.role)) {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        // Query to get total number of commands that match the search term
+        const totalQuery = 'SELECT COUNT(*) as total FROM commande WHERE description_commande LIKE ?';
+        const totalResult = await new Promise((resolve, reject) => {
+            db.query(totalQuery, [`%${searchTerm}%`], (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        const total = totalResult[0].total;
+
+        // Query to get commands with pagination and search term
+        const commandsQuery = 'SELECT * FROM commande WHERE description_commande LIKE ? LIMIT ? OFFSET ?';
+        const commandsResult = await new Promise((resolve, reject) => {
+            db.query(commandsQuery, [`%${searchTerm}%`, limit, offset], (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.json({
+            commands: commandsResult, // Changed from 'products' to 'commands'
+            total: total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        });
+    } catch (error) {
+        console.error('Error in searchCommands:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
 
 const updateCommandStatus = async (req, res) => {
     // Authorization check
@@ -138,10 +188,10 @@ const updateCommandStatus = async (req, res) => {
             return res.status(500).json({ message: "Internal Server Error" });
         }
         res.json({ message: "Command status updated successfully" });
-        
+
         const userId = authResult.decode.id;
         //    const userRole = authResult.decode.role;
-        console.log('qui connecte',userId)
+        console.log('qui connecte', userId)
 
         saveToHistory('Statut de la commande mis à jour', userId, userRole);
     });
@@ -180,7 +230,7 @@ const createInvoice = async (idcommande) => {
     try {
         // Récupérer le montant total de la commande et le mode de livraison depuis la table commande
         const { montant_total_commande, metho_delivraison_commande } = await getTotalAmountAndDeliveryMethod(idcommande);
-        
+
         // Insertion de la facture avec les détails fournis dans le corps de la requête
         await new Promise((resolve, reject) => {
             db.query(
@@ -286,5 +336,7 @@ const getCommandsByCommandId = async (req, res) => {
         res.json(result);
     });
 }
-module.exports = {getCustomerByIDCommand, getAllCommands, updateCommandStatus, 
-    getCommandsByClientId, getCommandsByCommandId,getTotalAmountAndDeliveryMethod ,checkExistingInvoice}
+module.exports = {
+    searchCommands, getCustomerByIDCommand, getAllCommands, updateCommandStatus,
+    getCommandsByClientId, getCommandsByCommandId, getTotalAmountAndDeliveryMethod, checkExistingInvoice
+}

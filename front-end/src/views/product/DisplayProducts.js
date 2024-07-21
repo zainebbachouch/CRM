@@ -12,12 +12,34 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
     const userPermissions = useContext(UserPermissionsContext);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
 
         console.log('User Permissions in DisplayProducts:', userPermissions);
 
     }, [userPermissions]);
+
+    const searchProducts = useCallback(async (searchTerm, page = 1) => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const config = {
+                withCredentials: true,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            };
+            const response = await axios.get(`http://127.0.0.1:5000/api/search/${searchTerm}?page=${page}&limit=10`, config);
+            setProducts(response.data.products);
+            setTotalPages(Math.ceil(response.data.total / 10)); // Use limit parameter here
+            setCurrentPage(page); // Update current page
+        } catch (err) {
+            console.error('Error searching products:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, [setProducts]);
 
 
     const fetchProducts = useCallback(async (page = 1) => {
@@ -31,6 +53,8 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                 },
             };
             const response = await axios.get(`http://127.0.0.1:5000/api/getAllProducts?page=${page}&limit=10`, config);
+            console.log('produit rrrrrrresponse:', response.data.products);
+
             setProducts(response.data.products);
             setTotalPages(Math.ceil(response.data.total / 10)); // Use limit parameter here
             setCurrentPage(page); // Update current page
@@ -40,6 +64,7 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
             setLoading(false);
         }
     }, [setProducts]);
+    
 
     const fetchCategories = useCallback(async () => {
         try {
@@ -51,17 +76,29 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                 },
             };
             const response = await axios.get('http://127.0.0.1:5000/api/getAllCategories', config);
-            setCategories(response.data);
+            setCategories(response.data.categories);
         } catch (err) {
             console.error('Error fetching categories:', err);
         }
     }, []);
 
-    useEffect(() => {
-        fetchProducts();
-        fetchCategories();
-    }, [fetchProducts, fetchCategories]);
 
+    useEffect(() => {
+        if (searchTerm) {
+            searchProducts(searchTerm, currentPage);
+        } else {
+            fetchProducts(currentPage);
+        }
+        fetchCategories();
+    }, [searchTerm, currentPage, searchProducts,fetchProducts, fetchCategories]);
+
+    const handleSearchSubmit = (event) => {
+        event.preventDefault();
+        searchProducts(searchTerm, currentPage);
+    };
+    const handleSearchChange = (event) => {
+        setSearchTerm(event.target.value);
+    };
     const handleDelete = async (id) => {
         try {
             const token = localStorage.getItem('token');
@@ -86,9 +123,14 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
     };
 
     const getCategoryName = (categoryId) => {
+        if (!Array.isArray(categories)) {
+            console.error('Categories is not an array:', categories);
+            return 'N/A';
+        }
         const category = categories.find((cat) => cat.idcategorie === categoryId);
         return category ? category.nom_categorie : 'N/A';
     };
+    
 
     const handleAddToBasket = async (productId) => {
         try {
@@ -109,10 +151,13 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
             console.error('Error adding product to basket:', error);
         }
     };
-
     const handlePageChange = (newPage) => {
         if (newPage > 0 && newPage <= totalPages) {
-            fetchProducts(newPage); // Fetch products for the new page
+            if (searchTerm) {
+                searchProducts(searchTerm, newPage);
+            } else {
+                fetchProducts(newPage);
+            }
         }
     };
 
@@ -133,7 +178,18 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                     setProducts={setProducts}
                 />
             )}
+
+            <form onSubmit={handleSearchSubmit} className="d-flex">
+                <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    className="form-control me-2"
+                />
+            </form>
             <div className="container-fluid d-flex justify-content-end mb-2">
+
                 {(isAdmin || (userPermissions && userPermissions.addProduit === 1)) && ( // Add parentheses here
 
                     <button className="btn btn-success mr-2" data-bs-toggle="modal" data-bs-target="#exampleModal" onClick={() => handleUpdate('val', 'ajouter')}>
@@ -216,7 +272,7 @@ function DisplayProducts({ products, setProducts, addProduct, setSelectedProduct
                             </div>
                         </div>
                     ))}
-                  </div>
+                </div>
             )}
 
             <nav aria-label="Page navigation">

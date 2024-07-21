@@ -11,7 +11,8 @@ router.get("/getFactureOfClientAuthorized",factureController.getFactureOfClientA
 
 
 router.post("/createPDFInvoice", factureController.creatPDFInvoice);
-router.get("/fetchPDFInvoice", factureController.fetchPDFInvoice);
+router.get('/searchFactures', factureController.searchFactures);
+
 
 
 module.exports = router;

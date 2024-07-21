@@ -1,6 +1,6 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ')
-const {saveToHistory}=require('./callback')
+const { saveToHistory } = require('./callback')
 
 
 const createCategorie = async (req, res) => {
@@ -30,7 +30,7 @@ const createCategorie = async (req, res) => {
         if (result) {
             console.log("Catégorie insérée avec succès");
             console.log(result);
-            res.json({ message: "Insertion réussie" ,nom_categorie});
+            res.json({ message: "Insertion réussie", nom_categorie });
             const userId = authResult.decode.id;
             const userRole = authResult.decode.role;
             console.log('qui connecte', userId)
@@ -127,7 +127,44 @@ const getAllCategories = async (req, res) => {
     }
 };
 
+const searchCategorie = async (req, res) => {
+    const { searchTerm } = req.params; // Ensure this matches the route parameter
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = (page - 1) * limit;
 
+    try {
+        // Query to get total number of categories that match the search term
+        const totalQuery = 'SELECT COUNT(*) as total FROM categorie WHERE nom_categorie LIKE ?';
+        const totalResult = await new Promise((resolve, reject) => {
+            db.query(totalQuery, [`%${searchTerm}%`], (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        const total = totalResult[0].total;
+
+        // Query to get categories with pagination and search term
+        const categoriesQuery = 'SELECT * FROM categorie WHERE nom_categorie LIKE ? LIMIT ? OFFSET ?';
+        const categoriesResult = await new Promise((resolve, reject) => {
+            db.query(categoriesQuery, [`%${searchTerm}%`, limit, offset], (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.json({
+            categories: categoriesResult, // Changed from 'products' to 'categories'
+            total: total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        });
+    } catch (error) {
+        console.error('Error in searchCategorie:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
 
 
 
@@ -209,4 +246,4 @@ const deleteCategorie = async (req, res) => {
 
 
 
-module.exports = { createCategorie, getCategorieById, getAllCategories, updateCategorie, deleteCategorie }
+module.exports = {searchCategorie, createCategorie, getCategorieById, getAllCategories, updateCategorie, deleteCategorie }

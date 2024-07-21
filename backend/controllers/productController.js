@@ -1,6 +1,6 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ')
-const { saveToHistory } = require('./callback');
+const { saveToHistory ,search } = require('./callback');
 
 
 
@@ -80,6 +80,47 @@ const getAllProducts = async (req, res) => {
     }
 };
 
+
+// In productController.js
+
+const searchProducts = async (req, res) => {
+    const { searchTerm } = req.params;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = (page - 1) * limit;
+
+    try {
+        // Query to get total number of products that match the search term
+        const totalQuery = 'SELECT COUNT(*) as total FROM produit WHERE nom_produit LIKE ?';
+        const totalResult = await new Promise((resolve, reject) => {
+            db.query(totalQuery, [`%${searchTerm}%`], (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        const total = totalResult[0].total;
+
+        // Query to get products with pagination and search term
+        const productsQuery = 'SELECT * FROM produit WHERE nom_produit LIKE ? LIMIT ? OFFSET ?';
+        const productsResult = await new Promise((resolve, reject) => {
+            db.query(productsQuery, [`%${searchTerm}%`, limit, offset], (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.json({
+            products: productsResult,
+            total: total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        });
+    } catch (error) {
+        console.error('Error in searchProducts:', error);
+        res.status(500).send('Server error');
+    }
+};
 
 
 
@@ -200,6 +241,6 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-module.exports = { createProduct, getProductById, getAllProducts, updateProduct, deleteProduct };
+module.exports = { searchProducts,createProduct, getProductById, getAllProducts, updateProduct, deleteProduct };
 
 

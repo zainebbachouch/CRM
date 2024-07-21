@@ -7,5 +7,6 @@ router.get('/getCategorieById/:id', categorieController.getCategorieById);
 router.get('/getAllCategories', categorieController.getAllCategories);
 router.put('/updateCategorie/:id', categorieController.updateCategorie);
 router.delete('/deleteCategorie/:id', categorieController.deleteCategorie);
+router.get('/searchCategories/:searchTerm', categorieController.searchCategorie);
 
 module.exports = router;

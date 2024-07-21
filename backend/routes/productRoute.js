@@ -23,5 +23,5 @@ router.post('/createProduct', (req, res) => { upload.single('photo_produit'), pr
 router.get('/getProductById/:produitId', productController.getProductById);
 router.get('/getAllProducts', productController.getAllProducts);
 router.delete('/deleteProduct/:id', productController.deleteProduct);
-
+router.get('/search/:searchTerm', productController.searchProducts);
 module.exports = router;
