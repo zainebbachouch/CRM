@@ -36,7 +36,12 @@ const addEmployeesToAuthorization = async (req, res) => {
                     } else {
                         const exists = result[0].count > 0;
                         if (!exists) {
-                            const insertQuery = 'INSERT INTO autorisation (email_employe, deleteClient, deleteFacture, deleteCommande, deleteProduit, deleteCategorie, activateClient, addProduit, addCategorie, incativeClient, updateFacture, updateCommande, updateProduit, updateCategorie) VALUES (?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)';
+                            const insertQuery = `
+                            INSERT INTO autorisation 
+                            (email_employe, deleteClient, deleteFacture, deleteCommande, deleteProduit, deleteCategorie, 
+                            statusClient, addProduit, addCategorie, updateFacture, updateCommande, updateProduit, updateCategorie) 
+                            VALUES (?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+                        `;
                             db.query(insertQuery, [email], (err, result) => {
                                 if (err) {
                                     reject(err);
@@ -89,7 +94,7 @@ const updatestatusEmployesAutorisation = async (req, res) => {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
-        const { email_employe,deleteClient, deleteFacture, deleteCommande, deleteProduit, deleteCategorie, addProduit, addCategorie,  updateFacture, updateCommande, updateProduit, updateCategorie ,statusClient } = req.body;
+        const { email_employe, deleteClient, deleteFacture, deleteCommande, deleteProduit, deleteCategorie, addProduit, addCategorie, updateFacture, updateCommande, updateProduit, updateCategorie, statusClient } = req.body;
 
         if (!email_employe) {
             return res.status(400).json({ message: "Missing email_employe" });
@@ -102,7 +107,7 @@ const updatestatusEmployesAutorisation = async (req, res) => {
         SET deleteFacture = ?, deleteClient=? ,deleteCommande = ?, deleteProduit = ?, deleteCategorie = ?,  addProduit = ?, addCategorie = ?,  updateFacture = ?, updateCommande = ?, updateProduit = ?, updateCategorie = ?, statusClient = ?
         WHERE email_employe = ?`;
 
-        db.query(sqlQuery, [deleteFacture,deleteClient, deleteCommande, deleteProduit, deleteCategorie,  addProduit, addCategorie, updateFacture, updateCommande, updateProduit, updateCategorie,statusClient, email_employe], (err, result) => {
+        db.query(sqlQuery, [deleteFacture, deleteClient, deleteCommande, deleteProduit, deleteCategorie, addProduit, addCategorie, updateFacture, updateCommande, updateProduit, updateCategorie, statusClient, email_employe], (err, result) => {
             if (err) {
                 console.error('SQL Error:', err);
                 return res.status(500).json({ message: "Internal Server Error" });

@@ -97,9 +97,6 @@ const loginAdmin = async (email, password) => {
         }
 
         const token = await createToken("admin", user.idadmin, user.email_admin, process.env.JWT_SECRET);
-        const refreshToken = crypto.randomBytes(32).toString('hex');
-
-        storeRefreshToken(user.email_admin, refreshToken);
         const { mdp, ...others } = user;
 
         /*  res.cookie("accessToken", token, {
@@ -121,19 +118,19 @@ const loginAdmin = async (email, password) => {
 
         return {
             success: true, message: "Login successful", token: token,
-            refreshToken: refreshToken,
             role: 'admin', user: {
                 username: user.nom_admin, id: user.idadmin, email: user.email_admin,
                 photo: user.photo_admin ? user.photo_admin.toString('base64') : null // Convert photo to base64
 
-            }
-        };
-    }
-    catch (error) {
+            }  
+          } 
+        }
+        catch (error) {
         console.error(error);
         return { success: false, message: "Internal server error" };
     }
 };
+
 
 
 const loginEmploye = async (email, password) => {
@@ -336,7 +333,7 @@ const registerE = async (req, res) => {
             prenom_employe: prenom,
             email_employe: email,
             mdp: hashedPassword,
-            photo_employe: Buffer.from(photo, 'base64'),
+            photo_employe: photo,
             telephone_employe: telephone,
             adresse_employe: adresse,
             //datede_naissance_employe: dateDeNaissance , 
@@ -561,8 +558,6 @@ const deleteClient = async (req, res) => {
     }
 };
 
-
-
 const updateEmployeeStatus = async (req, res) => {
     const { id } = req.params;
     const { etat_compte } = req.body;
@@ -576,10 +571,7 @@ const updateEmployeeStatus = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        /*   if (!['admin'].includes(authResult.decode.role)) {
-               return res.status(403).json({ message: "Insufficient permissions" });
-           }*/
-        if (authResult.decode.role !== 'admin') {
+        if (!['admin'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
@@ -616,9 +608,7 @@ const updateEmployeeStatus = async (req, res) => {
         } else {
             await sendDeactivationEmails(recipients);
         }
-        const userId = authResult.decode.id;
-        const userRole = authResult.decode.role;
-        saveToHistory('updateEmployeeStatus', userId, userRole);
+
         res.json({ message: "Employee status updated successfully" });
     } catch (error) {
         console.error(error);
@@ -639,7 +629,7 @@ const updateClientStatus = async (req, res) => {
         if (authResult.message !== 'authorized') {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        if (!['admin', 'employe'].includes(authResult.decode.role)) {
+        if (!['admin'].includes(authResult.decode.role)) {
             return res.status(403).json({ message: "Insufficient permissions" });
         }
 
@@ -678,17 +668,13 @@ const updateClientStatus = async (req, res) => {
         } else {
             await sendDeactivationEmails(recipients);
         }
-        const userId = authResult.decode.id;
-        const userRole = authResult.decode.role;
-        saveToHistory('Update Status Client', userId, userRole);
-        res.json({ message: "Client deleted successfully" });
+
         res.json({ message: "Client status updated successfully" });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
-
 
 
 
@@ -703,7 +689,6 @@ const transporter = nodemailer.createTransport({
     }
 });
   */
-
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -712,230 +697,20 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const TOKEN_PATH = path.join(__dirname, '../document/tokens.json');
-
-function readTokens() {
-    if (fs.existsSync(TOKEN_PATH)) {
-        return JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf8'));
-    }
-    return {};
-}
-
-function writeTokens(tokens) {
-    fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens, null, 2), 'utf8');
-    console.log('Tokens written to file:', tokens);
-}
-/*
-function storeRefreshToken(email, refreshToken) {
-    const tokens = readTokens();
-    if (!tokens[email]) {
-        tokens[email] = {}; // Créer un nouvel objet vide si l'e-mail n'existe pas
-    }
-
-    if (refreshToken) {
-        tokens[email].refresh_token = refreshToken.toString(); // Stocker le refresh token
-        writeTokens(tokens);
-        console.log('Tokens after storing refresh token:', tokens);
-    } else {
-        console.error('Refresh token is undefined');
-    }
-}*/
-
-
-
-
-function storeRefreshToken(email, refreshToken) {
-    let tokens = {};
-    if (fs.existsSync(TOKEN_PATH)) {
-        const data = fs.readFileSync(TOKEN_PATH);
-        tokens = JSON.parse(data);
-    }
-
-    tokens[email] = { refresh_token: refreshToken };
-
-    fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens, null, 2));
-    console.log('Tokens after storing refresh token:', tokens);
-}
-
-async function getRefreshToken(email) {
-    const tokens = readTokens();
-    if (!tokens[email] || !tokens[email].refresh_token) {
-        throw new Error('Refresh token not found');
-    }
-    return tokens[email].refresh_token;
-}
-
-async function getAccessToken(refreshToken) {
-    console.log(`Using refresh token: ${refreshToken}`);
+const sendEmail = async (to, subject, html) => {
     try {
-        const oAuth2Client = new google.auth.OAuth2(
-            process.env.CLIENT_ID,
-            process.env.CLIENT_SECRET,
-            process.env.REDIRECT_URI
-        );
-
-        oAuth2Client.setCredentials({ refresh_token: refreshToken });
-
-        const { token } = await oAuth2Client.getAccessToken();
-        console.log(`Obtained access token: ${token}`);
-        return token;
-    } catch (error) {
-        console.error('Error getting access token:', error);
-        throw new Error('Failed to get access token');
-    }
-}
-
-async function sendEmail(senderEmail, to, subject, html, refreshToken) {
-    try {
-        const accessToken = await getAccessToken(refreshToken);
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                type: 'OAuth2',
-                user: senderEmail,
-                clientId: process.env.CLIENT_ID,
-                clientSecret: process.env.CLIENT_SECRET,
-                refreshToken: refreshToken,
-                accessToken: accessToken,
-            },
-        });
-
         await transporter.sendMail({
-            from: senderEmail,
+            from: 'Expéditeur<zaineb.bachouch@gmail.com>'
+            ,
             to,
             subject,
             html,
         });
-
         console.log('Email sent successfully');
     } catch (error) {
         console.error('Error sending email:', error);
-        throw new Error('Failed to send email');
-    }
-}
-
-
-
-async function sendMailEmploye(req, res) {
-    try {
-        const authResult = await isAuthorize(req, res);
-        if (authResult.message !== 'authorized') {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
-        console.log('authResult:', authResult);
-        const { to, subject, message, recipientRole, recipientId } = req.body;
-        if (!to || !subject || !message) {
-            return res.status(400).json({ message: "Incomplete email data" });
-        }
-
-        const emailId = await insertEmailIntoDatabase(to, subject, message);
-        const senderId = authResult.decode.id;
-        const senderRole = authResult.decode.role;
-        const senderEmail = authResult.decode.email;
-
-        console.log('senderEmail:', senderEmail);
-
-        await insertEmailSender(emailId, senderId, senderRole);
-        await insertEmailRecipient(emailId, recipientId, recipientRole);
-
-        const refreshToken = await getRefreshToken(senderEmail);
-        console.log('Refresh token:', refreshToken);
-
-        await sendEmail(senderEmail, to, subject, message, refreshToken);
-
-        res.status(200).json({ message: "Email sent successfully" });
-    } catch (error) {
-        console.error("Error sending email to employee:", error.message);
-        res.status(500).json({ message: "Internal server error" });
-    }
-}
-
-
-const insertEmailIntoDatabase = async (to, subject, message) => {
-    try {
-        const query = 'INSERT INTO emails (to_email, subject, message) VALUES (?, ?, ?)';
-        const result = await new Promise((resolve, reject) => {
-            db.query(query, [to, subject, message], (error, result) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-        return result.insertId;
-    } catch (error) {
-        console.error("Error inserting email into database:", error);
-        throw error;
     }
 };
-
-async function insertEmailSender(emailId, senderId, senderRole) {
-    try {
-        let query;
-        if (senderRole === 'admin') {
-            query = `INSERT INTO email_senders (email_id, sender_admin_id) VALUES (?, ?)`;
-        } else if (senderRole === 'employe') {
-            query = `INSERT INTO email_senders (email_id, sender_employe_id) VALUES (?, ?)`;
-        } else if (senderRole === 'client') {
-            query = `INSERT INTO email_senders (email_id, sender_client_id) VALUES (?, ?)`;
-        }
-
-        if (!query) {
-            throw new Error('Invalid sender role');
-        }
-
-        await new Promise((resolve, reject) => {
-            db.query(query, [emailId, senderId], (error) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    } catch (error) {
-        console.error("Error inserting email sender into database:", error);
-        throw error;
-    }
-}
-
-async function insertEmailRecipient(emailId, recipientId, recipientRole) {
-    try {
-        let query;
-        if (recipientRole === 'admin') {
-            query = `INSERT INTO email_recipients (email_id, recipient_admin_id) VALUES (?, ?)`;
-        } else if (recipientRole === 'employe') {
-            query = `INSERT INTO email_recipients (email_id, recipient_employe_id) VALUES (?, ?)`;
-        } else if (recipientRole === 'client') {
-            query = `INSERT INTO email_recipients (email_id, recipient_client_id) VALUES (?, ?)`;
-        }
-
-        if (!query) {
-            throw new Error('Invalid recipient role');
-        }
-
-        await new Promise((resolve, reject) => {
-            db.query(query, [emailId, recipientId], (error) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    } catch (error) {
-        console.error("Error inserting email recipient into database:", error);
-        throw error;
-    }
-}
-
-
-
-
-
-
-
 
 
 
@@ -976,8 +751,6 @@ const sendDeactivationEmails = async (recipients) => {
         console.error('Error sending deactivation emails:', error);
     }
 };
-
-
 
 
 
@@ -1365,7 +1138,7 @@ module.exports = {
 
     getClientInformation, getEmployeInformation, updateAdminInformation, updateClientInformation,
 
-    updateEmployeInformation, listAdminAuthorized, listEmployeAuthorized, listClientAuthorized, sendMailEmploye,
+    updateEmployeInformation, listAdminAuthorized, listEmployeAuthorized, listClientAuthorized,
 
-    listEmails, storeRefreshToken, readTokens, writeTokens
+    listEmails
 };

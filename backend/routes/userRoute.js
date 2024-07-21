@@ -75,8 +75,8 @@ router.delete('/deleteClient/:id', userController.deleteClient);
 
 
 
-//envoie mail
+/*envoie mail
 router.post('/sendMailEmploye', userController.sendMailEmploye)
 router.get('/listEmails', userController.listEmails)
-
+*/
 module.exports = router;
