@@ -253,48 +253,51 @@ const searchHistoryByDate = async (req, res) => {
 };
 
 
-
-  const deleteHistoryById = async (req, res) => {
+const deleteHistoryById = async (req, res) => {
     try {
-      const authResult = await isAuthorize(req, res);
-      if (authResult.message !== 'authorized') {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-  
-      const { role } = authResult.decode;
-      const { idAction } = req.params;
-  
-      const query = `
-        DELETE FROM historique 
-        WHERE idaction = ? AND (
-          (client_idclient = ? AND ? = 'client') OR 
-          (employe_idemploye = ? AND ? = 'employe') OR 
-          (admin_idadmin = ? AND ? = 'admin')
-        )
-      `;
-  
-      const values = [idAction, idAction, role, idAction, role, idAction, role];
-  
-      await new Promise((resolve, reject) => {
-        db.query(query, values, (err, result) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(result);
-          }
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { role } = authResult.decode;
+        const { idAction } = req.params;
+        const { client_idclient, employe_idemploye, admin_idadmin } = req.query;
+
+        // Construct the SQL query to delete the record based on role
+        const query = `
+          DELETE FROM historique 
+          WHERE idaction = ? AND (
+            (? = 'client' AND client_idclient = ?) OR 
+            (? = 'employe' AND employe_idemploye = ?) OR 
+            (? = 'admin' AND admin_idadmin = ?)
+          )
+        `;
+
+        // Values for the query
+        const values = [idAction, role, client_idclient, role, employe_idemploye, role, admin_idadmin];
+
+        await new Promise((resolve, reject) => {
+            db.query(query, values, (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
         });
-      });
-  
-      res.json({ message: 'History deleted successfully' });
+
+        res.json({ message: 'History deleted successfully' });
     } catch (error) {
-      console.error('Error deleting history:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+        console.error('Error deleting history:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-  };
+};
 
 
 
-  
+
+
 const searchNotificationsByDate = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;

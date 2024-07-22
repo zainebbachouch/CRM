@@ -67,12 +67,20 @@ function Historyy() {
 
   const handleDelete = async (idAction) => {
     try {
-      await axios.delete(`http://127.0.0.1:5000/api/history/${idAction}`, config);
-      fetchHistory(); // Refresh history after deletion
+        await axios.delete(`http://127.0.0.1:5000/api/deleteHistory/${idAction}`, {
+            ...config,
+            params: {
+                ...(role === 'client' && { client_idclient: id }),
+                ...(role === 'employe' && { employe_idemploye: id }),
+                ...(role === 'admin' && { admin_idadmin: id })
+            }
+        });
+        fetchHistory(); // Refresh history after deletion
     } catch (error) {
-      console.error('Error deleting history entry:', error);
+        console.error('Error deleting history entry:', error);
     }
-  };
+};
+
 
   return (
     <div className="d-flex">
