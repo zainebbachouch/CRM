@@ -1,43 +1,45 @@
 .navbar {
-    background-color: white;
-    height: 10vh;
-    width:82.3vw !important ;  
-    
+  background-color: white;
+  height: 10vh;
+  width: 82.3vw !important;
+
 }
 
 
-.flag{
-    border-radius: 50%; 
-    width: 20px; 
-    height: 20px;
+.flag {
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
 }
-.profile{
-    border-radius: 50%; 
-    width: 40px; 
-    height: 40px;
+
+.profile {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
 }
+
 .basket {
-    position: relative;
-  }
-  
-  .card-count {
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    background-color: red;
-    color: white;
-    padding: 5px;
-    border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform: translate(50%, -50%);
-  }
-.label
-{
-    font-weight:500 !important;
+  position: relative;
+}
+
+.card-count {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  padding: 5px;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(50%, -50%);
+}
+
+.label {
+  font-weight: 500 !important;
 }
 
 
@@ -128,6 +130,26 @@ button[type="button"]:hover {
 .dropdown-item:hover {
   background-color: #f1f1f1;
 }
+
+/*notification-profilenotification-profile*/
+.history-container {
+  max-height: 400px; /* Ajustez la hauteur maximale selon vos besoins */
+  overflow: auto;
+}
+
+.notification-profile {
+  max-height: 400px;
+  /* Ajoutez cette ligne pour définir la hauteur maximale */
+  overflow-y: auto;
+  /* Ajoutez cette ligne pour permettre le défilement vertical */
+
+}
+
+.notification-profile div {
+  display: flex;
+
+}
+
 /*notification*/
 /*notification*/
 .notification-icon {
@@ -152,6 +174,10 @@ button[type="button"]:hover {
   top: 30px;
   right: 10px;
   width: 300px;
+  max-height: 400px;
+  /* Ajoutez cette ligne pour définir la hauteur maximale */
+  overflow-y: auto;
+  /* Ajoutez cette ligne pour permettre le défilement vertical */
   background-color: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border-radius: 5px;

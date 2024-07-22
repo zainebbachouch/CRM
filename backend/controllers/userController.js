@@ -335,8 +335,7 @@ const forgotPassword = async (req, res) => {
     const resetCode = crypto.randomBytes(32).toString('hex');
 
     // Calculer l'expiration du code (1 heure à partir de maintenant)
-    const expiresAt = new Date(Date.now() + 3600000).toISOString().slice(0, 19).replace('T', ' ');
-
+    const expiresAt = new Date(Date.now() + 7200000).toISOString().slice(0, 19).replace('T', ' ');
     await db.query(
         'INSERT INTO password_resets (email, reset_code, expires_at, user_type) VALUES (?, ?, ?, ?)',
         [email, resetCode, expiresAt, userType]  // Inclure userType ici
@@ -373,10 +372,16 @@ const resetPassword = async (req, res) => {
                 'SELECT email, expires_at, NOW() AS current_time_now, user_type FROM password_resets WHERE reset_code = ?',
                 [resetCode],
                 (error, results) => {
-                    if (error) return reject(error);
+                    if (error) {
+                        console.log(error)
+
+                        return reject(error);
+                    }
+
                     resolve(results);
                 }
             );
+
         });
 
 

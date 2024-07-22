@@ -28,6 +28,7 @@ import { NotificationProvider } from './views/context/NotificationContext';
 import Task from './views/task/Task';
 import ForgotPassword from './views/ForgotPassword';
 import ResetPassword from './views/ResetPassword ';
+import Historyy from './components/sidenav/history';
 
 
 
@@ -41,88 +42,91 @@ function App() {
       <Router>
         <AuthProvider>
           <UserPermissionsPage>
-           <NotificationProvider>          
-            <Routes>
-              <Route path="/">            
-                <Route index element={<Home />} />
-                <Route path="login">
-                  <Route index element={<Login />} />
-                </Route>
-                <Route path="password">
-                  <Route index element={<ForgotPassword/>} />
-                </Route>
-                <Route path="/reset-password">
-                  <Route index element={<ResetPassword/>} />
-                </Route>
-                <Route path="register">
-                  <Route index element={<Register />} />
-                </Route>
-                <Route path="Dashboard">
-                  <Route index element={<Dashbord />} />
-                </Route>
-                <Route path="Products">
-                  <Route index element={<Products />} />
-                  <Route path=":id" element={<ProductDetails />} />
-                </Route>
-                <Route path="Products">
-                  <Route index element={<Products />} />
-                </Route>
-                <Route path="Commands">
-                  <Route index element={<Commands />} />
-                  <Route path=":id" element={<CommandDetails />} />
-                </Route>
+            <NotificationProvider>
+              <Routes>
+                <Route path="/">
+                  <Route index element={<Home />} />
+                  <Route path="login">
+                    <Route index element={<Login />} />
+                  </Route>
+                  <Route path="password">
+                    <Route index element={<ForgotPassword />} />
+                  </Route>
+                  <Route path="/reset-password">
+                    <Route index element={<ResetPassword />} />
+                  </Route>
+                  <Route path="register">
+                    <Route index element={<Register />} />
+                  </Route>
+                  <Route path="Dashboard">
+                    <Route index element={<Dashbord />} />
+                  </Route>
+                  <Route path="Products">
+                    <Route index element={<Products />} />
+                    <Route path=":id" element={<ProductDetails />} />
+                  </Route>
+                  <Route path="Products">
+                    <Route index element={<Products />} />
+                  </Route>
+                  <Route path="Commands">
+                    <Route index element={<Commands />} />
+                    <Route path=":id" element={<CommandDetails />} />
+                  </Route>
 
-                <Route path="invoices" >
-                  <Route index element={<Invoices />} />
-                  <Route path=":id" element={<InvoicesDetails />} />
-                </Route>
+                  <Route path="invoices" >
+                    <Route index element={<Invoices />} />
+                    <Route path=":id" element={<InvoicesDetails />} />
+                  </Route>
 
-                <Route path="Categories">
-                  <Route index element={<Categories />} />
-                </Route>
-                <Route path="adminstration">
-                  <Route index element={<Adminstration />} />
-                </Route>
-                <Route path="authorization">
-                  <Route index element={<AuthorizationList />} />
-                </Route>
-                <Route path="cart">
-                  <Route index element={<GetCartProducts />} />
-                </Route>
-                <Route path="completeCommand">
-                  <Route index element={<CompleteCommand />} />
-                </Route>
-                <Route path="profile">
-                  <Route path=":id" element={<Profile />} />
-                </Route>
+                  <Route path="Categories">
+                    <Route index element={<Categories />} />
+                  </Route>
+                  <Route path="adminstration">
+                    <Route index element={<Adminstration />} />
+                  </Route>
+                  <Route path="authorization">
+                    <Route index element={<AuthorizationList />} />
+                  </Route>
+                  <Route path="cart">
+                    <Route index element={<GetCartProducts />} />
+                  </Route>
+                  <Route path="completeCommand">
+                    <Route index element={<CompleteCommand />} />
+                  </Route>
+                  <Route path="profile">
+                    <Route path=":id" element={<Profile />} />
+                  </Route>
+                  <Route path="history">
+                    <Route path=":id" element={<Historyy />} />
+                  </Route>
 
-                <Route path="messenger">
-                  <Route index element={<MessengerPage/>} />
-                </Route>
-
-              
-                <Route path="task">
-                  <Route index element={<Task/>} />
-                </Route>
+                  <Route path="messenger">
+                    <Route index element={<MessengerPage />} />
+                  </Route>
 
 
-                <Route path="Pageemployes/:id" element={<Pageemployes />}>
-                  <Route path="envoyeeMail/:email" element={<EnvoyeeMailEmploye />} />
-                  <Route path="makecall" element={<MakeCall />} />
-                  <Route path="historique" element={<Historique />} />
+                  <Route path="task">
+                    <Route index element={<Task />} />
+                  </Route>
+
+
+                  <Route path="Pageemployes/:id" element={<Pageemployes />}>
+                    <Route path="envoyeeMail/:email" element={<EnvoyeeMailEmploye />} />
+                    <Route path="makecall" element={<MakeCall />} />
+                    <Route path="historique" element={<Historique />} />
+                  </Route>
+
+
+
+                  <Route path="Pageclients/:id" element={<Pageclients />} >
+                    <Route path="envoyeeMail/:email" element={<EnvoyeeMailClient />} />
+                    <Route path="makecall" element={<MakeCall />} />
+                    <Route path="historique" element={<Historique />} />
+                  </Route>
+
                 </Route>
-
-
-
-                <Route path="Pageclients/:id" element={<Pageclients />} >
-                  <Route path="envoyeeMail/:email" element={<EnvoyeeMailClient />} />
-                  <Route path="makecall" element={<MakeCall />} />
-                  <Route path="historique" element={<Historique />} />
-                </Route>
-
-              </Route>
-            </Routes>
-            </NotificationProvider> 
+              </Routes>
+            </NotificationProvider>
           </UserPermissionsPage>
         </AuthProvider>
       </Router>

@@ -4,6 +4,11 @@ import axios from 'axios';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
 import '../../style/viewsStyle/profile.css';
+import { RiDeleteBinLine } from "react-icons/ri";
+
+
+
+
 
 function Profile() {
     const { id } = useParams();
@@ -16,6 +21,7 @@ function Profile() {
     const [photo_admin, setAdmin] = useState(0)
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
+    const [notifications, setNotifications] = useState([]);
 
     const config = useMemo(() => ({
         headers: {
@@ -143,6 +149,40 @@ function Profile() {
         if (!dateString) return '';
         return dateString.slice(0, 10);
     };
+
+
+    useEffect(() => {
+        fetchNotifications();
+    }, []);
+
+    const fetchNotifications = async () => {
+        try {
+            const response = await axios.get('http://127.0.0.1:5000/api/getNotification', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            setNotifications(response.data.notifications);
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        }
+    };
+
+    const handleDelete = async (Id) => {
+        try {
+            await axios.delete(`http://127.0.0.1:5000/api/deleteNotification/${Id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            console.log('Notification deleted successfully');
+            fetchNotifications();
+        } catch (error) {
+            console.error('Error deleting notification:', error);
+        }
+    };
+
+
 
     if (loading) {
         return <div>Loading...</div>;
@@ -366,14 +406,33 @@ function Profile() {
                                     <p>Company Settings content goes here...</p>
                                 </div>
                                 <div className={`tab-pane fade ${filterActive === 3 ? 'show active' : ''}`} role="tabpanel">
-                                    <p>Notifications content goes here...</p>
+                                    <div >
+                                        <div className='notification-profile'>
+                                            {notifications.length > 0 ? (
+                                                notifications.map((notification, index) => (
+                                                    <div key={index} className="notification-item">
+                                                        <p>{notification.message}</p>
+                                                        <div onClick={() => handleDelete(notification.id)}>
+                                                            <RiDeleteBinLine />
+                                                        </div>
+                                                        <span className="notification-timestamp">
+                                                            {new Date(notification.date).toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p>No notifications</p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
+
     );
 }
 

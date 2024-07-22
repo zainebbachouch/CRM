@@ -7,6 +7,10 @@ import io from 'socket.io-client';
 import axios from 'axios';
 import { useNotificationContext } from '../../views/context/NotificationContext';
 import './TopNav.css';
+import { RiDeleteBinLine } from "react-icons/ri";
+
+
+
 
 function TopNav() {
     const currentUser = localStorage.getItem('username');
@@ -60,20 +64,20 @@ function TopNav() {
 
         fetchUnreadCount();
     }, [email, token, dispatch]);
-
+    const fetchNotifications = async () => {
+        try {
+            const response = await axios.get('http://127.0.0.1:5000/api/getNotification', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            dispatch({ type: 'SET_NOTIFICATIONS', payload: response.data.notifications });
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        }
+    };
     useEffect(() => {
-        const fetchNotifications = async () => {
-            try {
-                const response = await axios.get('http://127.0.0.1:5000/api/getNotification', {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-                dispatch({ type: 'SET_NOTIFICATIONS', payload: response.data.notifications });
-            } catch (error) {
-                console.error('Error fetching notifications:', error);
-            }
-        };
+
 
         fetchNotifications();
     }, [token, dispatch]);
@@ -98,6 +102,19 @@ function TopNav() {
             } catch (error) {
                 console.error('Error updating notifications:', error);
             }
+        }
+    };
+    const handleDelete = async (Id) => {
+        try {
+            await axios.delete(`http://127.0.0.1:5000/api/deleteNotification/${Id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            console.log('Notif deleted successfully');
+            fetchNotifications();
+        } catch (error) {
+            console.error('Error deleting Notif:', error);
         }
     };
 
@@ -134,6 +151,8 @@ function TopNav() {
                             {isOpen && (
                                 <div className="dropdown-menu">
                                     <Link to={`/profile/${userId}`} className="dropdown-item">Profile</Link>
+                                    <Link to={`/history/${userId}`} className="dropdown-item">history</Link>
+
                                     <div className="dropdown-item" onClick={handleLogout}>Logout</div>
                                 </div>
                             )}
@@ -148,6 +167,8 @@ function TopNav() {
                         notifications.map((notification, index) => (
                             <div key={index} className="notification-item">
                                 <p>{notification.message}</p>
+                                <div onClick={() => handleDelete(notification.id)}><RiDeleteBinLine /></div>
+
                                 <span className="notification-timestamp">{notification.timestamp}</span>
                             </div>
                         ))

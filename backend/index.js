@@ -144,6 +144,7 @@ app.get('/api/conversations', (req, res) => {
 });
 
 
+
 app.get('/api/allUsers', (req, res) => {
   const query = `
     SELECT idadmin AS userId, 'admin' AS role, nom_admin AS name, prenom_admin AS prenom, photo_admin AS photo FROM admin

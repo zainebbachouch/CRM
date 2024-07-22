@@ -276,6 +276,7 @@ function MessengerPage() {
                   return (
                     <div key={index} className={`message ${message.sender_id == userId ? 'message-right' : 'message-left'}`}>
                       <span>{message.message}</span>
+                      {}
                       <span className="messenger-timestamp">
                         {formatTimestamp(timestamp)}
                       </span>
