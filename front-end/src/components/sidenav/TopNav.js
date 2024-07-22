@@ -8,9 +8,9 @@ import axios from 'axios';
 import { useNotificationContext } from '../../views/context/NotificationContext';
 import './TopNav.css';
 import { RiDeleteBinLine } from "react-icons/ri";
+import { useAuth } from '../../views/context/authContext';
 
-
-
+import { useNavigate } from 'react-router-dom'; // Correct import
 
 function TopNav() {
     const currentUser = localStorage.getItem('username');
@@ -24,6 +24,10 @@ function TopNav() {
 
     const socketRef = useRef();
     const { state: { notifications, unreadCount }, dispatch } = useNotificationContext();
+
+
+    const { logout } = useAuth();
+    const navigate = useNavigate(); // Initialize useNavigate
 
     useEffect(() => {
         socketRef.current = io('http://localhost:3300', {
@@ -118,8 +122,15 @@ function TopNav() {
         }
     };
 
-    const handleLogout = () => {
-        console.log("Logged out");
+
+    const handleLogout = async () => {
+        try {
+            console.log("Logged out");
+            await logout(); // Ensure the function is async
+            navigate('/login'); // Redirect to login page
+        } catch (error) {
+            console.error("Error during logout:", error);
+        }
     };
 
     return (
@@ -153,8 +164,9 @@ function TopNav() {
                                     <Link to={`/profile/${userId}`} className="dropdown-item">Profile</Link>
                                     <Link to={`/history/${userId}`} className="dropdown-item">history</Link>
 
-                                    <div className="dropdown-item" onClick={handleLogout}>Logout</div>
-                                </div>
+                                    <div className="dropdown-item" onClick={handleLogout}>
+                                        Logout
+                                    </div>                                </div>
                             )}
                         </div>
                     </div>

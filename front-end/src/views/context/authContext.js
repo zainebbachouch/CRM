@@ -75,6 +75,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('role');
       localStorage.removeItem('email');
       localStorage.removeItem('photo');
+  
+      // Clear cookies as well
+      document.cookie = 'cookie=; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=None; Secure';
     };
 
   return (
