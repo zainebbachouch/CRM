@@ -1,55 +1,76 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
-import { useParams } from 'react-router-dom';
-import axios from 'axios';
 import { RiDeleteBinLine } from "react-icons/ri";
-import './TopNav.css';
-
-
 
 function Historyy() {
   const { id } = useParams();
+  const [history, setHistory] = useState([]);
+  const [searchCriteria, setSearchCriteria] = useState({
+    description_action: '',
+    startDate: '',
+    endDate: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(10);
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
 
+  const config = useMemo(() => ({
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }), [token]);
+
+  // Function to fetch history based on search criteria and page
+  const fetchHistory = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        ...(role === 'client' && { client_idclient: id }),
+        ...(role === 'employe' && { employe_idemploye: id }),
+        ...(role === 'admin' && { admin_idadmin: id }),
+        ...searchCriteria
+      };
+
+      const response = await axios.get('http://127.0.0.1:5000/api/history', { ...config, params });
+      setHistory(response.data.historique);
+      setTotalPages(Math.ceil(response.data.total / itemsPerPage));
+    } catch (error) {
+      console.error('Error fetching history:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [config, itemsPerPage, currentPage, searchCriteria, role, id]);
+
+  // Trigger fetchHistory whenever searchCriteria or currentPage changes
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:5000/api/getAllHistoryById`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-          params: {
-            client_idclient: role === 'client' ? id : undefined,
-            employe_idemploye: role === 'employe' ? id : undefined,
-            admin_idadmin: role === 'admin' ? id : undefined
-          }
-        });
-        setHistory(response.data.historique);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching history:', error);
-        setLoading(false);
-      }
-    };
-
     fetchHistory();
-  }, [id, token, role]);
+  }, [fetchHistory]);
+
+  const handleSearchChange = (event) => {
+    const { name, value } = event.target;
+    setSearchCriteria(prevState => ({ ...prevState, [name]: value }));
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const handleDelete = async (idAction) => {
     try {
-      await axios.delete(`http://127.0.0.1:5000/api/deleteHistory/${idAction}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      setHistory(history.filter(item => item.idaction !== idAction));
-      console.log('History deleted successfully');
+      await axios.delete(`http://127.0.0.1:5000/api/history/${idAction}`, config);
+      fetchHistory(); // Refresh history after deletion
     } catch (error) {
-      console.error('Error deleting history:', error);
+      console.error('Error deleting history entry:', error);
     }
   };
 
@@ -58,46 +79,100 @@ function Historyy() {
       <SideBar />
       <div className="container-fluid flex-column">
         <TopBar />
-        <div className="container-fluid p-2 history-container">
+        <div className="container-fluid p-2">
+          <h1>History</h1>
+          <form className="mb-3">
+            <div className="mb-2">
+              <label>Description:</label>
+              <input
+                type="text"
+                name="description_action"
+                value={searchCriteria.description_action}
+                onChange={handleSearchChange}
+                className="form-control"
+                placeholder="Search by description"
+              />
+            </div>
+            <div className="mb-2">
+              <label>Start Date:</label>
+              <input
+                type="date"
+                name="startDate"
+                value={searchCriteria.startDate}
+                onChange={handleSearchChange}
+                className="form-control"
+              />
+            </div>
+            <div className="mb-2">
+              <label>End Date:</label>
+              <input
+                type="date"
+                name="endDate"
+                value={searchCriteria.endDate}
+                onChange={handleSearchChange}
+                className="form-control"
+              />
+            </div>
+          </form>
           {loading ? (
-            <p>Loading...</p>
+            <div>Loading...</div>
           ) : (
-            history.length > 0 ? (
+            <div>
               <table className="table">
                 <thead>
                   <tr>
-                    <th>ID Action</th>
-                    <th>Date Action</th>
-                    <th>Heure Action</th>
-                    <th>Description Action</th>
-                    <th>Client ID</th>
-                    <th>Employe ID</th>
-                    <th>Admin ID</th>
-                    <th>Actions</th>
+                    <th>ID</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {history.map((item) => (
-                    <tr key={item.idaction}>
-                      <td>{item.idaction}</td>
-                      <td>{item.date_action}</td>
-                      <td>{item.heure_action}</td>
-                      <td>{item.description_action}</td>
-                      <td>{item.client_idclient}</td>
-                      <td>{item.employe_idemploye}</td>
-                      <td>{item.admin_idadmin}</td>
+                  {history.map((entry) => (
+                    <tr key={entry.idaction}>
+                      <td>{entry.idaction}</td>
+                      <td>{entry.description_action}</td>
+                      <td>{new Date(entry.date_action).toLocaleDateString()}</td>
                       <td>
-                        <div onClick={() => handleDelete(item.idaction)}>
-                          <RiDeleteBinLine />
-                        </div>
+                        <RiDeleteBinLine
+                          onClick={() => handleDelete(entry.idaction)}
+                          style={{ cursor: 'pointer' }}
+                        />
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            ) : (
-              <p>No history found.</p>
-            )
+              <nav>
+                <ul className="pagination">
+                  <li className="page-item">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      className="page-link"
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                  </li>
+                  {[...Array(totalPages).keys()].slice(Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2)).map((index) => (
+                    <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+                      <button onClick={() => handlePageChange(index + 1)} className="page-link">
+                        {index + 1}
+                      </button>
+                    </li>
+                  ))}
+                  <li className="page-item">
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      className="page-link"
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
           )}
         </div>
       </div>
