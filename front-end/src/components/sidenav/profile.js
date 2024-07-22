@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import SideBar from '../../components/sidebar/SideBar';
@@ -22,6 +22,20 @@ function Profile() {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
     const [notifications, setNotifications] = useState([]);
+    const [searchCriteria, setSearchCriteria] = useState({
+        startDate: '',
+        endDate: '',
+        message: ''
+    });
+
+
+
+
+
+
+
+
+
 
     const config = useMemo(() => ({
         headers: {
@@ -151,37 +165,70 @@ function Profile() {
     };
 
 
-    useEffect(() => {
-        fetchNotifications();
-    }, []);
 
-    const fetchNotifications = async () => {
+
+
+    const fetchNotifications = useCallback(async () => {
+        setLoading(true);
         try {
-            const response = await axios.get('http://127.0.0.1:5000/api/getNotification', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            const response = await axios.get('http://127.0.0.1:5000/api/getNotification', config);
             setNotifications(response.data.notifications);
         } catch (error) {
             console.error('Error fetching notifications:', error);
+        } finally {
+            setLoading(false);
         }
+    }, [config]);
+
+    const searchNotifications = useCallback(async (searchCriteria) => {
+        setLoading(true);
+        try {
+            const { message, startDate, endDate } = searchCriteria;
+            const params = {
+                ...(message && { message }),
+                ...(startDate && { startDate }),
+                ...(endDate && { endDate })
+            };
+
+            const response = await axios.get('http://127.0.0.1:5000/api/searchNotifications', {
+                ...config,
+                params
+            });
+            setNotifications(response.data.notifications);
+        } catch (error) {
+            console.error('Error searching notifications:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [config]);
+
+    useEffect(() => {
+        if (Object.values(searchCriteria).some(value => value)) {
+            searchNotifications(searchCriteria);
+        } else {
+            fetchNotifications();
+        }
+    }, [searchCriteria, searchNotifications, fetchNotifications]);
+
+    const handleSearchChange = (event) => {
+        const { name, value } = event.target;
+        setSearchCriteria((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleDelete = async (Id) => {
+    const handleSearchSubmit = (event) => {
+        event.preventDefault();
+        searchNotifications(searchCriteria);
+    };
+
+    const handleDelete = async (id) => {
         try {
-            await axios.delete(`http://127.0.0.1:5000/api/deleteNotification/${Id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            await axios.delete(`http://127.0.0.1:5000/api/deleteNotification/${id}`, config);
             console.log('Notification deleted successfully');
             fetchNotifications();
         } catch (error) {
             console.error('Error deleting notification:', error);
         }
     };
-
 
 
     if (loading) {
@@ -406,9 +453,45 @@ function Profile() {
                                     <p>Company Settings content goes here...</p>
                                 </div>
                                 <div className={`tab-pane fade ${filterActive === 3 ? 'show active' : ''}`} role="tabpanel">
-                                    <div >
-                                        <div className='notification-profile'>
-                                            {notifications.length > 0 ? (
+                                    <div>
+                                        <form onSubmit={handleSearchSubmit} className="mb-3">
+                                            <div className="mb-2">
+                                                <label>Start Date:</label>
+                                                <input
+                                                    type="date"
+                                                    name="startDate"
+                                                    value={searchCriteria.startDate}
+                                                    onChange={handleSearchChange}
+                                                    className="form-control"
+                                                />
+                                            </div>
+                                            <div className="mb-2">
+                                                <label>End Date:</label>
+                                                <input
+                                                    type="date"
+                                                    name="endDate"
+                                                    value={searchCriteria.endDate}
+                                                    onChange={handleSearchChange}
+                                                    className="form-control"
+                                                />
+                                            </div>
+                                            <div className="mb-2">
+                                                <label>Message:</label>
+                                                <input
+                                                    type="text"
+                                                    name="message"
+                                                    value={searchCriteria.message}
+                                                    onChange={handleSearchChange}
+                                                    className="form-control"
+                                                    placeholder="Search by message"
+                                                />
+                                            </div>
+                                            <button type="submit" className="btn btn-primary">Search</button>
+                                        </form>
+                                        <div className="notification-profile">
+                                            {loading ? (
+                                                <div>Loading...</div>
+                                            ) : notifications.length > 0 ? (
                                                 notifications.map((notification, index) => (
                                                     <div key={index} className="notification-item">
                                                         <p>{notification.message}</p>

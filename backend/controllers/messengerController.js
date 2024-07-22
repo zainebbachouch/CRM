@@ -23,6 +23,48 @@ const getNotifications = async (req, res) => {
     }
 };
 
+
+
+// Ajoutez cette fonction dans votre backend (Express.js)
+const searchNotifications = async (req, res) => {
+    try {
+        const { startDate, endDate, message } = req.query;
+
+        let query = `
+            SELECT id, email_destinataire, message, date 
+            FROM notification 
+            WHERE 1=1
+        `;
+        const values = [];
+
+        if (startDate && endDate) {
+            query += ' AND date BETWEEN ? AND ?';
+            values.push(startDate, endDate);
+        }
+
+        if (message) {
+            query += ' AND message LIKE ?';
+            values.push(`%${message}%`);
+        }
+
+        const notificationResult = await new Promise((resolve, reject) => {
+            db.query(query, values, (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        res.json({ notifications: notificationResult });
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+
 // Supprimer une notification par ID
 const deleteNotification = async (req, res) => {
     try {
@@ -298,38 +340,7 @@ const deleteHistoryById = async (req, res) => {
 
 
 
-const searchNotificationsByDate = async (req, res) => {
-    try {
-        const { startDate, endDate } = req.query;
 
-        if (!startDate || !endDate) {
-            return res.status(400).json({ message: "Bad Request: Both startDate and endDate must be provided" });
-        }
-
-        // Query to get notifications within the specified date range
-        const query = `
-            SELECT id, email_destinataire, message, date 
-            FROM notification 
-            WHERE date BETWEEN ? AND ?
-        `;
-        const values = [startDate, endDate];
-
-        const notificationResult = await new Promise((resolve, reject) => {
-            db.query(query, values, (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-
-        res.json({ notifications: notificationResult });
-    } catch (error) {
-        console.error('Error fetching notifications:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-};
 
 
 module.exports = {
@@ -340,6 +351,6 @@ module.exports = {
     getAllHistoryById,
     deleteHistoryById,
     searchHistoryByDate,
-    searchNotificationsByDate
+    searchNotifications
 
 };
