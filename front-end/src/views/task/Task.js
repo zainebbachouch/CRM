@@ -10,15 +10,21 @@ import { CiMenuKebab } from "react-icons/ci";
 import '../../style/viewsStyle/task.css';
 import { RiDeleteBinLine } from "react-icons/ri";
 import { FaDoorOpen } from "react-icons/fa6";
-
+import io from "socket.io-client";
 
 
 
 function Task() {
   const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+  const email = localStorage.getItem('email');
+  const userid = localStorage.getItem('userId');
+
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isOpen, setIsOpen] = useState({});
+
+  const socket = io.connect("http://localhost:3300");
 
 
   const config = useMemo(() => ({
@@ -82,6 +88,8 @@ function Task() {
       if (source.droppableId !== destination.droppableId) {
         movedTask.statut = destination.droppableId;
       }
+    
+
 
       // Insert the task into the destination list at the specified index
       destinationList.splice(destination.index, 0, movedTask);
@@ -109,17 +117,20 @@ function Task() {
         deadline: formattedDeadline,
         statut: movedTask.statut,
         priorite: movedTask.priorite,
-        order: movedTask.order
+        order: movedTask.order,
+        email,
+        userid,
+        role,
+        token,
+        taskId: draggableId // Include the taskId here
+        // Include the token here
       };
-
-      console.log('PUT data for single task:', putData);
-      // Update the single task
-      await axios.put(
-        `http://127.0.0.1:5000/api/updateTaskStatus/${draggableId}`,
-        putData,
-        config
-      );
-
+  
+      await axios.put(`http://127.0.0.1:5000/api/updateTaskStatus/${draggableId}`, putData, config);
+  
+      if (movedTask.statut === "Done") {
+        socket.emit('TaskifDone', putData);
+      }
       // Prepare data for updating order of all tasks
       const updateOrderData = [
         ...sourceList.map((task) => ({ id: task.id, order: task.order })),

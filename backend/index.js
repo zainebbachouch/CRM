@@ -18,7 +18,7 @@ const { getInformationOfRole } = require('./controllers/callback');
 const { createProduct } = require('./controllers/productController');
 const { passCommand } = require('./controllers/basketController');
 const { updateCommandStatus } = require('./controllers/commandsContoller')
-const {createTask} = require('./controllers/taskController');
+const { createTask, updateTaskStatus } = require('./controllers/taskController');
 
 
 
@@ -235,8 +235,8 @@ io.on('connection', (socket) => {
         console.log("Notification enregistrée avec succès pour:", email);
         results.push(result);
 
-      //  const updateResult = await db.query(updateQuery, [email]);
-       // console.log(`Unread count mis à jour pour ${email}:`, updateResult);
+        //  const updateResult = await db.query(updateQuery, [email]);
+        // console.log(`Unread count mis à jour pour ${email}:`, updateResult);
       }
 
       return results;
@@ -247,7 +247,7 @@ io.on('connection', (socket) => {
   };
 
 
-  var senderEmail, iduser, role ,selectedEmployees;
+  var senderEmail, iduser, role, selectedEmployees;
 
 
   socket.on('newProduct', async (product) => {
@@ -451,7 +451,7 @@ io.on('connection', (socket) => {
     senderEmail = data.email;
     iduser = data.userid;
     role = data.role;
-    selectedEmployees=data.selectedEmployees;
+    selectedEmployees = data.selectedEmployees;
 
 
     try {
@@ -498,7 +498,73 @@ io.on('connection', (socket) => {
     }
   });
 
- 
+  socket.on('TaskifDone', async (putData) => {
+    console.log('TaskifDone received', putData);
+    const { email, userid, role, token, ...taskData } = putData;
+    const taskId = putData.taskId; // Assuming taskId is passed with the data
+
+    try {
+        // Prepare request object
+        const req = { body: taskData, headers: { authorization: `Bearer ${token}` }, params: { id: taskId } };
+
+        // Call updateTaskStatus and extract the response
+        const response = await new Promise((resolve, reject) => {
+            updateTaskStatus(req, {
+                status: (code) => ({
+                    json: (data) => resolve(data)
+                }),
+            });
+        });
+
+        // Extract NameOfSender from response
+        const nameOfSender = response?.nameOfSender || 'Unknown Sender'; // Default value if not available
+
+        // Define a query promise function
+        const queryPromise = (sql, params = []) => {
+            return new Promise((resolve, reject) => {
+                db.query(sql, params, (error, results) => {
+                    if (error) reject(error);
+                    else resolve(results);
+                });
+            });
+        };
+
+        // Get all admin emails
+        const admins = await queryPromise('SELECT * FROM admin');
+        console.log('admins:', admins);
+
+        // Notification message
+        const notificationMessage = `A task has been completed by ${nameOfSender}`;
+        const adminEmails = admins
+            .filter(admin => admin.idadmin !== userid)
+            .map(admin => admin.email_admin);
+
+        // Save notifications (assuming saveNotifications is defined)
+        await saveNotifications(adminEmails, notificationMessage, email);
+
+        // Send notifications via socket to all users except the current user
+        for (const userId in userSocketMap) {
+            if (userId !== userid) {
+                const receiverSocketId = userSocketMap[userId];
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit('receiveNotification', {
+                        message: notificationMessage,
+                        timestamp: new Date().toISOString(),
+                        taskId: taskId
+                    });
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error in TaskifDone event:', error);
+    }
+});
+
+
+
+
+
+
 
   app.use((error, req, res, next) => {
     console.log('This is the rejected field ->', error.field);

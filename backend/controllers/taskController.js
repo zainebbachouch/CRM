@@ -57,7 +57,7 @@ const createTask = async (req, res) => {
                 saveToHistory('task created', userId, userRole);
                 res.status(201).json({ message: 'Tâche créée avec succès', id: taskId, title });
 
-            
+
             });
         });
 
@@ -67,6 +67,29 @@ const createTask = async (req, res) => {
     }
 };
 
+const getTaskById = async (req, res) => {
+    try {
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe') {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        const { id } = req.params;
+        const query = 'SELECT * FROM tache WHERE id = ?';
+        db.query(query, [id], (err, result) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (result.length === 0) return res.status(404).json({ message: 'Tâche non trouvée' });
+            res.status(200).json(result[0]);
+        });
+    } catch (error) {
+        console.error('Error fetching task by ID:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
 
 
 
@@ -118,29 +141,6 @@ const getAllTasks = async (req, res) => {
 };
 
 
-const getTaskById = async (req, res) => {
-    try {
-        const authResult = await isAuthorize(req, res);
-        if (authResult.message !== 'authorized') {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
-
-        if (authResult.decode.role !== 'admin' && authResult.decode.role !== 'employe') {
-            return res.status(403).json({ message: "Insufficient permissions" });
-        }
-
-        const { id } = req.params;
-        const query = 'SELECT * FROM tache WHERE id = ?';
-        db.query(query, [id], (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
-            if (result.length === 0) return res.status(404).json({ message: 'Tâche non trouvée' });
-            res.status(200).json(result[0]);
-        });
-    } catch (error) {
-        console.error('Error fetching task by ID:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-};
 
 
 
@@ -217,19 +217,50 @@ const updateTaskStatus = async (req, res) => {
         }
 
         const updateQuery = 'UPDATE tache SET messageTache = ?, deadline = ?, statut = ?, priorite = ?, `order` = ? WHERE id = ?';
-        db.query(updateQuery, [messageTache, deadline, statut, priorite, order, id], (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
-            res.status(200).json({ message: 'Task updated successfully' });
 
-            const userId = authResult.decode.id;
-            const userRole = authResult.decode.role;
-            saveToHistory('task updated', userId, userRole);
+        // Update the task status and wait for it to complete
+        const updateTaskPromise = new Promise((resolve, reject) => {
+            db.query(updateQuery, [messageTache, deadline, statut, priorite, order, id], (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
         });
+
+        // Fetch the names of employees associated with the task
+        const nameQuery = `
+            SELECT e.nom_employe, e.prenom_employe
+            FROM employe e
+            JOIN tache_employe te ON e.idemploye = te.idEmploye
+            WHERE te.idTache = ?;
+        `;
+        const fetchNamesPromise = new Promise((resolve, reject) => {
+            db.query(nameQuery, [id], (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        // Wait for both promises to complete
+        const [updateResult, namesResult] = await Promise.all([updateTaskPromise, fetchNamesPromise]);
+
+        // Generate the names of the employees
+        const nameOfSender = namesResult.map(e => `${e.nom_employe} ${e.prenom_employe}`).join(', ');
+
+        // Log the update to history
+        const userId = authResult.decode.id;
+        const userRole = authResult.decode.role;
+        saveToHistory('task updated', userId, userRole);
+        console.log('Name of Senderrrrrrrrr:', nameOfSender);
+
+        // Respond with the result
+        res.status(200).json({ message: 'Task updated successfully', nameOfSender });
     } catch (error) {
         console.error('Error updating task:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+
 
 
 
