@@ -18,7 +18,10 @@ function Commands() {
   const [error, setError] = useState(null);
   const isAdmin = localStorage.getItem('role') === 'admin';
   const userPermissions = useContext(UserPermissionsContext);
+
   const socket = io.connect("http://localhost:3300");
+
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');

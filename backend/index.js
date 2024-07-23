@@ -14,11 +14,11 @@ const taskRoute = require("./routes/taskRoute");
 const http = require('http');
 const socketIo = require('socket.io');
 const db = require('./config/dbConnection');
-const { saveNotification, getInformationOfRole } = require('./controllers/callback');
+const { getInformationOfRole } = require('./controllers/callback');
 const { createProduct } = require('./controllers/productController');
 const { passCommand } = require('./controllers/basketController');
 const { updateCommandStatus } = require('./controllers/commandsContoller')
-const { getUserEmail } = require('./controllers/callback')
+const {createTask} = require('./controllers/taskController');
 
 
 
@@ -247,7 +247,8 @@ io.on('connection', (socket) => {
   };
 
 
-  var senderEmail, iduser, role;
+  var senderEmail, iduser, role ,selectedEmployees;
+
 
   socket.on('newProduct', async (product) => {
     console.log('New product added:', product);
@@ -445,6 +446,59 @@ io.on('connection', (socket) => {
   });
 
 
+  socket.on('createTask', async (data) => {
+    console.log('createTask received', data);
+    senderEmail = data.email;
+    iduser = data.userid;
+    role = data.role;
+    selectedEmployees=data.selectedEmployees;
+
+
+    try {
+      const req = { body: data };
+      await createTask(req, {
+        status: (code) => ({
+          json: (data) => {
+            console.log(`Response sent: ${code} ${JSON.stringify(data)}`);
+          }
+        }),
+      });
+
+      const queryPromise = (sql, params = []) => {
+        return new Promise((resolve, reject) => {
+          db.query(sql, params, (error, results) => {
+            if (error) reject(error);
+            else resolve(results);
+          });
+        });
+      };
+
+      const employees = await queryPromise('SELECT * FROM employe');
+      console.log('Employees:', employees);
+
+      const notificationMessage = `A new task has been assigned to you`;
+
+      const employeeEmails = employees
+        .filter(employee => selectedEmployees.includes(employee.idemploye) && employee.idemploye !== iduser)
+        .map(employee => employee.email_employe);
+
+      await saveNotifications(employeeEmails, notificationMessage, senderEmail);
+
+      for (const userId of selectedEmployees) {
+        const receiverSocketId = userSocketMap[userId];
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit('receiveNotification', {
+            message: notificationMessage,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error in createTask in index.js:', error);
+    }
+  });
+
+ 
 
   app.use((error, req, res, next) => {
     console.log('This is the rejected field ->', error.field);

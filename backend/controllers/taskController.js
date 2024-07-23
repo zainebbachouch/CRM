@@ -1,6 +1,7 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ')
-const { saveToHistory } = require('./callback');
+const { saveToHistory, getEmailById } = require('./callback');
+
 
 
 
@@ -54,7 +55,9 @@ const createTask = async (req, res) => {
                 const userId = authResult.decode.id;
                 const userRole = authResult.decode.role;
                 saveToHistory('task created', userId, userRole);
-                res.status(201).json({ message: 'Tâche créée avec succès', id: taskId });
+                res.status(201).json({ message: 'Tâche créée avec succès', id: taskId, title });
+
+            
             });
         });
 
@@ -307,4 +310,4 @@ const deleteTask = async (req, res) => {
     }
 };
 
-module.exports = { createTask, getAllTasks, getTaskById, updateTask, deleteTask, updateTasksOrder ,updateTaskStatus };
+module.exports = { createTask, getAllTasks, getTaskById, updateTask, deleteTask, updateTasksOrder, updateTaskStatus };

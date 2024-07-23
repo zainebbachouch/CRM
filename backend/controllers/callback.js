@@ -208,10 +208,18 @@ const getUserEmail = async (id) => {
     const result = await db.query(emailQuery, [id]);
     return result[0][`email_${role}`];
 };
-// Fonction de recherche générique
-const search = async (tableName, searchTerm, fields = '*') => {
-    const query = `SELECT ${fields} FROM ${tableName} WHERE name LIKE ?`;
-    const [results] = await db.query(query, [`%${searchTerm}%`]);
-    return results;
+const getEmailById = (idEmploye) => {
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT email_employe FROM employe WHERE idemploye = ?';
+        db.query(query, [idEmploye], (err, result) => {
+            if (err) {
+                console.error('Error fetching email:', err);
+                return reject(err);
+            }
+            resolve(result[0]?.email_employe);
+        });
+    });
 };
-module.exports = {search, saveToHistory, getInformationOfRole, updateInformationOfRole, saveNotification, getUserEmail };
+
+
+module.exports = { getEmailById, saveToHistory, getInformationOfRole, updateInformationOfRole, saveNotification, getUserEmail };

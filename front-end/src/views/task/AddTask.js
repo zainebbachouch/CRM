@@ -4,6 +4,10 @@ import { EditorState, convertToRaw, convertFromRaw } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import Autocomplete from 'react-autocomplete';
+import io from "socket.io-client";
+
+
+
 
 function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
   const [loading, setLoading] = useState(false);
@@ -22,10 +26,19 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
 
   const role = localStorage.getItem('role');
   const token = localStorage.getItem('token');
+  const email = localStorage.getItem('email');
+  const userid = localStorage.getItem('userId');
+
+
+
   const [employees, setEmployees] = useState([]);
 
 
   const [selectedEmployees, setSelectedEmployees] = useState([]);
+
+
+  const socket = io.connect("http://localhost:3300");
+
 
   const config = useMemo(() => ({
     headers: { Authorization: `Bearer ${token}` },
@@ -134,6 +147,8 @@ function AddTask({ selectedTask, fetchTasks, tasks, setTasks }) {
         response = await axios.put(`http://127.0.0.1:5000/api/updateTask/${selectedTask.id}`, data, config);
       } else {
         response = await axios.post('http://127.0.0.1:5000/api/createTask', data, config);
+        socket.emit('createTask', { ...data, email, userid, role ,selectedEmployees  });
+
       }
 
       if (Array.isArray(response.data)) {
