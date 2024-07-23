@@ -81,9 +81,7 @@ function App() {
                   <Route path="Categories">
                     <Route index element={<Categories />} />
                   </Route>
-                  <Route path="adminstration">
-                    <Route index element={<Adminstration />} />
-                  </Route>
+                  
                   <Route path="authorization">
                     <Route index element={<AuthorizationList />} />
                   </Route>
@@ -97,7 +95,7 @@ function App() {
                     <Route path=":id" element={<Profile />} />
                   </Route>
                   <Route path="history">
-                    <Route path=":id" element={<Historyy />} />
+                    <Route path=":id" element={<Historyy/>} />
                   </Route>
 
                   <Route path="messenger">
@@ -108,12 +106,14 @@ function App() {
                   <Route path="task">
                     <Route index element={<Task />} />
                   </Route>
-
+                  <Route path="adminstration">
+                    <Route index element={<Adminstration />} />
+                  </Route>
 
                   <Route path="Pageemployes/:id" element={<Pageemployes />}>
                     <Route path="envoyeeMail/:email" element={<EnvoyeeMailEmploye />} />
                     <Route path="makecall" element={<MakeCall />} />
-                    <Route path="historique" element={<Historique />} />
+                    <Route path="historique" element={<Historique type="employe" />} />
                   </Route>
 
 
@@ -121,7 +121,7 @@ function App() {
                   <Route path="Pageclients/:id" element={<Pageclients />} >
                     <Route path="envoyeeMail/:email" element={<EnvoyeeMailClient />} />
                     <Route path="makecall" element={<MakeCall />} />
-                    <Route path="historique" element={<Historique />} />
+                    <Route path="historique" element={<Historique type="client" />} />
                   </Route>
 
                 </Route>

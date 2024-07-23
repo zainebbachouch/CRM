@@ -225,16 +225,18 @@ const updateTaskStatus = async (req, res) => {
                 resolve(result);
             });
         });
+        const userId = authResult.decode.id;
+
 
         // Fetch the names of employees associated with the task
         const nameQuery = `
             SELECT e.nom_employe, e.prenom_employe
             FROM employe e
             JOIN tache_employe te ON e.idemploye = te.idEmploye
-            WHERE te.idTache = ?;
+            WHERE te.idTache = ? AND e.idemploye =?;
         `;
         const fetchNamesPromise = new Promise((resolve, reject) => {
-            db.query(nameQuery, [id], (err, result) => {
+            db.query(nameQuery, [id, userId], (err, result) => {
                 if (err) return reject(err);
                 resolve(result);
             });
@@ -247,7 +249,6 @@ const updateTaskStatus = async (req, res) => {
         const nameOfSender = namesResult.map(e => `${e.nom_employe} ${e.prenom_employe}`).join(', ');
 
         // Log the update to history
-        const userId = authResult.decode.id;
         const userRole = authResult.decode.role;
         saveToHistory('task updated', userId, userRole);
         console.log('Name of Senderrrrrrrrr:', nameOfSender);

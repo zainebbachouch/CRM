@@ -7,54 +7,52 @@ import { UserPermissionsContext } from '../context/UserPermissionsPage';
 import { Link } from 'react-router-dom';
 import { FaDoorOpen } from "react-icons/fa6";
 
-
-
-
 function Adminstration() {
   const [employees, setEmployees] = useState([]);
   const [clients, setClients] = useState([]);
   const [filterActive, setFilterActive] = useState(2); // Default to Client List for employees
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error state
 
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
 
-  const isAdmin = localStorage.getItem('role') === 'admin';
+  const isAdmin = role === 'admin';
   const userPermissions = useContext(UserPermissionsContext);
 
-
-  const config = useMemo(() => {
-    return {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      withCredentials: true,
-    };
-  }, [token]);
+  const config = useMemo(() => ({
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    withCredentials: true,
+  }), [token]);
 
   useEffect(() => {
-    const fetchEmployees = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/api/employees', config);
-        setEmployees(response.data);
+        setLoading(true);
+        setError(null); // Reset error state
+
+        if (role !== 'employe') {
+          const employeeResponse = await axios.get('http://127.0.0.1:5000/api/employees', config);
+          setEmployees(employeeResponse.data);
+        }
+
+        const clientResponse = await axios.get('http://127.0.0.1:5000/api/clients', config);
+        setClients(clientResponse.data);
+        
+        if (role !== 'employe') {
+          setFilterActive(1); // Default to Employee List for admins
+        }
       } catch (err) {
-        console.error('Error fetching employees:', err);
+        console.error('Error fetching data:', err);
+        setError('Failed to fetch data. Please try again later.');
+      } finally {
+        setLoading(false);
       }
     };
 
-    const fetchClients = async () => {
-      try {
-        const response = await axios.get('http://127.0.0.1:5000/api/clients', config);
-        setClients(response.data);
-      } catch (err) {
-        console.error('Error fetching clients:', err);
-      }
-    };
-
-    if (role !== 'employe') {
-      fetchEmployees();
-      setFilterActive(1); // Default to Employee List for admins
-    }
-    fetchClients();
+    fetchData();
   }, [config, role]);
 
   const handleFilterClick = (filter) => {
@@ -135,8 +133,8 @@ function Adminstration() {
             <div className="adminstrationNavWrap">
               <div className="adminstrationNav">
                 <ul>
-                {role === 'admin' && (
-                  <li
+                  {role === 'admin' && (
+                    <li
                       className={`${filterActive === 1 ? "active" : ""}`}
                       onClick={() => handleFilterClick(1)}
                     >
@@ -152,6 +150,8 @@ function Adminstration() {
                 </ul>
                 <div>
                   <h1>{filterActive === 1 ? 'Employee List' : 'Client List'}</h1>
+                  {loading && <p>Loading...</p>}
+                  {error && <p className="error-message">{error}</p>}
                   <div className='adminstrationrWrap'>
                     <table>
                       <thead>
@@ -167,7 +167,7 @@ function Adminstration() {
                           <th>Gender</th>
                           <th>Status</th>
                           <th>Action</th>
-                          <th>read more</th>
+                          <th>Read More</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -177,7 +177,11 @@ function Adminstration() {
                               <td>{employee.idemploye}</td>
                               <td>{employee.nom_employe} {employee.prenom_employe}</td>
                               <td>{employee.email_employe}</td>
-                              <td>{employee.photo_employe}</td>
+                              <td>
+                                {employee.photo_employe ? (
+                                  <img src={employee.photo_employe} alt="employee" style={{ width: '50px', height: '50px' }} />
+                                ) : 'No Photo'}
+                              </td>
                               <td>{employee.telephone_employe}</td>
                               <td>{employee.adresse_employe}</td>
                               <td>{formatDate(employee.datede_naissance_employe)}</td>
@@ -204,7 +208,6 @@ function Adminstration() {
                                   <FaDoorOpen />
                                 </Link>
                               </td>
-
                             </tr>
                           ))
                           : clients.map((client, key) => (
@@ -212,7 +215,11 @@ function Adminstration() {
                               <td>{client.idclient}</td>
                               <td>{client.nom_client} {client.prenom_client}</td>
                               <td>{client.email_client}</td>
-                              <td>{client.photo_client}</td>
+                              <td>
+                                {client.photo_client ? (
+                                  <img src={client.photo_client} alt="client" style={{ width: '50px', height: '50px' }} />
+                                ) : 'No Photo'}
+                              </td>
                               <td>{client.telephone_client}</td>
                               <td>{client.adresse_client}</td>
                               <td>{formatDate(client.datede_naissance_client)}</td>
@@ -231,12 +238,10 @@ function Adminstration() {
                                 </select>
                               </td>
                               <td>
-                                {(isAdmin || (userPermissions && userPermissions.statusClient === 1)) && ( // Add parentheses here
-
+                                {(isAdmin || (userPermissions && userPermissions.statusClient === 1)) && (
                                   <button className="btn btn-primary mr-2" onClick={() => updateClientStatus(client.idclient, client.etat_compte)}>Save</button>
                                 )}
-                                {(isAdmin || (userPermissions && userPermissions.deleteClient === 1)) && ( // Add parentheses here
-
+                                {(isAdmin || (userPermissions && userPermissions.deleteClient === 1)) && (
                                   <button className="btn btn-danger" onClick={() => deleteClient(client.idclient)}>Delete</button>
                                 )}
                               </td>
