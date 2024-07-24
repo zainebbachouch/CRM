@@ -8,7 +8,7 @@ import { format, isToday, isYesterday, isThisWeek, isValid } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { GiHamburgerMenu } from "react-icons/gi";
 
-
+import { IoMdAddCircle } from "react-icons/io";
 
 
 function MessengerPage() {
@@ -43,7 +43,33 @@ function MessengerPage() {
     rolereciever: null,
     sender_id: userId,
   });
+  const handleAddFileClick=()=>{
+    document.getElementById("fileInput").click()
+  }
+const handleFileChange = async (e) => {
+  console.log(e.target.files[0])
+  const {name ,type ,files} = e.target.files[0];
 
+    const file = e.target.files[0];
+    console.log('filemessenger', file);
+
+    const formData1 = new FormData();
+    formData1.append('file', file);
+    formData1.append('upload_preset', 'xlcnkdgy'); // Nom de l'environnement cloud
+
+    try {
+        const response = await axios.post('https://api.cloudinary.com/v1_1/dik98v16k/image/upload/', formData1);
+        const fileUrl = response.data.secure_url;
+        setNewMessage("File "+ fileUrl)
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            [name]: fileUrl,
+        }));
+    } catch (error) {
+        console.error("Error uploading file:", error);
+    }
+
+}
 
 
  
@@ -51,7 +77,7 @@ function MessengerPage() {
 
   useEffect(() => {
     fetchConversations();
-    fetchAllUsers(); 
+    fetchAllUsers(); // Fetch all users when component mounts
   }, []);
 
 
@@ -130,6 +156,7 @@ function MessengerPage() {
 
   const handleConversationClick = (data) => {
     if (data.hasOwnProperty('id')) {
+      // Handle conversation click
       setSelectedConversation(data);
       setFormData({
         ...formData,
@@ -138,8 +165,9 @@ function MessengerPage() {
       });
       fetchMessages(data.id);
     } else {
+      // Handle user click - Start a new conversation
       const newConversation = {
-        id: data.userId, 
+        id: data.userId, // You can set a temporary ID for new conversations
         role: data.role,
         name: `${data.name} ${data.prenom}`,
         photo: data.photo,
@@ -151,7 +179,8 @@ function MessengerPage() {
         receiver_id: null,
         rolereciever: data.role,
       });
-      setMessages([]); 
+      // You may choose to fetch initial messages for new conversations here
+      setMessages([]); // Clear messages for new conversation
     }
   };
   
@@ -159,6 +188,7 @@ function MessengerPage() {
 
   const handleSendMessage = () => {
     if (!selectedConversation || !selectedConversation.id) {
+      // Handle case where there is no selected conversation
       console.error('No conversation selected');
       return;
     }
@@ -180,6 +210,7 @@ function MessengerPage() {
 
 
 
+  // Filter out duplicate conversations based on their IDs
   const uniqueConversations = conversations.filter((conversation, index) => (
     conversations.findIndex((c) => 
       c.id === conversation.id && 
@@ -275,8 +306,7 @@ function MessengerPage() {
                   const timestamp = new Date(message.timestamp);
                   return (
                     <div key={index} className={`message ${message.sender_id == userId ? 'message-right' : 'message-left'}`}>
-                      <span>{message.message}</span>
-                      {}
+                     {message.message.indexOf("File ")==0 ?  <span className="isFile" ><a href={message.message.substring(5)} target="_blank" download>{message.message.substring(5)}</a></span> :  <span className="">{message.message}</span>}
                       <span className="messenger-timestamp">
                         {formatTimestamp(timestamp)}
                       </span>
@@ -286,6 +316,15 @@ function MessengerPage() {
               </div>
 
               <div className="conversation-footer">
+              <IoMdAddCircle onClick={handleAddFileClick} />
+                <input
+                  type="file"     
+                  name="file_url"       
+                  id="fileInput"      
+                  style={{ display: 'none' }} 
+                  onChange={handleFileChange}
+                  accept="image/*,application/pdf,.doc,.docx"
+                />
                 <input
                   type="text"
                   name="message"

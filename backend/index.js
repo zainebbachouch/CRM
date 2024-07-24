@@ -199,7 +199,7 @@ io.on('connection', (socket) => {
         const notificationMessage = `New message from ${senderName} (${message.sender_id}) to ${message.receiver_id}: ${message.message}`;
 
         const email_destinataire = receiverInfo[`email_${message.rolereciever}`];
-        await saveNotification(email_destinataire, notificationMessage);
+        await saveNotifications(email_destinataire, notificationMessage);
 
         const receiverSocketId = userSocketMap[message.receiver_id];
         if (receiverSocketId) {
