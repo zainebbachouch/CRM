@@ -373,7 +373,6 @@ const fetchPDFInvoice = async (req, res) => {
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
     try {
         res.sendFile(path.resolve(sanitizedFilePath));
-
     }
     catch (error) {
         console.error("Error fetching PDF:", error);
@@ -382,7 +381,273 @@ const fetchPDFInvoice = async (req, res) => {
 };
 
 
-module.exports = {
+/*
+const getTotalRevenue = async (req, res) => {
+    try {
+        const totalQuery = 'SELECT SUM(montant_total_facture) AS totalRevenue FROM facture';
+        const totalResult = await new Promise((resolve, reject) => {
+            db.query(totalQuery, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        // Return only the total revenue
+        const totalRevenue = totalResult[0]?.totalRevenue || 0; // Use optional chaining
+        res.status(200).json({ totalRevenue }); // Return totalRevenue instead of totalResult
+    } catch (error) {
+        console.error("Error fetching total revenue:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+*/
+
+// Function to get total revenue based on selected period
+const getTotalRevenue = async (req, res) => {
+    const { period } = req.query; // Get the time period from query parameters
+    console.log("Period for total revenue:", period); // Log the period
+    let periodQuery = '';
+
+    // Set the SQL query based on the period
+    switch (period) {
+        case 'daily':
+            periodQuery = 'DATE(date_facture)';
+            break;
+        case 'weekly':
+            periodQuery = 'YEARWEEK(date_facture)';
+            break;
+        case 'monthly':
+            periodQuery = 'DATE_FORMAT(date_facture, "%Y-%m")';
+            break;
+        case 'yearly':
+            periodQuery = 'YEAR(date_facture)';
+            break;
+        default:
+            return res.status(400).json({ message: "Invalid period" });
+    }
+
+    const totalQuery = `
+        SELECT ${periodQuery} AS period, SUM(montant_total_facture) AS totalRevenue
+        FROM facture
+        GROUP BY period
+        ORDER BY period
+    `;
+
+    try {
+        const totalResult = await new Promise((resolve, reject) => {
+            db.query(totalQuery, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json(totalResult);
+    } catch (error) {
+        console.error("Error fetching total revenue:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+
+
+const getAverageInvoiceValue = async (req, res) => {
+    try {
+        const avgQuery = 'SELECT AVG(montant_total_facture) AS averageInvoiceValue FROM facture';
+        const avgResult = await new Promise((resolve, reject) => {
+            db.query(avgQuery, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        // Extraction de la valeur moyenne de la première ligne du résultat
+        const averageInvoiceValue = avgResult.length > 0 ? avgResult[0].averageInvoiceValue : null;
+
+        res.status(200).json({ averageInvoiceValue });
+    } catch (error) {
+        console.error("Error fetching average invoice value:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+const getInvoiceCount = async (req, res) => {
+    try {
+        const countQuery = 'SELECT COUNT(*) AS invoiceCount FROM facture';
+        const countResult = await new Promise((resolve, reject) => {
+            db.query(countQuery, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        const invoiceCount = countResult.length > 0 ? countResult[0].invoiceCount : 0;
+
+        res.status(200).json({ invoiceCount });
+    } catch (error) {
+        console.error("Error fetching invoice count:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const getInvoiceAmountDistribution = async (req, res) => {
+    try {
+        const distributionQuery = 'SELECT montant_total_facture FROM facture';
+        const distributionResult = await new Promise((resolve, reject) => {
+            db.query(distributionQuery, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        // Transformation des résultats pour obtenir la distribution
+        const invoiceAmounts = distributionResult.map(row => row.montant_total_facture);
+        const distribution = getHistogram(invoiceAmounts, 5); // Changez le nombre de bins selon vos besoins
+
+        res.status(200).json({ distribution });
+    } catch (error) {
+        console.error("Error fetching invoice amount distribution:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const getHistogram = (data, binCount) => {
+    if (data.length === 0) return [];
+    
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const binSize = (max - min) / binCount;
+
+    const bins = Array(binCount).fill(0);
+
+    data.forEach(amount => {
+        const binIndex = Math.min(Math.floor((amount - min) / binSize), binCount - 1);
+        bins[binIndex]++;
+    });
+
+    const histogram = bins.map((count, index) => ({
+        binStart: min + index * binSize,
+        binEnd: min + (index + 1) * binSize,
+        count,
+    }));
+
+    return histogram;
+};
+
+
+const getInvoiceFrequency = async (req, res) => {
+    const { period } = req.query;
+
+    let frequencyQuery;
+
+    switch (period) {
+        case 'daily':
+            frequencyQuery = `
+                SELECT DATE(date_facture) AS period, COUNT(*) AS invoiceCount
+                FROM facture
+                GROUP BY DATE(date_facture)
+                ORDER BY DATE(date_facture)
+            `;
+            break;
+        case 'weekly':
+            frequencyQuery = `
+                SELECT DATE_FORMAT(date_facture, '%Y-%u') AS period, COUNT(*) AS invoiceCount
+                FROM facture
+                GROUP BY DATE_FORMAT(date_facture, '%Y-%u')
+                ORDER BY DATE_FORMAT(date_facture, '%Y-%u')
+            `;
+            break;
+        case 'monthly':
+            frequencyQuery = `
+                SELECT DATE_FORMAT(date_facture, '%Y-%m') AS period, COUNT(*) AS invoiceCount
+                FROM facture
+                GROUP BY DATE_FORMAT(date_facture, '%Y-%m')
+                ORDER BY DATE_FORMAT(date_facture, '%Y-%m')
+            `;
+            break;
+        default:
+            return res.status(400).json({ message: "Invalid period parameter. Use 'daily', 'weekly', or 'monthly'." });
+    }
+
+    try {
+        const frequencyResult = await new Promise((resolve, reject) => {
+            db.query(frequencyQuery, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json({ invoiceFrequency: frequencyResult });
+    } catch (error) {
+        console.error("Error fetching invoice frequency:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+const getOutstandingInvoices = async (req, res) => {
+    const outstandingQuery = `
+        SELECT 
+            COUNT(*) AS unpaidInvoiceCount, 
+            SUM(montant_total_facture) AS unpaidInvoiceTotal 
+        FROM facture 
+        WHERE 
+            statut_paiement_facture = 'non_paye' 
+            OR (etat_facture = 'enRetard' AND date_echeance < NOW());
+    `;
+
+    try {
+        const outstandingResult = await new Promise((resolve, reject) => {
+            db.query(outstandingQuery, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json({ outstandingInvoices: outstandingResult[0] });
+    } catch (error) {
+        console.error("Error fetching outstanding invoices:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+const getPaymentTimeliness = async (req, res) => {
+    const timelinessQuery = `
+        SELECT 
+            DATE_FORMAT(date_facture, '%Y-%m') AS period, 
+            COUNT(*) AS paidInvoices
+        FROM facture
+        WHERE statut_paiement_facture = 'paye'
+        GROUP BY DATE_FORMAT(date_facture, '%Y-%m')
+        ORDER BY DATE_FORMAT(date_facture, '%Y-%m');
+    `;
+
+    try {
+        const timelinessResult = await new Promise((resolve, reject) => {
+            db.query(timelinessQuery, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        const labels = timelinessResult.map(record => record.period);
+        const data = timelinessResult.map(record => record.paidInvoices);
+
+        res.status(200).json({ labels, data });
+    } catch (error) {
+        console.error("Error fetching payment timeliness:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+module.exports = {getTotalRevenue,getAverageInvoiceValue,getInvoiceCount,getInvoiceAmountDistribution,getInvoiceFrequency,
+    getOutstandingInvoices,getPaymentTimeliness,
     searchFactures,
     getInvoiceDetailsByCommandId, getAllFactures, createInvoice,
     deleteInvoiceByCommandId, creatPDFInvoice, fetchPDFInvoice, getFactureOfClientAuthorized

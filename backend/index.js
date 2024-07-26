@@ -83,7 +83,39 @@ app.use('/api', autorisationRoute);
 app.use('/api', messengerRoute);
 app.use('/api', taskRoute);
 
+app.get('/api/searchUsers/:searchTerm', async (req, res) => {
+  const { searchTerm } = req.params;
 
+  try {
+    const query = `
+      SELECT idemploye AS userId, 'employe' AS role, nom_employe AS name, prenom_employe AS prenom, photo_employe AS photo 
+      FROM employe 
+      WHERE nom_employe LIKE ? OR prenom_employe LIKE ?
+      UNION
+      SELECT idadmin AS userId, 'admin' AS role, nom_admin AS name, prenom_admin AS prenom, photo_admin AS photo 
+      FROM admin 
+      WHERE nom_admin LIKE ? OR prenom_admin LIKE ?
+      UNION
+      SELECT idclient AS userId, 'client' AS role, nom_client AS name, prenom_client AS prenom, photo_client AS photo 
+      FROM client 
+      WHERE nom_client LIKE ? OR prenom_client LIKE ?
+    `;
+
+    const values = Array(6).fill(`%${searchTerm}%`);
+
+    db.query(query, values, (err, results) => {
+      if (err) {
+        console.error('Error in searchUsers:', err);
+        res.status(500).send('Server error');
+        return;
+      }
+      res.status(200).json({ users: results });
+    });
+  } catch (error) {
+    console.error('Error in searchUsers:', error);
+    res.status(500).send('Server error');
+  }
+});
 
 app.get('/api/listMessages', (req, res) => {
   const { sender_id, receiver_id } = req.query;
@@ -504,61 +536,61 @@ io.on('connection', (socket) => {
     const taskId = putData.taskId; // Assuming taskId is passed with the data
 
     try {
-        // Prepare request object
-        const req = { body: taskData, headers: { authorization: `Bearer ${token}` }, params: { id: taskId } };
+      // Prepare request object
+      const req = { body: taskData, headers: { authorization: `Bearer ${token}` }, params: { id: taskId } };
 
-        // Call updateTaskStatus and extract the response
-        const response = await new Promise((resolve, reject) => {
-            updateTaskStatus(req, {
-                status: (code) => ({
-                    json: (data) => resolve(data)
-                }),
-            });
+      // Call updateTaskStatus and extract the response
+      const response = await new Promise((resolve, reject) => {
+        updateTaskStatus(req, {
+          status: (code) => ({
+            json: (data) => resolve(data)
+          }),
         });
+      });
 
-        // Extract NameOfSender from response
-        const nameOfSender = response?.nameOfSender || 'Unknown Sender'; // Default value if not available
+      // Extract NameOfSender from response
+      const nameOfSender = response?.nameOfSender || 'Unknown Sender'; // Default value if not available
 
-        // Define a query promise function
-        const queryPromise = (sql, params = []) => {
-            return new Promise((resolve, reject) => {
-                db.query(sql, params, (error, results) => {
-                    if (error) reject(error);
-                    else resolve(results);
-                });
+      // Define a query promise function
+      const queryPromise = (sql, params = []) => {
+        return new Promise((resolve, reject) => {
+          db.query(sql, params, (error, results) => {
+            if (error) reject(error);
+            else resolve(results);
+          });
+        });
+      };
+
+      // Get all admin emails
+      const admins = await queryPromise('SELECT * FROM admin');
+      console.log('admins:', admins);
+
+      // Notification message
+      const notificationMessage = `A task has been completed by ${nameOfSender}`;
+      const adminEmails = admins
+        .filter(admin => admin.idadmin !== userid)
+        .map(admin => admin.email_admin);
+
+      // Save notifications (assuming saveNotifications is defined)
+      await saveNotifications(adminEmails, notificationMessage, email);
+
+      // Send notifications via socket to all users except the current user
+      for (const userId in userSocketMap) {
+        if (userId !== userid) {
+          const receiverSocketId = userSocketMap[userId];
+          if (receiverSocketId) {
+            io.to(receiverSocketId).emit('receiveNotification', {
+              message: notificationMessage,
+              timestamp: new Date().toISOString(),
+              taskId: taskId
             });
-        };
-
-        // Get all admin emails
-        const admins = await queryPromise('SELECT * FROM admin');
-        console.log('admins:', admins);
-
-        // Notification message
-        const notificationMessage = `A task has been completed by ${nameOfSender}`;
-        const adminEmails = admins
-            .filter(admin => admin.idadmin !== userid)
-            .map(admin => admin.email_admin);
-
-        // Save notifications (assuming saveNotifications is defined)
-        await saveNotifications(adminEmails, notificationMessage, email);
-
-        // Send notifications via socket to all users except the current user
-        for (const userId in userSocketMap) {
-            if (userId !== userid) {
-                const receiverSocketId = userSocketMap[userId];
-                if (receiverSocketId) {
-                    io.to(receiverSocketId).emit('receiveNotification', {
-                        message: notificationMessage,
-                        timestamp: new Date().toISOString(),
-                        taskId: taskId
-                    });
-                }
-            }
+          }
         }
+      }
     } catch (error) {
-        console.error('Error in TaskifDone event:', error);
+      console.error('Error in TaskifDone event:', error);
     }
-});
+  });
 
 
 

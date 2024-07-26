@@ -7,8 +7,8 @@ import io from "socket.io-client";
 import { format, isToday, isYesterday, isThisWeek, isValid } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { GiHamburgerMenu } from "react-icons/gi";
-
 import { IoMdAddCircle } from "react-icons/io";
+import EmojiPicker from 'emoji-picker-react';
 
 
 function MessengerPage() {
@@ -22,7 +22,10 @@ function MessengerPage() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [allUsers, setAllUsers] = useState([]); 
+  const [allUsers, setAllUsers] = useState([]);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
 
   const config = useMemo(() => {
@@ -43,12 +46,12 @@ function MessengerPage() {
     rolereciever: null,
     sender_id: userId,
   });
-  const handleAddFileClick=()=>{
+  const handleAddFileClick = () => {
     document.getElementById("fileInput").click()
   }
-const handleFileChange = async (e) => {
-  console.log(e.target.files[0])
-  const {name ,type ,files} = e.target.files[0];
+  const handleFileChange = async (e) => {
+    console.log(e.target.files[0])
+    const { name, type, files } = e.target.files[0];
 
     const file = e.target.files[0];
     console.log('filemessenger', file);
@@ -58,27 +61,31 @@ const handleFileChange = async (e) => {
     formData1.append('upload_preset', 'xlcnkdgy'); // Nom de l'environnement cloud
 
     try {
-        const response = await axios.post('https://api.cloudinary.com/v1_1/dik98v16k/image/upload/', formData1);
-        const fileUrl = response.data.secure_url;
-        setNewMessage("File "+ fileUrl)
-        setFormData((prevFormData) => ({
-            ...prevFormData,
-            [name]: fileUrl,
-        }));
+      const response = await axios.post('https://api.cloudinary.com/v1_1/dik98v16k/image/upload/', formData1);
+      const fileUrl = response.data.secure_url;
+      setNewMessage("File " + fileUrl)
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        [name]: fileUrl,
+      }));
     } catch (error) {
-        console.error("Error uploading file:", error);
+      console.error("Error uploading file:", error);
     }
 
-}
+  }
 
 
- 
+
 
 
   useEffect(() => {
-    fetchConversations();
-    fetchAllUsers(); // Fetch all users when component mounts
-  }, []);
+    if (searchTerm) {
+      handleSearch();
+    } else {
+      fetchConversations();
+      fetchAllUsers();
+    }
+  }, [searchTerm]);
 
 
   useEffect(() => {
@@ -144,15 +151,15 @@ const handleFileChange = async (e) => {
   };
 
 
-/*  const handleConversationClick = (conversation) => {
-    setSelectedConversation(conversation);
-    setFormData({
-      ...formData,
-      receiver_id: conversation.id,
-      rolereciever: conversation.role,
-    });
-    fetchMessages(conversation.id);
-  };*/
+  /*  const handleConversationClick = (conversation) => {
+      setSelectedConversation(conversation);
+      setFormData({
+        ...formData,
+        receiver_id: conversation.id,
+        rolereciever: conversation.role,
+      });
+      fetchMessages(conversation.id);
+    };*/
 
   const handleConversationClick = (data) => {
     if (data.hasOwnProperty('id')) {
@@ -172,7 +179,7 @@ const handleFileChange = async (e) => {
         name: `${data.name} ${data.prenom}`,
         photo: data.photo,
       };
-      console.log(' newConversation  newConversation ', newConversation )
+      console.log(' newConversation  newConversation ', newConversation)
       setSelectedConversation(newConversation);
       setFormData({
         ...formData,
@@ -183,7 +190,7 @@ const handleFileChange = async (e) => {
       setMessages([]); // Clear messages for new conversation
     }
   };
-  
+
 
 
   const handleSendMessage = () => {
@@ -192,9 +199,9 @@ const handleFileChange = async (e) => {
       console.error('No conversation selected');
       return;
     }
-  
+
     if (newMessage.trim() === '') return;
-  
+
     const message = {
       sender_id: userId,
       rolesender: role,
@@ -202,23 +209,23 @@ const handleFileChange = async (e) => {
       rolereciever: selectedConversation.role,
       message: newMessage,
     };
-  
+
     socket.emit('sendMessage', message);
     setNewMessage('');
   };
-  
+
 
 
 
   // Filter out duplicate conversations based on their IDs
   const uniqueConversations = conversations.filter((conversation, index) => (
-    conversations.findIndex((c) => 
-      c.id === conversation.id && 
-      c.name === conversation.name && 
+    conversations.findIndex((c) =>
+      c.id === conversation.id &&
+      c.name === conversation.name &&
       c.prenom === conversation.prenom
     ) === index
   ));
-  
+
 
   const formatTimestamp = (timestamp) => {
     if (!isValid(timestamp)) return 'Invalid date';
@@ -228,11 +235,47 @@ const handleFileChange = async (e) => {
     } else if (isYesterday(timestamp)) {
       return `Yesterday, ${format(timestamp, 'HH:mm')}`;
     } else if (isThisWeek(timestamp)) {
-      return format(timestamp, 'EEEE, HH:mm'); 
+      return format(timestamp, 'EEEE, HH:mm');
     } else {
-      return format(timestamp, 'dd MMM yyyy, HH:mm'); 
+      return format(timestamp, 'dd MMM yyyy, HH:mm');
     }
   };
+
+
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+
+    try {
+      const response = await axios.get(`http://127.0.0.1:5000/api/searchUsers/${searchTerm}`, config);
+      const searchResults = response.data.users;
+
+      // Update both conversations and allUsers based on search results
+      setConversations(searchResults);
+      setAllUsers(searchResults);
+    } catch (error) {
+      console.error('Error fetching search results:', error);
+    }
+  };
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    handleSearch();
+  };
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const handleEmojiPickerToggle = () => {
+    setShowEmojiPicker(!showEmojiPicker);
+  };
+
+  const onEmojiClick = (showEmojiPicker) => {   
+    if (showEmojiPicker && showEmojiPicker.emoji) {
+      setNewMessage(prevMessage => prevMessage + showEmojiPicker.emoji);
+    }
+    setShowEmojiPicker(false);
+  };
+  
 
 
   if (!userId) {
@@ -248,55 +291,61 @@ const handleFileChange = async (e) => {
           <div className="sidebar">
             <div className="srch_bar">
               <div className="stylish-input-group">
-                <input type="text" className="search-bar" placeholder="Search" />
                 <span className="input-group-addon">
-                  <button type="button"> <i className="fa fa-search" aria-hidden="true"></i> </button>
+                  <form onSubmit={handleSearchSubmit}>
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                      placeholder="Search for users..."
+                    />
+                  </form>
                 </span>
               </div>
-  </div>
-
-
-  <div className='uniqueConversations'>
-  <ul>
-  <GiHamburgerMenu />
-  {uniqueConversations.map((conversation, index) => (
-    <li key={index} onClick={() => handleConversationClick(conversation)}>
-      <img src={conversation.photo} />
-      <span> {`${conversation.name} ${conversation.prenom}`}  </span>
-      <span>{conversation.role}</span>
-      {conversation.message && (
-        <span>{conversation.message.slice(0, 5)}</span>
-      )}
-    </li>
-  ))}
-</ul>
-  </div>
-
-
-<div className="all-users">
-  <h3>All Users</h3>
-  <ul>
-    {allUsers
-  .filter((user) => !conversations.find((conversation) => conversation.id === user.userId))
-  .map((user, index) => (
-    <li key={index} onClick={() => handleConversationClick(user)}>
-      <img src={user.photo} alt={`${user.name} ${user.prenom}`} />
-      <span>{user.role}</span>
-      
-    </li>
-))}
-
-  </ul>
-</div>
-
-
-
             </div>
 
 
-           
+            <div className='uniqueConversations'>
+              <ul>
+                <GiHamburgerMenu />
+                {uniqueConversations.map((conversation, index) => (
+                  <li key={index} onClick={() => handleConversationClick(conversation)}>
+                    <img src={conversation.photo} />
+                    <span> {`${conversation.name} ${conversation.prenom}`}  </span>
+                    <span>{conversation.role}</span>
+                    {conversation.message && (
+                      <span>{conversation.message.slice(0, 5)}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-            {selectedConversation && (
+
+            <div className="all-users">
+              <h3>All Users</h3>
+              <ul>
+                {allUsers
+                  .filter((user) => !conversations.find((conversation) => conversation.id === user.userId))
+                  .map((user, index) => (
+                    <li key={index} onClick={() => handleConversationClick(user)}>
+                      <img src={user.photo} alt={`${user.name} ${user.prenom}`} />
+                      <span>{user.role}</span>
+
+                    </li>
+                  ))}
+
+              </ul>
+            </div>
+
+
+
+          </div>
+
+
+
+
+          {selectedConversation && (
             <div className="conversation">
               <div className="conversation-header">
                 <span>{selectedConversation.rolereciever}</span>
@@ -306,7 +355,10 @@ const handleFileChange = async (e) => {
                   const timestamp = new Date(message.timestamp);
                   return (
                     <div key={index} className={`message ${message.sender_id == userId ? 'message-right' : 'message-left'}`}>
-                     {message.message.indexOf("File ")==0 ?  <span className="isFile" ><a href={message.message.substring(5)} target="_blank" download>{message.message.substring(5)}</a></span> :  <span className="">{message.message}</span>}
+                      {message.message.indexOf("File ") == 0 ?
+                       <span className="isFile" ><a href={message.message.substring(5)} target="_blank" download>
+                        {message.message.substring(5)}</a></span>
+                        : <span className="">{message.message}</span>}
                       <span className="messenger-timestamp">
                         {formatTimestamp(timestamp)}
                       </span>
@@ -316,21 +368,25 @@ const handleFileChange = async (e) => {
               </div>
 
               <div className="conversation-footer">
-              <IoMdAddCircle onClick={handleAddFileClick} />
+                <IoMdAddCircle onClick={handleAddFileClick} />
                 <input
-                  type="file"     
-                  name="file_url"       
-                  id="fileInput"      
-                  style={{ display: 'none' }} 
+                  type="file"
+                  name="file_url"
+                  id="fileInput"
+                  style={{ display: 'none' }}
                   onChange={handleFileChange}
                   accept="image/*,application/pdf,.doc,.docx"
                 />
+                <button type="button" onClick={handleEmojiPickerToggle}>😀</button>
+                {showEmojiPicker && <EmojiPicker onEmojiClick={onEmojiClick} />}
+              
                 <input
                   type="text"
                   name="message"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type your message here"
+                  
                 />
                 <button onClick={handleSendMessage}>Send</button>
               </div>

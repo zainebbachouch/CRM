@@ -241,6 +241,84 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-module.exports = { searchProducts,createProduct, getProductById, getAllProducts, updateProduct, deleteProduct };
+
+// 1. Total Sales: Sum of all sales for each product.
+const getTotalSales = async (req, res) => {
+    try {
+        const query = `
+            SELECT p.idproduit, p.nom_produit, SUM(f.montant_total_facture) AS totalSales
+            FROM produit p
+            JOIN ligne_de_commande lc ON p.idproduit = lc.produit_idproduit
+            JOIN commande c ON lc.commande_idcommande = c.idcommande
+            JOIN facture f ON c.idcommande = f.idcommande
+            GROUP BY p.idproduit, p.nom_produit`;
+        
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error("Error fetching total sales:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+// Function to get total products sold based on selected period
+const getTotalProductsSold = async (req, res) => {
+    const period = req.query.period || 'monthly'; // Default to 'monthly' if no period is provided
+    console.log("Period for total products sold:", period); // Log the period
+    // Determine date filtering based on the period
+    let dateCondition;
+    switch (period) {
+        case 'daily':
+            dateCondition = `DATE(f.date_facture) = CURDATE()`;
+            break;
+        case 'weekly':
+            dateCondition = `YEARWEEK(f.date_facture, 1) = YEARWEEK(CURDATE(), 1)`; // ISO week format
+            break;
+        case 'monthly':
+            dateCondition = `MONTH(f.date_facture) = MONTH(CURDATE()) AND YEAR(f.date_facture) = YEAR(CURDATE())`;
+            break;
+        case 'yearly':
+            dateCondition = `YEAR(f.date_facture) = YEAR(CURDATE())`;
+            break;
+        default:
+            return res.status(400).json({ message: "Invalid period" });
+    }
+
+    try {
+        const query = `
+            SELECT SUM(lc.quantite_produit) AS totalProductsSold  
+            FROM ligne_de_commande lc
+            JOIN produit p ON lc.produit_idproduit = p.idproduit
+            JOIN commande c ON lc.commande_idcommande = c.idcommande
+            JOIN facture f ON c.idcommande = f.idcommande
+            WHERE f.etat_facture = 'payee' AND ${dateCondition};`; // Filter by paid invoices and selected period
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        const totalProductsSold = results[0]?.totalProductsSold || 0; // Get the total products sold
+        res.status(200).json([{ totalProductsSold }]); // Return as an array
+        // Return totalProductsSold
+    } catch (error) {
+        console.error("Error fetching total products sold:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+module.exports = {
+    getTotalSales,getTotalProductsSold,
+    searchProducts,createProduct, getProductById, getAllProducts, updateProduct, deleteProduct };
 
 
