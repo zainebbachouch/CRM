@@ -342,4 +342,50 @@ const deleteTask = async (req, res) => {
     }
 };
 
-module.exports = { createTask, getAllTasks, getTaskById, updateTask, deleteTask, updateTasksOrder, updateTaskStatus };
+
+
+
+
+// Function to get tasks count by status
+const getTasksByStatus = async (req, res) => {
+    const { selectedStatus } = req.query;
+    const tasksQuery = `
+    SELECT statut, COUNT(*) AS count FROM tache GROUP BY statut;
+
+    `;
+
+    try {
+        const tasksCountsResult = await new Promise((resolve, reject) => {
+            db.query(tasksQuery, [selectedStatus], (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        // Map the results to a more useful format
+        const tasksCounts = {
+            toDo: 0,
+            inProgress: 0,
+            done: 0,
+        };
+
+        tasksCountsResult.forEach(row => {
+            tasksCounts[row.statut] = row.count;
+        });
+
+        res.json(tasksCounts);
+    } catch (error) {
+        console.error("Error fetching tasks count:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+
+
+
+module.exports = {
+    getTasksByStatus,
+    createTask, getAllTasks, getTaskById, updateTask, deleteTask, updateTasksOrder, updateTaskStatus
+};

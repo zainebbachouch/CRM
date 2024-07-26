@@ -14,6 +14,19 @@
   padding: 20px;
 }
 
+.chart-selection {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.chart-selection label {
+  margin: 0 10px;
+  cursor: pointer;
+}
+
 .chart-container {
   flex: 1 1 45%;
   margin: 10px;
@@ -21,9 +34,8 @@
   background-color: #fff;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  max-width: 800px; /* Set a reasonable max width */
-  max-height: 300px; /* Set a reasonable max height */
-  overflow: auto; /* Prevent overflow */
+  height: 40vh; /* Changed from 40% to 40vh */
+  overflow-y: scroll;
 }
 
 @media (max-width: 768px) {
@@ -43,7 +55,6 @@ body {
   font-family: Arial, sans-serif;
 }
 
-/* Dashboard header styles */
 .header {
   display: flex;
   flex-wrap: wrap;
@@ -57,7 +68,7 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 20px;
   flex: 1;
-  height: 40%;
+  height: 40vh; /* Changed from 40% to 40vh */
   width: 100%;
   position: relative;
 }
@@ -88,9 +99,24 @@ select {
   font-size: 14px;
 }
 
-/* Dropdown specific styles */
 .card .dropdown {
   position: absolute;
   top: 20px;
   right: 60px;
+}
+
+/* New Sections CSS */
+.recent-activities,
+.performance-overview {
+  width: 100%;
+  margin: 20px 0;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.recent-activities h2,
+.performance-overview h2 {
+  text-align: left; /* Align titles to the left */
 }

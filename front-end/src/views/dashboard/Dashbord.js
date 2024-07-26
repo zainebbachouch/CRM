@@ -9,17 +9,16 @@ import InvoiceCountChart from './InvoiceCountChart ';
 import InvoiceFrequencyChart from './InvoiceFrequencyChart ';
 import InvoiceTrendsChart from './InvoiceTrendsChart ';
 import OutstandingInvoicesChart from './OutstandingInvoicesChart ';
-import TotalRevenueChart from './TotalRevenueChart ';
 
 
 function Dashbord() {
     const [frequencyPeriod, setFrequencyPeriod] = useState('daily'); // State for selected period
-    const charts = [
-        { component: <TotalRevenueChart />, title: 'Total Rllevenue' },
-        { component: <AverageInvoiceValueChart />, title: 'Average Invoice Value' },
-        { component: <InvoiceCountChart />, title: 'Invoice Count' },
-        { component: <InvoiceAmountDistributionChart />, title: 'Invoice Amount Distribution' },
-        {
+    const [selectedChart, setSelectedChart] = useState('averageInvoiceValue'); // State for selected chart
+    const charts = {
+        averageInvoiceValue: { component: <AverageInvoiceValueChart />, title: 'Average Invoice Value' },
+        invoiceCount: { component: <InvoiceCountChart />, title: 'Invoice Count' },
+        invoiceAmountDistribution: { component: <InvoiceAmountDistributionChart />, title: 'Invoice Amount Distribution' },
+        invoiceFrequency: {
             component: (
                 <>
                     <select
@@ -37,9 +36,11 @@ function Dashbord() {
                 </>
             ), title: 'Invoice Frequency (Monthly)'
         },
-        { component: <OutstandingInvoicesChart />, title: 'Outstanding Invoices' },
-        { component: <InvoiceTrendsChart />, title: 'Invoice Trends' },
-    ];
+        outstandingInvoices: { component: <OutstandingInvoicesChart />, title: 'Outstanding Invoices' },
+        invoiceTrends: { component: <InvoiceTrendsChart />, title: 'Invoice Trends' },
+
+
+    }
 
     return (
         <div className="d-flex">
@@ -47,16 +48,37 @@ function Dashbord() {
             <div className="d-flex container-fluid m-0 p-0 flex-column">
                 <TopBar />
                 <div className="container-fluid p-0 m-0 dashboard-content">
-                    <Header/>
-                    {charts.map((chart, index) => (
-                        <div key={index} className="chart-container">
-                            <h2>{chart.title}</h2>
-                            {chart.component}
-                        </div>
-                    ))}
+                    <Header />
+                    <div className="chart-selection">
+                        {Object.keys(charts).map((chartKey) => (
+                            <label key={chartKey}>
+                                <input
+                                    type="radio"
+                                    value={chartKey}
+                                    checked={selectedChart === chartKey}
+                                    onChange={() => setSelectedChart(chartKey)}
+                                />
+                                {charts[chartKey].title}
+                            </label>
+                        ))}
+                    </div>
+                    <div className="chart-container">
+                        <h2>{charts[selectedChart].title}</h2>
+                        {charts[selectedChart].component}
+                    </div>
+                    {/* New Sections */}
+                    <div className="recent-activities">
+                        <h2>Recent Activities</h2>
+                        <p>Here you can add recent activities...</p>
+                    </div>
+                    <div className="performance-overview">
+                        <h2>Performance Overview</h2>
+                        <p>Here you can add performance overview...</p>
+                    </div>
                 </div>
             </div>
         </div>
+
     );
 }
 
