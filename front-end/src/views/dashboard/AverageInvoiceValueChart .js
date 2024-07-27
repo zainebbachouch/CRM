@@ -5,13 +5,15 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  LineElement, // Ajoutez LineElement pour les graphiques linéaires
+  LineElement,
+  PointElement,
+  Title,
   Tooltip,
   Legend,
 } from 'chart.js';
 
-// Enregistrez les éléments nécessaires
-ChartJS.register(CategoryScale, LinearScale, LineElement, Tooltip, Legend);
+// Register necessary elements with ChartJS
+ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
 
 const AverageInvoiceValueChart = () => {
   const [chartData, setChartData] = useState({
@@ -22,24 +24,33 @@ const AverageInvoiceValueChart = () => {
         data: [],
         fill: false,
         borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.1,
       },
     ],
   });
+  const [period, setPeriod] = useState('monthly');
 
   useEffect(() => {
     const fetchAverageInvoiceValue = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/api/averageinvoicevalue');
-        const averageInvoiceValue = response.data.averageInvoiceValue;
+        const response = await axios.get(`http://127.0.0.1:5000/api/averageinvoicevalue?period=${period}`);
+        const { averageInvoiceValues } = response.data;
+        console.log("averageInvoiceValues", averageInvoiceValues);
+
+        const labels = averageInvoiceValues.map(item => item.period);
+        const data = averageInvoiceValues.map(item => item.averageInvoiceValue);
 
         setChartData({
-          labels: ['Valeur Moyenne'], // Ajustez selon votre besoin
+          labels,
           datasets: [
             {
               label: 'Valeur Moyenne des Factures',
-              data: [averageInvoiceValue || 0],
+              data,
               fill: false,
               borderColor: 'rgba(75, 192, 192, 1)',
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              tension: 0.1,
             },
           ],
         });
@@ -49,12 +60,58 @@ const AverageInvoiceValueChart = () => {
     };
 
     fetchAverageInvoiceValue();
-  }, []);
+  }, [period]);
+
+  const getXAxisTitle = () => {
+    switch (period) {
+      case 'daily':
+        return 'Jour';
+      case 'monthly':
+        return 'Mois';
+      case 'yearly':
+        return 'Année';
+      default:
+        return 'Période';
+    }
+  };
 
   return (
     <div className="chart-container">
       <h2>Valeur Moyenne des Factures</h2>
-      <Line data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
+      <div>
+        <label>
+          Period:
+          <select value={period} onChange={(e) => setPeriod(e.target.value)}>
+            <option value="daily">Daily</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </label>
+      </div>
+      <Line
+        data={chartData}
+        options={{
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Montant (€)',
+              },
+            },
+            x: {
+              type: 'category', // Ensuring the x-axis is treated as categorical
+              title: {
+                display: true,
+                text: getXAxisTitle(),
+              },
+              labels: chartData.labels, // Ensure labels reflect the correct periods
+            },
+          },
+        }}
+      />
     </div>
   );
 };

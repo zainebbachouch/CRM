@@ -20,6 +20,7 @@
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
+  margin-top: 100px;
 }
 
 .chart-selection label {
@@ -28,15 +29,18 @@
 }
 
 .chart-container {
-  flex: 1 1 45%;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
   margin: 10px;
-  padding: 20px;
-  background-color: #fff;
+  
+  background-color: rgb(203, 228, 103);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  height: 40vh; /* Changed from 40% to 40vh */
-  overflow-y: scroll;
+  height: 50vh;
+  width: 100vh;
 }
+
 
 @media (max-width: 768px) {
   .chart-container {

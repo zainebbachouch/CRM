@@ -49,6 +49,17 @@ function Dashbord() {
                 <TopBar />
                 <div className="container-fluid p-0 m-0 dashboard-content">
                     <Header />
+                    
+                   
+                    <div class="row">
+
+                           {/* New Sections */}
+                    <div className="recent-activities" class="col-4">
+                        <h2>Recent Activities</h2>
+                        <p>Here you can add recent activities...</p>
+                    </div>
+
+                    <div className="chart-container" class="col-8">
                     <div className="chart-selection">
                         {Object.keys(charts).map((chartKey) => (
                             <label key={chartKey}>
@@ -61,15 +72,14 @@ function Dashbord() {
                                 {charts[chartKey].title}
                             </label>
                         ))}
+                     
                     </div>
-                    <div className="chart-container">
                         <h2>{charts[selectedChart].title}</h2>
                         {charts[selectedChart].component}
-                    </div>
-                    {/* New Sections */}
-                    <div className="recent-activities">
-                        <h2>Recent Activities</h2>
-                        <p>Here you can add recent activities...</p>
+                    </div>      
+                   
+                   
+                 
                     </div>
                     <div className="performance-overview">
                         <h2>Performance Overview</h2>

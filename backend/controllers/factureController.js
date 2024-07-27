@@ -454,24 +454,44 @@ const getTotalRevenue = async (req, res) => {
 
 const getAverageInvoiceValue = async (req, res) => {
     try {
-        const avgQuery = 'SELECT AVG(montant_total_facture) AS averageInvoiceValue FROM facture';
-        const avgResult = await new Promise((resolve, reject) => {
-            db.query(avgQuery, (err, result) => {
-                if (err) return reject(err);
-                resolve(result);
-            });
+      const { period } = req.query;
+      let dateFormat;
+  
+      switch (period) {
+        case 'daily':
+          dateFormat = '%Y-%m-%d';
+          break;
+        case 'monthly':
+          dateFormat = '%Y-%m';
+          break;
+        case 'yearly':
+          dateFormat = '%Y';
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid period specified" });
+      }
+  
+      const avgQuery = `
+        SELECT DATE_FORMAT(date_facture, '${dateFormat}') AS period, AVG(montant_total_facture) AS averageInvoiceValue 
+        FROM facture 
+        GROUP BY period 
+        ORDER BY period;
+      `;
+  
+      const avgResult = await new Promise((resolve, reject) => {
+        db.query(avgQuery, (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
         });
-
-        // Extraction de la valeur moyenne de la première ligne du résultat
-        const averageInvoiceValue = avgResult.length > 0 ? avgResult[0].averageInvoiceValue : null;
-
-        res.status(200).json({ averageInvoiceValue });
+      });
+  
+      res.status(200).json({ averageInvoiceValues: avgResult });
     } catch (error) {
-        console.error("Error fetching average invoice value:", error);
-        res.status(500).json({ message: "Internal server error" });
+      console.error("Error fetching average invoice value:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
-};
-
+  };
+  
 
 const getInvoiceCount = async (req, res) => {
     try {

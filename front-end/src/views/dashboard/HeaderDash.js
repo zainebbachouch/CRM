@@ -34,12 +34,18 @@ const Header = () => {
             const productsData = Array.isArray(totalProductsSoldResponse.data)
                 ? totalProductsSoldResponse.data.map(item => item.totalProductsSold)
                 : [];
+                   // Normalize the keys for task counts
+                   const normalizedTasksCounts = {
+                    toDo: tasksCountsResponse.data['toDo'] || tasksCountsResponse.data['To-Do'] || 0,
+                    inProgress: tasksCountsResponse.data['inProgress'] || tasksCountsResponse.data['In-Progress'] || 0,
+                    done: tasksCountsResponse.data['done'] || tasksCountsResponse.data['Done'] || 0,
+                };
 
             setData(prevData => ({
                 ...prevData,
                 totalRevenue: revenueData,
                 totalProductsSold: productsData,
-                tasksCounts: tasksCountsResponse.data,
+                tasksCounts: normalizedTasksCounts,
             }));
 
             setLabels(revenueData.length > 0 ? revenueData.map((_, index) => `Period ${index + 1}`) : []);
@@ -51,12 +57,12 @@ const Header = () => {
     fetchData();
 }, [revenuePeriod, productsPeriod, selectedStatus]);
 
-  const totalTasks = data.tasksCounts[selectedStatus] || 0; // Get tasks count based on selected status
-  const completedTasks = data.tasksCounts.done || 0; // This should reflect all completed tasks
-  const percentageCompleted = totalTasks > 0
-      ? (completedTasks / totalTasks) * 100
-      : 0;
-  
+const totalTasks = data.tasksCounts.toDo + data.tasksCounts.inProgress + data.tasksCounts.done;
+    const completedTasks = data.tasksCounts.done || 0;
+    const percentageCompleted = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+    const taskStatusLabels = ['To-Do', 'In-Progress', 'Done'];
+    const taskStatusData = [data.tasksCounts.toDo, data.tasksCounts.inProgress, data.tasksCounts.done];
 
 
   return (
@@ -118,25 +124,21 @@ const Header = () => {
       </div>
   {/* Tasks Card */}
   <div className="card">
-        <div className="card-content">
-          <div className="icon">
-            <i className="fas fa-tasks"></i>
-          </div>
-          <div className="value">{totalTasks}</div> {/* Display tasks count based on selected status */}
-          <div className="label">Total {selectedStatus} Tasks</div>
-          <div className="value">
-            {data.tasksCounts.done} Completed ({percentageCompleted.toFixed(2)}%)
-          </div>
-          <div className="label">Task Status</div>
-          <label htmlFor="status">Select Task Status: </label>
-          <select id="status" value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
-            <option value="To-Do">To-Do</option>
-            <option value="In-Progress">In-Progress</option>
-            <option value="Done">Done</option>
-          </select>
+                <div className="card-content">
+                    <div className="icon">
+                        <i className="fas fa-tasks"></i>
+                    </div>
+                    <div className="value">{totalTasks} tasks</div>
+                    <div className="value">
+                        {data.tasksCounts.done} Completed Task ({percentageCompleted.toFixed(2)}%)
+                    </div>
+                    
+                </div>
+                <div style={{ height: '40%' }}>
+                    <SmallChart data={taskStatusData} labels={taskStatusLabels} chartType="pie" />
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 export default Header;
