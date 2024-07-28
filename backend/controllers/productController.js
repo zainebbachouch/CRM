@@ -1,6 +1,6 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ')
-const { saveToHistory ,search } = require('./callback');
+const { saveToHistory, search } = require('./callback');
 
 
 
@@ -252,7 +252,7 @@ const getTotalSales = async (req, res) => {
             JOIN commande c ON lc.commande_idcommande = c.idcommande
             JOIN facture f ON c.idcommande = f.idcommande
             GROUP BY p.idproduit, p.nom_produit`;
-        
+
         const results = await new Promise((resolve, reject) => {
             db.query(query, (err, result) => {
                 if (err) return reject(err);
@@ -317,8 +317,215 @@ const getTotalProductsSold = async (req, res) => {
 };
 
 
+
+
+const getAverageSalesPrice = async (req, res) => {
+    try {
+        const { period } = req.query;
+        let dateFormat, dateCondition;
+
+        switch (period) {
+            case 'daily':
+                dateFormat = '%Y-%m-%d';
+                dateCondition = `DATE(f.date_facture) = CURDATE()`;
+                break;
+            case 'weekly':
+                dateFormat = '%Y-%u'; // Week number
+                dateCondition = `YEARWEEK(f.date_facture, 1) = YEARWEEK(CURDATE(), 1)`;
+                break;
+            case 'monthly':
+                dateFormat = '%Y-%m';
+                dateCondition = `MONTH(f.date_facture) = MONTH(CURDATE()) AND YEAR(f.date_facture) = YEAR(CURDATE())`;
+                break;
+            case 'yearly':
+                dateFormat = '%Y';
+                dateCondition = `YEAR(f.date_facture) = YEAR(CURDATE())`;
+                break;
+            default:
+                return res.status(400).json({ message: "Invalid period specified" });
+        }
+
+        const query = `
+            SELECT DATE_FORMAT(f.date_facture, '${dateFormat}') AS period, AVG(f.montant_total_facture) AS averagePrice
+            FROM produit p
+            JOIN ligne_de_commande lc ON p.idproduit = lc.produit_idproduit
+            JOIN commande c ON lc.commande_idcommande = c.idcommande
+            JOIN facture f ON c.idcommande = f.idcommande
+            WHERE f.etat_facture = 'payee' AND ${dateCondition}
+            GROUP BY period
+        `;
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json({ averageSalesPrice: results });
+    } catch (error) {
+        console.error("Error fetching average sales price:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+
+const getTopSellingProducts = async (req, res) => {
+    try {
+        const { period } = req.query;
+        let dateFormat, dateCondition;
+
+        switch (period) {
+            case 'daily':
+                dateFormat = '%Y-%m-%d';
+                dateCondition = `DATE(f.date_facture) = CURDATE()`;
+                break;
+            case 'weekly':
+                dateFormat = '%Y-%u'; // Week number
+                dateCondition = `YEARWEEK(f.date_facture, 1) = YEARWEEK(CURDATE(), 1)`;
+                break;
+            case 'monthly':
+                dateFormat = '%Y-%m';
+                dateCondition = `MONTH(f.date_facture) = MONTH(CURDATE()) AND YEAR(f.date_facture) = YEAR(CURDATE())`;
+                break;
+            case 'yearly':
+                dateFormat = '%Y';
+                dateCondition = `YEAR(f.date_facture) = YEAR(CURDATE())`;
+                break;
+            default:
+                return res.status(400).json({ message: "Invalid period specified" });
+        }
+
+        const query = `
+            SELECT DATE_FORMAT(f.date_facture, '${dateFormat}') AS period, p.nom_produit, SUM(lc.quantite_produit) AS totalSold
+            FROM produit p
+            JOIN ligne_de_commande lc ON p.idproduit = lc.produit_idproduit
+            JOIN commande c ON lc.commande_idcommande = c.idcommande
+            JOIN facture f ON c.idcommande = f.idcommande
+            WHERE f.etat_facture = 'payee' AND ${dateCondition}
+            GROUP BY period, p.nom_produit
+            ORDER BY totalSold DESC
+        `;
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json({ topSellingProducts: results });
+    } catch (error) {
+        console.error("Error fetching top selling products:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+const getSalesTrends = async (req, res) => {
+    try {
+        const { period } = req.query;
+        let dateFormat, dateCondition;
+
+        switch (period) {
+            case 'daily':
+                dateFormat = '%Y-%m-%d';
+                dateCondition = `DATE(f.date_facture) = CURDATE()`;
+                break;
+            case 'weekly':
+                dateFormat = '%Y-%u'; // Week number
+                dateCondition = `YEARWEEK(f.date_facture, 1) = YEARWEEK(CURDATE(), 1)`;
+                break;
+            case 'monthly':
+                dateFormat = '%Y-%m';
+                dateCondition = `MONTH(f.date_facture) = MONTH(CURDATE()) AND YEAR(f.date_facture) = YEAR(CURDATE())`;
+                break;
+            case 'yearly':
+                dateFormat = '%Y';
+                dateCondition = `YEAR(f.date_facture) = YEAR(CURDATE())`;
+                break;
+            default:
+                return res.status(400).json({ message: "Invalid period specified" });
+        }
+
+        const query = `
+            SELECT DATE_FORMAT(f.date_facture, '${dateFormat}') AS period, SUM(f.montant_total_facture) AS totalSales
+            FROM facture f
+            WHERE f.etat_facture = 'payee' AND ${dateCondition}
+            GROUP BY period
+            ORDER BY period
+        `;
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json({ salesTrends: results });
+    } catch (error) {
+        console.error("Error fetching sales trends:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+const getUnpaidProducts = async (req, res) => {
+    try {
+        const { period } = req.query;
+        let dateCondition;
+
+        switch (period) {
+            case 'daily':
+                dateCondition = `DATE(f.date_echeance) = CURDATE()`;
+                break;
+            case 'weekly':
+                dateCondition = `YEARWEEK(f.date_echeance, 1) = YEARWEEK(CURDATE(), 1)`;
+                break;
+            case 'monthly':
+                dateCondition = `MONTH(f.date_echeance) = MONTH(CURDATE()) AND YEAR(f.date_echeance) = YEAR(CURDATE())`;
+                break;
+            case 'yearly':
+                dateCondition = `YEAR(f.date_echeance) = YEAR(CURDATE())`;
+                break;
+            default:
+                return res.status(400).json({ message: "Invalid period specified" });
+        }
+
+        const query = `
+            SELECT DATE_FORMAT(f.date_echeance, '%Y-%m-%d') AS period, COUNT(p.idproduit) AS unpaidProductsCount
+            FROM produit p
+            JOIN ligne_de_commande lc ON p.idproduit = lc.produit_idproduit
+            JOIN commande c ON lc.commande_idcommande = c.idcommande
+            JOIN facture f ON c.idcommande = f.idcommande
+            WHERE f.etat_facture != 'payee' AND ${dateCondition}
+            GROUP BY period
+        `;
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json({ unpaidProducts: results });
+    } catch (error) {
+        console.error("Error fetching unpaid products:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
 module.exports = {
-    getTotalSales,getTotalProductsSold,
-    searchProducts,createProduct, getProductById, getAllProducts, updateProduct, deleteProduct };
+    getTotalSales, getTotalProductsSold, getAverageSalesPrice, getTopSellingProducts, getSalesTrends, getUnpaidProducts,
+    searchProducts, createProduct, getProductById, getAllProducts, updateProduct, deleteProduct
+};
 
 

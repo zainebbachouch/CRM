@@ -9,4 +9,11 @@ router.put('/updateCategorie/:id', categorieController.updateCategorie);
 router.delete('/deleteCategorie/:id', categorieController.deleteCategorie);
 router.get('/searchCategories/:searchTerm', categorieController.searchCategorie);
 
+
+
+
+router.get('/revenue-contribution',categorieController.revenuecontribution)
+router.get('/top-selling-categories', categorieController.topSellingCategories);
+
+
 module.exports = router;

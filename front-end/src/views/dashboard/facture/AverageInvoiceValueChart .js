@@ -107,7 +107,9 @@ const AverageInvoiceValueChart = () => {
                 display: true,
                 text: getXAxisTitle(),
               },
-              labels: chartData.labels, // Ensure labels reflect the correct periods
+              ticks: {
+                color: 'red', // Set the color of the x-axis labels
+              },
             },
           },
         }}

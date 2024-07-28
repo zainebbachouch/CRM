@@ -244,6 +244,146 @@ const deleteCategorie = async (req, res) => {
 };
 
 
+const revenuecontribution = async (req, res) => {
+    const period = req.query.period || 'monthly';
+    console.log("Period for revenue contribution:", period);
+
+    let dateCondition;
+    let dateFormat;
+
+    switch (period) {
+        case 'daily':
+            dateCondition = `DATE(f.date_facture) = CURDATE()`;
+            dateFormat = '%Y-%m-%d';
+            break;
+        case 'weekly':
+            dateCondition = `YEARWEEK(f.date_facture, 1) = YEARWEEK(CURDATE(), 1)`;
+            dateFormat = '%Y-%u'; // Week number
+            break;
+        case 'monthly':
+            dateCondition = `MONTH(f.date_facture) = MONTH(CURDATE()) AND YEAR(f.date_facture) = YEAR(CURDATE())`;
+            dateFormat = '%Y-%m';
+            break;
+        case 'yearly':
+            dateCondition = `YEAR(f.date_facture) = YEAR(CURDATE())`;
+            dateFormat = '%Y';
+            break;
+        default:
+            return res.status(400).json({ message: "Invalid period" });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                c.nom_categorie AS category,
+                DATE_FORMAT(f.date_facture, '${dateFormat}') AS period,
+                AVG(f.montant_total_facture) AS revenu
+            FROM 
+                ligne_de_commande l
+            JOIN 
+                produit p ON l.produit_idproduit = p.idproduit
+            JOIN 
+                categorie c ON p.categorie_idcategorie = c.idcategorie
+            JOIN 
+                commande co ON l.commande_idcommande = co.idcommande
+            JOIN 
+                facture f ON co.idcommande = f.idcommande
+            WHERE 
+                f.etat_facture = 'payee' AND ${dateCondition}
+            GROUP BY 
+                c.nom_categorie, period;
+        `;
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error("Error fetching total Revenue Contribution by Category:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const topSellingCategories = async (req, res) => {
+    const period = req.query.period || 'monthly';
+    console.log("Period for top selling categories:", period);
+  
+    let dateCondition;
+    let dateFormat;
+  
+    switch (period) {
+      case 'daily':
+        dateCondition = `DATE(f.date_facture) = CURDATE()`;
+        dateFormat = '%Y-%m-%d';
+        break;
+      case 'weekly':
+        dateCondition = `YEARWEEK(f.date_facture, 1) = YEARWEEK(CURDATE(), 1)`;
+        dateFormat = '%Y-%u';
+        break;
+      case 'monthly':
+        dateCondition = `MONTH(f.date_facture) = MONTH(CURDATE()) AND YEAR(f.date_facture) = YEAR(CURDATE())`;
+        dateFormat = '%Y-%m';
+        break;
+      case 'yearly':
+        dateCondition = `YEAR(f.date_facture) = YEAR(CURDATE())`;
+        dateFormat = '%Y';
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid period" });
+    }
+  
+    try {
+      const query = `
+        SELECT 
+          c.nom_categorie AS category,
+          COUNT(l.produit_idproduit) AS total_products_sold,
+          SUM(l.quantite_produit * p.prix_produit) AS total_sales
+        FROM 
+          ligne_de_commande l
+        JOIN 
+          produit p ON l.produit_idproduit = p.idproduit
+        JOIN 
+          categorie c ON p.categorie_idcategorie = c.idcategorie
+        JOIN 
+          commande co ON l.commande_idcommande = co.idcommande
+        JOIN 
+          facture f ON co.idcommande = f.idcommande
+        WHERE 
+          ${dateCondition} 
+        GROUP BY 
+          c.nom_categorie
+        ORDER BY 
+          total_sales DESC
+        LIMIT 5;
+      `;
+  
+      console.log("Query for top selling categories:", query); // Log the query
+
+      const results = await new Promise((resolve, reject) => {
+        db.query(query, (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
+        });
+      });
+  
+      res.status(200).json(results); // Return the results
+    } catch (error) {
+      console.error("Error fetching top selling categories:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
 
 
-module.exports = {searchCategorie, createCategorie, getCategorieById, getAllCategories, updateCategorie, deleteCategorie }
+
+
+
+
+module.exports = {
+    revenuecontribution,topSellingCategories,
+    searchCategorie, createCategorie, getCategorieById, getAllCategories, updateCategorie, deleteCategorie }
+
+

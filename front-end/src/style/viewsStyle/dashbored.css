@@ -33,7 +33,7 @@
   justify-content: center;
   flex-wrap: wrap;
   margin: 10px;
-  
+
   background-color: rgb(203, 228, 103);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
@@ -72,7 +72,8 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 20px;
   flex: 1;
-  height: 40vh; /* Changed from 40% to 40vh */
+  height: 40vh;
+  /* Changed from 40% to 40vh */
   width: 100%;
   position: relative;
 }
@@ -110,6 +111,10 @@ select {
 }
 
 /* New Sections CSS */
+.recent-activities h2 {
+  margin-top: 165px;
+}
+
 .recent-activities,
 .performance-overview {
   width: 100%;
@@ -118,9 +123,11 @@ select {
   background-color: #fff;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
+  margin-top: 100px;
 }
 
 .recent-activities h2,
 .performance-overview h2 {
-  text-align: left; /* Align titles to the left */
+  text-align: left;
+  /* Align titles to the left */
 }

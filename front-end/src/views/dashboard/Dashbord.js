@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import SideBar from '../../components/sidebar/SideBar';
 import TopBar from '../../components/sidenav/TopNav';
 import '../../style/viewsStyle/dashbored.css';
-import AverageInvoiceValueChart from './AverageInvoiceValueChart ';
+import AverageInvoiceValueChart from './facture/AverageInvoiceValueChart ';
 import Header from './HeaderDash';
-import InvoiceAmountDistributionChart from './InvoiceAmountDistributionChart ';
-import InvoiceCountChart from './InvoiceCountChart ';
-import InvoiceFrequencyChart from './InvoiceFrequencyChart ';
-import InvoiceTrendsChart from './InvoiceTrendsChart ';
-import OutstandingInvoicesChart from './OutstandingInvoicesChart ';
+import InvoiceAmountDistributionChart from './facture/InvoiceAmountDistributionChart ';
+import InvoiceFrequencyChart from './facture/InvoiceFrequencyChart ';
+import InvoiceTrendsChart from './facture/InvoiceTrendsChart ';
+import OutstandingInvoicesChart from './facture/OutstandingInvoicesChart ';
+import DashProduct from './product/DashProduct';
+import SalesChart from './product/SalesChart ';
 
 
 function Dashbord() {
@@ -16,7 +17,6 @@ function Dashbord() {
     const [selectedChart, setSelectedChart] = useState('averageInvoiceValue'); // State for selected chart
     const charts = {
         averageInvoiceValue: { component: <AverageInvoiceValueChart />, title: 'Average Invoice Value' },
-        invoiceCount: { component: <InvoiceCountChart />, title: 'Invoice Count' },
         invoiceAmountDistribution: { component: <InvoiceAmountDistributionChart />, title: 'Invoice Amount Distribution' },
         invoiceFrequency: {
             component: (
@@ -24,7 +24,7 @@ function Dashbord() {
                     <select
                         value={frequencyPeriod}
                         onChange={(e) => setFrequencyPeriod(e.target.value)}
-                        style={{ marginBottom: '20px' }} // Inline style for spacing
+                        style={{ marginBottom: '20px' }} 
                     >
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
@@ -56,7 +56,7 @@ function Dashbord() {
                            {/* New Sections */}
                     <div className="recent-activities" class="col-4">
                         <h2>Recent Activities</h2>
-                        <p>Here you can add recent activities...</p>
+                       <SalesChart/>
                     </div>
 
                     <div className="chart-container" class="col-8">

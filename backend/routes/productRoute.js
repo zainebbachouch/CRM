@@ -29,6 +29,12 @@ router.get('/search/:searchTerm', productController.searchProducts);
 router.get('/total-products-sold', productController.getTotalProductsSold);
 
 
+router.get('/average-sales-price', productController.getAverageSalesPrice);
+router.get('/top-selling-products', productController.getTopSellingProducts);
+router.get('/sales-trends', productController.getSalesTrends);
+router.get('/unpaid-products', productController.getUnpaidProducts);
+
+
 
 
 

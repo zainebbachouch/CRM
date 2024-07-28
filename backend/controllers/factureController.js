@@ -512,6 +512,9 @@ const getInvoiceCount = async (req, res) => {
     }
 };
 
+
+
+
 const getInvoiceAmountDistribution = async (req, res) => {
     try {
         const distributionQuery = 'SELECT montant_total_facture FROM facture';
@@ -611,12 +614,13 @@ const getInvoiceFrequency = async (req, res) => {
 const getOutstandingInvoices = async (req, res) => {
     const outstandingQuery = `
         SELECT 
-            COUNT(*) AS unpaidInvoiceCount, 
-            SUM(montant_total_facture) AS unpaidInvoiceTotal 
+            COUNT(CASE WHEN statut_paiement_facture = 'non_paye' THEN 1 END) AS unpaidInvoiceCount,
+            SUM(CASE WHEN statut_paiement_facture = 'non_paye' THEN montant_total_facture ELSE 0 END) AS unpaidInvoiceTotal,
+            COUNT(CASE WHEN statut_paiement_facture = 'paye' THEN 1 END) AS paidInvoiceCount,
+            SUM(CASE WHEN statut_paiement_facture = 'paye' THEN montant_total_facture ELSE 0 END) AS paidInvoiceTotal
         FROM facture 
         WHERE 
-            statut_paiement_facture = 'non_paye' 
-            OR (etat_facture = 'enRetard' AND date_echeance < NOW());
+            etat_facture IN ('enAttente', 'payee', 'enRetard', 'annulee');
     `;
 
     try {
