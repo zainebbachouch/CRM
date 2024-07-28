@@ -166,40 +166,7 @@ const SalesChart = () => {
                     Yearly
                 </label>
             </div>
-            <div>
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={showAverage}
-                        onChange={() => setShowAverage(!showAverage)}
-                    />
-                    Show Average Sales Price
-                </label>
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={showTopSelling}
-                        onChange={() => setShowTopSelling(!showTopSelling)}
-                    />
-                    Show Top Selling Products
-                </label>
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={showTrends}
-                        onChange={() => setShowTrends(!showTrends)}
-                    />
-                    Show Sales Trends
-                </label>
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={showUnpaid}
-                        onChange={() => setShowUnpaid(!showUnpaid)}
-                    />
-                    Show Unpaid Products
-                </label>
-            </div>
+          
         </div>
     );
 };

@@ -380,10 +380,453 @@ const topSellingCategories = async (req, res) => {
 
 
 
+  const getTotalSalesByCategory = async (req, res) => {
+    const period = req.query.period || 'monthly';
+    let dateCondition;
+
+    switch (period) {
+        case 'daily':
+            dateCondition = `DATE(f.date_facture) = CURDATE()`;
+            break;
+        case 'weekly':
+            dateCondition = `YEARWEEK(f.date_facture, 1) = YEARWEEK(CURDATE(), 1)`;
+            break;
+        case 'monthly':
+            dateCondition = `MONTH(f.date_facture) = MONTH(CURDATE()) AND YEAR(f.date_facture) = YEAR(CURDATE())`;
+            break;
+        case 'yearly':
+            dateCondition = `YEAR(f.date_facture) = YEAR(CURDATE())`;
+            break;
+        default:
+            return res.status(400).json({ message: "Invalid period" });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                c.nom_categorie AS category,
+                SUM(l.quantite_produit * p.prix_produit) AS total_sales
+            FROM 
+                ligne_de_commande l
+            JOIN 
+                produit p ON l.produit_idproduit = p.idproduit
+            JOIN 
+                categorie c ON p.categorie_idcategorie = c.idcategorie
+            JOIN 
+                commande co ON l.commande_idcommande = co.idcommande
+            JOIN 
+                facture f ON co.idcommande = f.idcommande
+            WHERE 
+                ${dateCondition} 
+            GROUP BY 
+                c.nom_categorie
+            ORDER BY 
+                total_sales DESC;
+        `;
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error("Error fetching total sales by category:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+const getAverageSalesPriceByCategory = async (req, res) => {
+    const period = req.query.period || 'monthly';
+    console.log("Period for average sales price by category:", period);
+
+    let dateCondition;
+
+    switch (period) {
+        case 'daily':
+            dateCondition = `DATE(f.date_facture) = CURDATE()`;
+            break;
+        case 'weekly':
+            dateCondition = `YEARWEEK(f.date_facture, 1) = YEARWEEK(CURDATE(), 1)`;
+            break;
+        case 'monthly':
+            dateCondition = `MONTH(f.date_facture) = MONTH(CURDATE()) AND YEAR(f.date_facture) = YEAR(CURDATE())`;
+            break;
+        case 'yearly':
+            dateCondition = `YEAR(f.date_facture) = YEAR(CURDATE())`;
+            break;
+        default:
+            return res.status(400).json({ message: "Invalid period" });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                c.nom_categorie AS category,
+                AVG(p.prix_produit) AS average_price
+            FROM 
+                ligne_de_commande l
+            JOIN 
+                produit p ON l.produit_idproduit = p.idproduit
+            JOIN 
+                categorie c ON p.categorie_idcategorie = c.idcategorie
+            JOIN 
+                commande co ON l.commande_idcommande = co.idcommande
+            JOIN 
+                facture f ON co.idcommande = f.idcommande
+            WHERE 
+                ${dateCondition}
+            GROUP BY 
+                c.nom_categorie
+            ORDER BY 
+                average_price DESC;
+        `;
+
+        console.log("Query for average sales price by category:", query);
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error("Error fetching average sales price by category:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const getSalesDistributionByCategory = async (req, res) => {
+    const period = req.query.period || 'monthly';
+    console.log("Period for sales distribution by category:", period);
+
+    let dateCondition;
+
+    switch (period) {
+        case 'daily':
+            dateCondition = `DATE(f.date_facture) = CURDATE()`;
+            break;
+        case 'weekly':
+            dateCondition = `YEARWEEK(f.date_facture, 1) = YEARWEEK(CURDATE(), 1)`;
+            break;
+        case 'monthly':
+            dateCondition = `MONTH(f.date_facture) = MONTH(CURDATE()) AND YEAR(f.date_facture) = YEAR(CURDATE())`;
+            break;
+        case 'yearly':
+            dateCondition = `YEAR(f.date_facture) = YEAR(CURDATE())`;
+            break;
+        default:
+            return res.status(400).json({ message: "Invalid period" });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                c.nom_categorie AS category,
+                COUNT(l.produit_idproduit) AS total_products_sold,
+                SUM(l.quantite_produit) AS total_quantity_sold
+            FROM 
+                ligne_de_commande l
+            JOIN 
+                produit p ON l.produit_idproduit = p.idproduit
+            JOIN 
+                categorie c ON p.categorie_idcategorie = c.idcategorie
+            JOIN 
+                commande co ON l.commande_idcommande = co.idcommande
+            JOIN 
+                facture f ON co.idcommande = f.idcommande
+            WHERE 
+                ${dateCondition} 
+            GROUP BY 
+                c.nom_categorie
+            ORDER BY 
+                total_quantity_sold DESC;
+        `;
+
+        console.log("Query for sales distribution by category:", query);
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error("Error fetching sales distribution by category:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const getCategoryTrends = async (req, res) => {
+    const period = req.query.period || 'monthly';
+    console.log("Period for category trends:", period);
+
+    let dateCondition;
+    let dateFormat;
+
+    switch (period) {
+        case 'daily':
+            dateCondition = `DATE(f.date_facture) >= CURDATE() - INTERVAL 7 DAY`;
+            dateFormat = '%Y-%m-%d';
+            break;
+        case 'weekly':
+            dateCondition = `YEARWEEK(f.date_facture, 1) >= YEARWEEK(CURDATE(), 1) - 4`;
+            dateFormat = '%Y-%u';
+            break;
+        case 'monthly':
+            dateCondition = `MONTH(f.date_facture) >= MONTH(CURDATE()) - 6 AND YEAR(f.date_facture) = YEAR(CURDATE())`;
+            dateFormat = '%Y-%m';
+            break;
+        case 'yearly':
+            dateCondition = `YEAR(f.date_facture) >= YEAR(CURDATE()) - 5`;
+            dateFormat = '%Y';
+            break;
+        default:
+            return res.status(400).json({ message: "Invalid period" });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                c.nom_categorie AS category,
+                DATE_FORMAT(f.date_facture, '${dateFormat}') AS period,
+                SUM(l.quantite_produit * p.prix_produit) AS total_sales
+            FROM 
+                ligne_de_commande l
+            JOIN 
+                produit p ON l.produit_idproduit = p.idproduit
+            JOIN 
+                categorie c ON p.categorie_idcategorie = c.idcategorie
+            JOIN 
+                commande co ON l.commande_idcommande = co.idcommande
+            JOIN 
+                facture f ON co.idcommande = f.idcommande
+            WHERE 
+                ${dateCondition}
+            GROUP BY 
+                c.nom_categorie, period
+            ORDER BY 
+                period ASC;
+        `;
+
+        console.log("Query for category trends:", query);
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error("Error fetching category trends:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+/*
+const getNumberOfProductsByCategory = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                c.nom_categorie AS category,
+                COUNT(p.idproduit) AS number_of_products
+
+            FROM 
+                categorie c
+            LEFT JOIN 
+                produit p ON c.idcategorie = p.categorie_idcategorie
+            GROUP BY 
+                c.nom_categorie
+            ORDER BY 
+                number_of_products DESC;
+        `;
+
+        console.log("Query for number of products by category:", query);
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error("Error fetching number of products by category:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+*/
+const getNumberOfProductsByCategory = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                c.nom_categorie AS category,
+                COUNT(p.idproduit) AS number_of_products
+            FROM 
+                categorie c
+            LEFT JOIN 
+                produit p ON c.idcategorie = p.categorie_idcategorie
+            GROUP BY 
+                c.nom_categorie
+            ORDER BY 
+                number_of_products DESC;
+        `;
+
+        const totalProductsQuery = `SELECT COUNT(*) AS total_products FROM produit;`;
+        const totalCategoriesQuery = `SELECT COUNT(*) AS total_categories FROM categorie;`;
+
+        console.log("Query for number of products by category:", query);
+
+        const [results, totalProductsResult, totalCategoriesResult] = await Promise.all([
+            new Promise((resolve, reject) => {
+                db.query(query, (err, result) => {
+                    if (err) return reject(err);
+                    resolve(result);
+                });
+            }),
+            new Promise((resolve, reject) => {
+                db.query(totalProductsQuery, (err, result) => {
+                    if (err) return reject(err);
+                    resolve(result[0]);
+                });
+            }),
+            new Promise((resolve, reject) => {
+                db.query(totalCategoriesQuery, (err, result) => {
+                    if (err) return reject(err);
+                    resolve(result[0]);
+                });
+            }),
+        ]);
+
+        res.status(200).json({
+            categories: results,
+            total_products: totalProductsResult.total_products,
+            total_categories: totalCategoriesResult.total_categories
+        });
+    } catch (error) {
+        console.error("Error fetching number of products by category:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+const getRevenueContributionByCategory = async (req, res) => {
+    const period = req.query.period || 'monthly';
+    console.log("Period for revenue contribution by category:", period);
+
+    let dateCondition;
+
+    switch (period) {
+        case 'daily':
+            dateCondition = `DATE(f.date_facture) = CURDATE()`;
+            break;
+        case 'weekly':
+            dateCondition = `YEARWEEK(f.date_facture, 1) = YEARWEEK(CURDATE(), 1)`;
+            break;
+        case 'monthly':
+            dateCondition = `MONTH(f.date_facture) = MONTH(CURDATE()) AND YEAR(f.date_facture) = YEAR(CURDATE())`;
+            break;
+        case 'yearly':
+            dateCondition = `YEAR(f.date_facture) = YEAR(CURDATE())`;
+            break;
+        default:
+            return res.status(400).json({ message: "Invalid period" });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                c.nom_categorie AS category,
+                SUM(l.quantite_produit * p.prix_produit) AS revenue_contribution
+            FROM 
+                ligne_de_commande l
+            JOIN 
+                produit p ON l.produit_idproduit = p.idproduit
+            JOIN 
+                categorie c ON p.categorie_idcategorie = c.idcategorie
+            JOIN 
+                commande co ON l.commande_idcommande = co.idcommande
+            JOIN 
+                facture f ON co.idcommande = f.idcommande
+            WHERE 
+                ${dateCondition}
+            GROUP BY 
+                c.nom_categorie
+            ORDER BY 
+                revenue_contribution DESC;
+        `;
+
+        console.log("Query for revenue contribution by category:", query);
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error("Error fetching revenue contribution by category:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+const getStockLevelsByCategory = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                c.nom_categorie AS category,
+                SUM(p.quantite_stock) AS stock_levels
+            FROM 
+                categorie c
+            JOIN 
+                produit p ON c.idcategorie = p.categorie_idcategorie
+            GROUP BY 
+                c.nom_categorie
+            ORDER BY 
+                stock_levels DESC;
+        ;`
+
+        console.log("Query for stock levels by category:", query);
+
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        res.status(200).json(results);
+    } catch (error) {
+        console.error("Error fetching stock levels by category:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 
 
 module.exports = {
     revenuecontribution,topSellingCategories,
+    getTotalSalesByCategory,
+    getAverageSalesPriceByCategory,
+    getSalesDistributionByCategory,
+    topSellingCategories,
+    getCategoryTrends,
+    getNumberOfProductsByCategory,
+    getRevenueContributionByCategory,
     searchCategorie, createCategorie, getCategorieById, getAllCategories, updateCategorie, deleteCategorie }
 
 

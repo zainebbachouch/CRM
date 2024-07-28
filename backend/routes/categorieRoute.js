@@ -16,4 +16,14 @@ router.get('/revenue-contribution',categorieController.revenuecontribution)
 router.get('/top-selling-categories', categorieController.topSellingCategories);
 
 
+router.get('/total-sales-by-category', categorieController.getTotalSalesByCategory);
+router.get('/average-sales-price-by-category', categorieController.getAverageSalesPriceByCategory);
+router.get('/sales-distribution-by-category', categorieController.getSalesDistributionByCategory);
+router.get('/top-selling-categories', categorieController.topSellingCategories);
+router.get('/category-trends', categorieController.getCategoryTrends);
+router.get('/number-of-products-by-category', categorieController.getNumberOfProductsByCategory);
+router.get('/revenue-contribution-by-category',categorieController.getRevenueContributionByCategory);
+//router.get('/stock-levels-by-category', categorieController.getStockLevelsByCategory);
+
+
 module.exports = router;

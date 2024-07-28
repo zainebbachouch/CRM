@@ -34,11 +34,7 @@ function SideBar() {
       name: "task",
       icon: <FaCommentAlt />
     }
-    ,  {
-      path: "/Dashboard",
-      name: "Dashboard",
-      icon: <FaCommentAlt />
-    }
+  
   ];
   const adminstration = {
     path: "/adminstration",

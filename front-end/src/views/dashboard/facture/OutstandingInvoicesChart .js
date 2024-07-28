@@ -23,7 +23,7 @@ const OutstandingInvoicesChart = () => {
                 borderWidth: 1,
             },
         ],
-    });
+    }); 
 
     const [invoiceCount, setInvoiceCount] = useState(0); // State for the invoice count
 

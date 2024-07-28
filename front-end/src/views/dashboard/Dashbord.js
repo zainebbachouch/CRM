@@ -8,13 +8,23 @@ import InvoiceAmountDistributionChart from './facture/InvoiceAmountDistributionC
 import InvoiceFrequencyChart from './facture/InvoiceFrequencyChart ';
 import InvoiceTrendsChart from './facture/InvoiceTrendsChart ';
 import OutstandingInvoicesChart from './facture/OutstandingInvoicesChart ';
-import DashProduct from './product/DashProduct';
 import SalesChart from './product/SalesChart ';
+import TotalSalesByCategoryChart from './categorie/TotalSalesByCategoryChart ';
+import AverageSalesPriceByCategoryChart from './categorie/AverageSalesPriceByCategoryChart ';
+import SalesDistributionByCategoryChart from './categorie/SalesDistributionByCategoryChart ';
+import NumberOfProductsByCategoryChart from './categorie/NumberOfProductsByCategoryChart ';
+import RevenueContributionByCategoryChart from './categorie/RevenueContributionByCategoryChart ';
+import StockLevelsByCategoryChart from './categorie/StockLevelsByCategoryChart ';
 
 
 function Dashbord() {
     const [frequencyPeriod, setFrequencyPeriod] = useState('daily'); // State for selected period
     const [selectedChart, setSelectedChart] = useState('averageInvoiceValue'); // State for selected chart
+    const [selectedCategoryChart, setSelectedCategoryChart] = useState('totalSalesByCategory'); // State for selected category chart   
+
+
+
+
     const charts = {
         averageInvoiceValue: { component: <AverageInvoiceValueChart />, title: 'Average Invoice Value' },
         invoiceAmountDistribution: { component: <InvoiceAmountDistributionChart />, title: 'Invoice Amount Distribution' },
@@ -24,7 +34,7 @@ function Dashbord() {
                     <select
                         value={frequencyPeriod}
                         onChange={(e) => setFrequencyPeriod(e.target.value)}
-                        style={{ marginBottom: '20px' }} 
+                        style={{ marginBottom: '20px' }}
                     >
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
@@ -42,6 +52,13 @@ function Dashbord() {
 
     }
 
+    const chartsCategories = {
+        totalSalesByCategory: { component: <TotalSalesByCategoryChart period={frequencyPeriod} />, title: 'Total Sales by Category' },
+        averageSalesPriceByCategory: { component: <AverageSalesPriceByCategoryChart period={frequencyPeriod} />, title: 'Average Sales Price by Category' },
+        salesDistributionByCategory: { component: <SalesDistributionByCategoryChart period={frequencyPeriod} />, title: 'Sales Distribution by Category' },
+        revenueContributionByCategory: { component: <RevenueContributionByCategoryChart period={frequencyPeriod} />, title: 'Revenue Contribution by Category' },
+    };
+
     return (
         <div className="d-flex">
             <SideBar />
@@ -49,47 +66,65 @@ function Dashbord() {
                 <TopBar />
                 <div className="container-fluid p-0 m-0 dashboard-content">
                     <Header />
-                    
-                   
-                    <div class="row">
-
-                           {/* New Sections */}
-                    <div className="recent-activities" class="col-4">
-                        <h2>Recent Activities</h2>
-                       <SalesChart/>
-                    </div>
-
-                    <div className="chart-container" class="col-8">
-                    <div className="chart-selection">
-                        {Object.keys(charts).map((chartKey) => (
-                            <label key={chartKey}>
-                                <input
-                                    type="radio"
-                                    value={chartKey}
-                                    checked={selectedChart === chartKey}
-                                    onChange={() => setSelectedChart(chartKey)}
-                                />
-                                {charts[chartKey].title}
-                            </label>
-                        ))}
-                     
-                    </div>
-                        <h2>{charts[selectedChart].title}</h2>
-                        {charts[selectedChart].component}
-                    </div>      
-                   
-                   
-                 
+                    <div className="row">
+                        <div className="col-4">
+                            <SalesChart />
+                        </div>
+                        <div className="col-8">
+                            <div className="chart-selection">
+                                {Object.keys(charts).map((chartKey) => (
+                                    <label key={chartKey}>
+                                        <input
+                                            type="radio"
+                                            value={chartKey}
+                                            checked={selectedChart === chartKey}
+                                            onChange={() => setSelectedChart(chartKey)}
+                                        />
+                                        {charts[chartKey].title}
+                                    </label>
+                                ))}
+                            </div>
+                            <h2>{charts[selectedChart].title}</h2>
+                            {charts[selectedChart].component}
+                        </div>
                     </div>
                     <div className="performance-overview">
-                        <h2>Performance Overview</h2>
-                        <p>Here you can add performance overview...</p>
+                        <div className="row">
+                            <div className="col-8">
+                                <select
+                                    value={frequencyPeriod}
+                                    onChange={(e) => setFrequencyPeriod(e.target.value)}
+                                    style={{ marginBottom: '20px' }}
+                                >
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                                {Object.keys(chartsCategories).map((chartKey) => (
+                                    <label key={chartKey}>
+                                        <input
+                                            type="radio"
+                                            value={chartKey}
+                                            checked={selectedCategoryChart === chartKey}
+                                            onChange={() => setSelectedCategoryChart(chartKey)}
+                                        />
+                                        {chartsCategories[chartKey].title}
+                                    </label>
+                                ))}
+                                <h2>{chartsCategories[selectedCategoryChart]?.title}</h2>
+                                {chartsCategories[selectedCategoryChart]?.component}
+                            </div>
+                            <div className="col-4">
+                                <NumberOfProductsByCategoryChart />
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
     );
 }
+
 
 export default Dashbord;
