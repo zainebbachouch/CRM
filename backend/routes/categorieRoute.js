@@ -18,7 +18,7 @@ router.get('/top-selling-categories', categorieController.topSellingCategories);
 
 router.get('/total-sales-by-category', categorieController.getTotalSalesByCategory);
 router.get('/average-sales-price-by-category', categorieController.getAverageSalesPriceByCategory);
-router.get('/sales-distribution-by-category', categorieController.getSalesDistributionByCategory);
+router.get('/sales-distribution-by-category', categorieController.getSalesDistributionHistogram);
 router.get('/top-selling-categories', categorieController.topSellingCategories);
 router.get('/category-trends', categorieController.getCategoryTrends);
 router.get('/number-of-products-by-category', categorieController.getNumberOfProductsByCategory);

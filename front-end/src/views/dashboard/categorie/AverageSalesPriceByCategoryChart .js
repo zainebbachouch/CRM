@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
 
-const AverageSalesPriceByCategoryChart = () => {
+const AverageSalesPriceByCategoryChart = ({ period }) => {
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [],
@@ -11,9 +11,11 @@ const AverageSalesPriceByCategoryChart = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/api/average-sales-price-by-category');
+        const response = await axios.get(`http://127.0.0.1:5000/api/average-sales-price-by-category?period=${period}`);
+        
+        // Ensure the keys match your backend response
         const categories = response.data.map(item => item.category);
-        const avgPrices = response.data.map(item => item.average_price);
+        const avgPrices = response.data.map(item => item.average_price); // Make sure this key matches your backend response
 
         setChartData({
           labels: categories,
@@ -33,7 +35,7 @@ const AverageSalesPriceByCategoryChart = () => {
     };
 
     fetchData();
-  }, []);
+  }, [period]); // Add period as a dependency to refetch when it changes
 
   return (
     <div>

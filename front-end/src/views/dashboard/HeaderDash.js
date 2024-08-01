@@ -28,11 +28,6 @@ const Header = () => {
         const topCategoriesResponse = await axios.get(`http://127.0.0.1:5000/api/top-selling-categories?period=${categoriesPeriod}`);
         const tasksCountsResponse = await axios.get(`http://127.0.0.1:5000/api/tasks-counts?status=${selectedStatus}`);
   
-        console.log("Total Revenue Response:", totalRevenueResponse.data);
-        console.log("Total Products Sold Response:", totalProductsSoldResponse.data);
-        console.log("Tasks Counts Response:", tasksCountsResponse.data);
-        console.log("Top Categories Response:", topCategoriesResponse.data);
-  
         const revenueData = Array.isArray(totalRevenueResponse.data)
           ? totalRevenueResponse.data.map(item => item.totalRevenue)
           : [];
@@ -92,7 +87,7 @@ const Header = () => {
           </div>
           <div className="label">Total Revenue</div>
           {/* Period selection for Total Revenue */}
-          <label htmlFor="period">Select Period: </label>
+          <label htmlFor="revenue-period">Select Period: </label>
           <select id="revenue-period" value={revenuePeriod} onChange={(e) => setRevenuePeriod(e.target.value)}>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
@@ -120,7 +115,7 @@ const Header = () => {
           </div>
           <div className="label">Total Products Sold</div>
           {/* Period selection for Total Products Sold */}
-          <label htmlFor="period">Select Period: </label>
+          <label htmlFor="products-period" >Select Period: </label>
           <select id="products-period" value={productsPeriod} onChange={(e) => setProductsPeriod(e.target.value)}>
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>

@@ -36,7 +36,6 @@ const AverageInvoiceValueChart = () => {
       try {
         const response = await axios.get(`http://127.0.0.1:5000/api/averageinvoicevalue?period=${period}`);
         const { averageInvoiceValues } = response.data;
-        console.log("averageInvoiceValues", averageInvoiceValues);
 
         const labels = averageInvoiceValues.map(item => item.period);
         const data = averageInvoiceValues.map(item => item.averageInvoiceValue);

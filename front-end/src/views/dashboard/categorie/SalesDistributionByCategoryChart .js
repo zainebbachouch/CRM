@@ -1,62 +1,69 @@
+import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
-import axios from 'axios';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 
-const SalesDistributionByCategoryChart = () => {
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+const SalesDistributionByCategoryChart = ({ period }) => {
   const [chartData, setChartData] = useState({
     labels: [],
-    datasets: [],
+    datasets: [
+      {
+        label: 'Sales Distribution by Category',
+        data: [],
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+      },
+    ],
   });
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSalesDistribution = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/api/sales-distribution-by-category');
-        const categories = response.data.map(item => item.category);
-        const quantities = response.data.map(item => item.quantity);
+        const response = await axios.get(`http://127.0.0.1:5000/api/sales-distribution-by-category?period=${period}`);
+        const distribution = response.data.histogram;
+
+        const labels = distribution.map((bin) => `${bin.binStart.toFixed(2)} - ${bin.binEnd.toFixed(2)}`);
+        const data = distribution.map((bin) => bin.count);
 
         setChartData({
-          labels: categories,
+          labels,
           datasets: [
             {
-              label: 'Quantity Sold',
-              data: quantities,
-              backgroundColor: 'rgba(255, 159, 64, 0.6)',
-              borderColor: 'rgba(255, 159, 64, 1)',
+              label: 'Sales Distribution by Category',
+              data,
+              backgroundColor: 'rgba(75, 192, 192, 0.6)',
+              borderColor: 'rgba(75, 192, 192, 1)',
               borderWidth: 1,
             },
           ],
         });
       } catch (error) {
-        console.error('Error fetching data', error);
+        console.error('Error fetching sales distribution:', error);
       }
     };
 
-    fetchData();
-  }, []);
+    fetchSalesDistribution();
+  }, [period]);
 
   return (
-    <div>
+    <div className="chart-container">
+      <h2>Sales Distribution by Category</h2>
       <Bar
         data={chartData}
         options={{
-          title: {
-            display: true,
-            text: 'Sales Distribution by Category',
-            fontSize: 25,
-          },
-          legend: {
-            display: true, 
-            position: 'top',
-          },
-          scales: {
-            x: {
-              stacked: true,
-            },
-            y: {
-              stacked: true,
-            },
-          },
+          responsive: true,
+          maintainAspectRatio: false
         }}
       />
     </div>

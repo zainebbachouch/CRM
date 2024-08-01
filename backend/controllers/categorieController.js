@@ -378,8 +378,6 @@ const topSellingCategories = async (req, res) => {
   };
 
 
-
-
   const getTotalSalesByCategory = async (req, res) => {
     const period = req.query.period || 'monthly';
     let dateCondition;
@@ -417,7 +415,7 @@ const topSellingCategories = async (req, res) => {
             JOIN 
                 facture f ON co.idcommande = f.idcommande
             WHERE 
-                ${dateCondition} 
+                ${dateCondition} AND f.etat_facture = 'payee'
             GROUP BY 
                 c.nom_categorie
             ORDER BY 
@@ -426,7 +424,11 @@ const topSellingCategories = async (req, res) => {
 
         const results = await new Promise((resolve, reject) => {
             db.query(query, (err, result) => {
-                if (err) return reject(err);
+                if (err) {
+                    console.error("Database Query Error:", err); // Log any database query error
+                    return reject(err);
+                }
+                console.log("Query Results:", result); // Log the results from the query
                 resolve(result);
             });
         });
@@ -437,6 +439,9 @@ const topSellingCategories = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+
+
 
 
 const getAverageSalesPriceByCategory = async (req, res) => {
@@ -464,26 +469,26 @@ const getAverageSalesPriceByCategory = async (req, res) => {
 
     try {
         const query = `
-            SELECT 
-                c.nom_categorie AS category,
-                AVG(p.prix_produit) AS average_price
-            FROM 
-                ligne_de_commande l
-            JOIN 
-                produit p ON l.produit_idproduit = p.idproduit
-            JOIN 
-                categorie c ON p.categorie_idcategorie = c.idcategorie
-            JOIN 
-                commande co ON l.commande_idcommande = co.idcommande
-            JOIN 
-                facture f ON co.idcommande = f.idcommande
-            WHERE 
-                ${dateCondition}
-            GROUP BY 
-                c.nom_categorie
-            ORDER BY 
-                average_price DESC;
-        `;
+        SELECT 
+            c.nom_categorie AS category,
+            AVG(f.montant_total_facture) AS average_price
+        FROM 
+            ligne_de_commande l
+        JOIN 
+            produit p ON l.produit_idproduit = p.idproduit
+        JOIN 
+            categorie c ON p.categorie_idcategorie = c.idcategorie
+        JOIN 
+            commande co ON l.commande_idcommande = co.idcommande
+        JOIN 
+            facture f ON co.idcommande = f.idcommande
+        WHERE 
+            ${dateCondition} AND f.etat_facture = 'payee'
+        GROUP BY 
+            c.nom_categorie
+        ORDER BY 
+            average_price DESC;
+    `;
 
         console.log("Query for average sales price by category:", query);
 
@@ -501,9 +506,11 @@ const getAverageSalesPriceByCategory = async (req, res) => {
     }
 };
 
-const getSalesDistributionByCategory = async (req, res) => {
+
+
+const getSalesDistributionHistogram = async (req, res) => {
     const period = req.query.period || 'monthly';
-    console.log("Period for sales distribution by category:", period);
+    console.log("Period for sales distribution histogram:", period);
 
     let dateCondition;
 
@@ -526,43 +533,80 @@ const getSalesDistributionByCategory = async (req, res) => {
 
     try {
         const query = `
-            SELECT 
+            SELECT
                 c.nom_categorie AS category,
-                COUNT(l.produit_idproduit) AS total_products_sold,
-                SUM(l.quantite_produit) AS total_quantity_sold
-            FROM 
+                SUM(f.montant_total_facture) AS total_quantity_sold
+            FROM
                 ligne_de_commande l
-            JOIN 
+            JOIN
                 produit p ON l.produit_idproduit = p.idproduit
-            JOIN 
+            JOIN
                 categorie c ON p.categorie_idcategorie = c.idcategorie
-            JOIN 
+            JOIN
                 commande co ON l.commande_idcommande = co.idcommande
-            JOIN 
+            JOIN
                 facture f ON co.idcommande = f.idcommande
-            WHERE 
-                ${dateCondition} 
-            GROUP BY 
-                c.nom_categorie
-            ORDER BY 
-                total_quantity_sold DESC;
+            WHERE
+                ${dateCondition} AND f.etat_facture = 'payee'
+            GROUP BY
+                c.nom_categorie;
         `;
 
-        console.log("Query for sales distribution by category:", query);
+        console.log("SQL Query:", query);  // Log the query
 
         const results = await new Promise((resolve, reject) => {
             db.query(query, (err, result) => {
-                if (err) return reject(err);
+                if (err) {
+                    console.error("SQL Error:", err);  // Log SQL errors
+                    return reject(err);
+                }
                 resolve(result);
             });
         });
 
-        res.status(200).json(results);
+        if (!results.length) {
+            console.log("No data found for the given period:", period);  // Log when no data is found
+            return res.status(404).json({ message: "No data found for the given period." });
+        }
+
+        const categoryAmounts = results.map(row => row.total_quantity_sold);
+        const histogram = getHistogram(categoryAmounts, 5);
+
+        res.status(200).json({ histogram });
     } catch (error) {
-        console.error("Error fetching sales distribution by category:", error);
+        console.error("Error fetching sales distribution histogram:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+// Histogram function
+const getHistogram = (data, binCount) => {
+    if (data.length === 0) return [];
+    
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const binSize = (max - min) / binCount;
+
+    const bins = Array(binCount).fill(0);
+
+    data.forEach(amount => {
+        const binIndex = Math.min(Math.floor((amount - min) / binSize), binCount - 1);
+        bins[binIndex]++;
+    });
+
+    const histogram = bins.map((count, index) => ({
+        binStart: min + index * binSize,
+        binEnd: min + (index + 1) * binSize,
+        count,
+    }));
+
+    return histogram;
+};
+
+
+
+
+
 
 const getCategoryTrends = async (req, res) => {
     const period = req.query.period || 'monthly';
@@ -594,27 +638,27 @@ const getCategoryTrends = async (req, res) => {
 
     try {
         const query = `
-            SELECT 
-                c.nom_categorie AS category,
-                DATE_FORMAT(f.date_facture, '${dateFormat}') AS period,
-                SUM(l.quantite_produit * p.prix_produit) AS total_sales
-            FROM 
-                ligne_de_commande l
-            JOIN 
-                produit p ON l.produit_idproduit = p.idproduit
-            JOIN 
-                categorie c ON p.categorie_idcategorie = c.idcategorie
-            JOIN 
-                commande co ON l.commande_idcommande = co.idcommande
-            JOIN 
-                facture f ON co.idcommande = f.idcommande
-            WHERE 
-                ${dateCondition}
-            GROUP BY 
-                c.nom_categorie, period
-            ORDER BY 
-                period ASC;
-        `;
+        SELECT 
+            c.nom_categorie AS category,
+            DATE_FORMAT(f.date_facture, '${dateFormat}') AS period,
+            SUM(l.quantite_produit * p.prix_produit) AS total_sales
+        FROM 
+            ligne_de_commande l
+        JOIN 
+            produit p ON l.produit_idproduit = p.idproduit
+        JOIN 
+            categorie c ON p.categorie_idcategorie = c.idcategorie
+        JOIN 
+            commande co ON l.commande_idcommande = co.idcommande
+        JOIN 
+            facture f ON co.idcommande = f.idcommande
+        WHERE 
+            ${dateCondition} AND f.etat_facture = 'payee'
+        GROUP BY 
+            c.nom_categorie, period
+        ORDER BY 
+            period ASC;
+    `;
 
         console.log("Query for category trends:", query);
 
@@ -633,41 +677,6 @@ const getCategoryTrends = async (req, res) => {
 };
 
 
-
-/*
-const getNumberOfProductsByCategory = async (req, res) => {
-    try {
-        const query = `
-            SELECT 
-                c.nom_categorie AS category,
-                COUNT(p.idproduit) AS number_of_products
-
-            FROM 
-                categorie c
-            LEFT JOIN 
-                produit p ON c.idcategorie = p.categorie_idcategorie
-            GROUP BY 
-                c.nom_categorie
-            ORDER BY 
-                number_of_products DESC;
-        `;
-
-        console.log("Query for number of products by category:", query);
-
-        const results = await new Promise((resolve, reject) => {
-            db.query(query, (err, result) => {
-                if (err) return reject(err);
-                resolve(result);
-            });
-        });
-
-        res.status(200).json(results);
-    } catch (error) {
-        console.error("Error fetching number of products by category:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-*/
 const getNumberOfProductsByCategory = async (req, res) => {
     try {
         const query = `
@@ -689,26 +698,26 @@ const getNumberOfProductsByCategory = async (req, res) => {
 
         console.log("Query for number of products by category:", query);
 
-        const [results, totalProductsResult, totalCategoriesResult] = await Promise.all([
-            new Promise((resolve, reject) => {
-                db.query(query, (err, result) => {
-                    if (err) return reject(err);
-                    resolve(result);
-                });
-            }),
-            new Promise((resolve, reject) => {
-                db.query(totalProductsQuery, (err, result) => {
-                    if (err) return reject(err);
-                    resolve(result[0]);
-                });
-            }),
-            new Promise((resolve, reject) => {
-                db.query(totalCategoriesQuery, (err, result) => {
-                    if (err) return reject(err);
-                    resolve(result[0]);
-                });
-            }),
-        ]);
+        const results = await new Promise((resolve, reject) => {
+            db.query(query, (err, result) => {
+                if (err) return reject(err);
+                resolve(result);
+            });
+        });
+
+        const totalProductsResult = await new Promise((resolve, reject) => {
+            db.query(totalProductsQuery, (err, result) => {
+                if (err) return reject(err);
+                resolve(result[0]);
+            });
+        });
+
+        const totalCategoriesResult = await new Promise((resolve, reject) => {
+            db.query(totalCategoriesQuery, (err, result) => {
+                if (err) return reject(err);
+                resolve(result[0]);
+            });
+        });
 
         res.status(200).json({
             categories: results,
@@ -748,26 +757,26 @@ const getRevenueContributionByCategory = async (req, res) => {
 
     try {
         const query = `
-            SELECT 
-                c.nom_categorie AS category,
-                SUM(l.quantite_produit * p.prix_produit) AS revenue_contribution
-            FROM 
-                ligne_de_commande l
-            JOIN 
-                produit p ON l.produit_idproduit = p.idproduit
-            JOIN 
-                categorie c ON p.categorie_idcategorie = c.idcategorie
-            JOIN 
-                commande co ON l.commande_idcommande = co.idcommande
-            JOIN 
-                facture f ON co.idcommande = f.idcommande
-            WHERE 
-                ${dateCondition}
-            GROUP BY 
-                c.nom_categorie
-            ORDER BY 
-                revenue_contribution DESC;
-        `;
+        SELECT 
+            c.nom_categorie AS category,
+            SUM(l.quantite_produit * p.prix_produit) AS revenue_contribution
+        FROM 
+            ligne_de_commande l
+        JOIN 
+            produit p ON l.produit_idproduit = p.idproduit
+        JOIN 
+            categorie c ON p.categorie_idcategorie = c.idcategorie
+        JOIN 
+            commande co ON l.commande_idcommande = co.idcommande
+        JOIN 
+            facture f ON co.idcommande = f.idcommande
+        WHERE 
+            ${dateCondition} AND f.etat_facture = 'payee'
+        GROUP BY 
+            c.nom_categorie
+        ORDER BY 
+            revenue_contribution DESC;
+    `;
 
         console.log("Query for revenue contribution by category:", query);
 
@@ -784,6 +793,8 @@ const getRevenueContributionByCategory = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+
 const getStockLevelsByCategory = async (req, res) => {
     try {
         const query = `
@@ -822,7 +833,7 @@ module.exports = {
     revenuecontribution,topSellingCategories,
     getTotalSalesByCategory,
     getAverageSalesPriceByCategory,
-    getSalesDistributionByCategory,
+    getSalesDistributionHistogram,
     topSellingCategories,
     getCategoryTrends,
     getNumberOfProductsByCategory,

@@ -32,10 +32,7 @@ const SalesChart = () => {
             const trendsResponse = await axios.get(`http://127.0.0.1:5000/api/sales-trends?period=${period}`);
             const unpaidResponse = await axios.get(`http://127.0.0.1:5000/api/unpaid-products?period=${period}`);
 
-            console.log("Average Sales Price Response:", averageResponse.data);
-            console.log("Top Selling Products Response:", topSellingResponse.data);
-            console.log("Sales Trends Response:", trendsResponse.data);
-            console.log("Unpaid Products Response:", unpaidResponse.data);
+        
 
             setAverageSalesData(averageResponse.data.averageSalesPrice || []);
             setTopSellingData(topSellingResponse.data.topSellingProducts || []);

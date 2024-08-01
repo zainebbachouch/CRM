@@ -25,6 +25,7 @@ const NumberOfProductsByCategoryChart = () => {
   return (
     <div className="number-of-products-by-category-chart">
       <h2>Number of Products by Category</h2>
+      <input type="text" placeholder='search of categorie'/> 
       <p>Total Products: {totalProducts}</p>
       <p>Total Categories: {totalCategories}</p>
       <button onClick={() => setShowList(!showList)}>

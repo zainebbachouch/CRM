@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Pie } from 'react-chartjs-2';
 import axios from 'axios';
 
-const RevenueContributionByCategoryChart = () => {
+const RevenueContributionByCategoryChart = ({ period }) => { // Destructure period from props
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [],
@@ -11,7 +11,7 @@ const RevenueContributionByCategoryChart = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:5000/api/revenue-contribution-by-category');
+        const response = await axios.get(`http://127.0.0.1:5000/api/revenue-contribution-by-category?period=${period}`); // Use template literals correctly
         const categories = response.data.map(item => item.category);
         const revenues = response.data.map(item => item.revenue);
 
@@ -47,7 +47,7 @@ const RevenueContributionByCategoryChart = () => {
     };
 
     fetchData();
-  }, []);
+  }, [period]); // Add period as a dependency
 
   return (
     <div>

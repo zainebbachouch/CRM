@@ -14,13 +14,13 @@ import AverageSalesPriceByCategoryChart from './categorie/AverageSalesPriceByCat
 import SalesDistributionByCategoryChart from './categorie/SalesDistributionByCategoryChart ';
 import NumberOfProductsByCategoryChart from './categorie/NumberOfProductsByCategoryChart ';
 import RevenueContributionByCategoryChart from './categorie/RevenueContributionByCategoryChart ';
-import StockLevelsByCategoryChart from './categorie/StockLevelsByCategoryChart ';
 
 
 function Dashbord() {
     const [frequencyPeriod, setFrequencyPeriod] = useState('daily'); // State for selected period
     const [selectedChart, setSelectedChart] = useState('averageInvoiceValue'); // State for selected chart
     const [selectedCategoryChart, setSelectedCategoryChart] = useState('totalSalesByCategory'); // State for selected category chart   
+    const [frequencyPeriodd, setFrequencyPeriodd] = useState('daily'); // State for selected period
 
 
 
@@ -53,10 +53,10 @@ function Dashbord() {
     }
 
     const chartsCategories = {
-        totalSalesByCategory: { component: <TotalSalesByCategoryChart period={frequencyPeriod} />, title: 'Total Sales by Category' },
-        averageSalesPriceByCategory: { component: <AverageSalesPriceByCategoryChart period={frequencyPeriod} />, title: 'Average Sales Price by Category' },
-        salesDistributionByCategory: { component: <SalesDistributionByCategoryChart period={frequencyPeriod} />, title: 'Sales Distribution by Category' },
-        revenueContributionByCategory: { component: <RevenueContributionByCategoryChart period={frequencyPeriod} />, title: 'Revenue Contribution by Category' },
+        totalSalesByCategory: { component: <TotalSalesByCategoryChart period={frequencyPeriodd} />, title: 'Total Sales by Category' },
+        averageSalesPriceByCategory: { component: <AverageSalesPriceByCategoryChart period={frequencyPeriodd} />, title: 'Average Sales Price by Category' },
+        salesDistributionByCategory: { component: <SalesDistributionByCategoryChart period={frequencyPeriodd} />, title: 'Sales Distribution by Category' },
+        revenueContributionByCategory: { component: <RevenueContributionByCategoryChart period={frequencyPeriodd} />, title: 'Revenue Contribution by Category' },
     };
 
     return (
@@ -93,7 +93,7 @@ function Dashbord() {
                             <div className="col-8">
                                 <select
                                     value={frequencyPeriod}
-                                    onChange={(e) => setFrequencyPeriod(e.target.value)}
+                                    onChange={(e) => setFrequencyPeriodd(e.target.value)}
                                     style={{ marginBottom: '20px' }}
                                 >
                                     <option value="daily">Daily</option>
