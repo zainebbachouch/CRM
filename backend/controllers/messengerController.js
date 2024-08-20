@@ -1,6 +1,47 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ')
 
+
+
+const createMessage = async (req, res) => {
+    try {
+        const { receiver_id, rolereciever, message } = req.body;
+
+        // Authorization check
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        // Check role
+        const userRole = authResult.decode.role;
+        if (userRole !== 'admin' && userRole !== 'employe' && userRole !== 'client') {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        // Extract sender information from the decoded token
+        const sender_id = authResult.decode.id;
+
+        // Current timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+        // Insert message into the database
+        const result = await db.query(
+            'INSERT INTO messages (sender_id, rolesender, receiver_id, rolereciever, message, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+            [sender_id, userRole, receiver_id, rolereciever, message, timestamp]
+        );
+
+      
+
+        // Respond with success
+        res.json({ message: "Message envoyé avec succès", message });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
 // Récupérer toutes les notifications
 const getNotifications = async (req, res) => {
     try {
@@ -351,6 +392,7 @@ module.exports = {
     getAllHistoryById,
     deleteHistoryById,
     searchHistoryByDate,
-    searchNotifications
+    searchNotifications,
+    createMessage
 
 };

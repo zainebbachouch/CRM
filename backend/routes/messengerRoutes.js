@@ -19,4 +19,6 @@ router.get('/history', messengerController.searchHistoryByDate);
 router.delete('/deleteHistory/:idAction', messengerController.deleteHistoryById);
 // New routes
 
+
+router.post('/sendMessage',messengerController.createMessage);
 module.exports = router;
