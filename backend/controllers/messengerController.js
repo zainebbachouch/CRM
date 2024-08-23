@@ -1,6 +1,6 @@
 const db = require("../config/dbConnection");
 const { isAuthorize } = require('../services/validateToken ')
-
+const axios = require('axios');
 
 
 const createMessage = async (req, res) => {
@@ -40,6 +40,76 @@ const createMessage = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+
+
+
+
+
+
+/*
+
+const createMessage = async (req, res) => {
+    try {
+        const { receiver_id, rolereciever, message } = req.body;
+
+        // Authorization check
+        const authResult = await isAuthorize(req, res);
+        if (authResult.message !== 'authorized') {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        // Check role
+        const userRole = authResult.decode.role;
+        if (userRole !== 'admin' && userRole !== 'employe' && userRole !== 'client') {
+            return res.status(403).json({ message: "Insufficient permissions" });
+        }
+
+        // Extract sender information from the decoded token
+        const sender_id = authResult.decode.id;
+
+        // Current timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+        // Send message to Flask API for spam/ham prediction
+        const predictionResponse = await axios.post('http://127.0.0.1:5000/api/sendMessage', {
+            receiver_id,
+            rolereciever,
+            message
+        });
+
+        // Get prediction result from Flask
+        const prediction = predictionResponse.data.prediction;
+
+        // Optionally, handle different predictions (e.g., log spam messages, reject, etc.)
+        if (prediction === 'spam') {
+            return res.status(400).json({ message: "Message identified as spam and was not sent." });
+        }
+
+        // Insert message into the database if not spam
+        const result = await db.query(
+            'INSERT INTO messages (sender_id, rolesender, receiver_id, rolereciever, message, timestamp) VALUES (?, ?, ?, ?, ?, ?)',
+            [sender_id, userRole, receiver_id, rolereciever, message, timestamp]
+        );
+
+        // Respond with success
+        res.json({ message: "Message envoyé avec succès", message });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};*/
+
+
+
+
+
+
+
+
+
+
+
 
 
 // Récupérer toutes les notifications

@@ -250,33 +250,69 @@ io.on('connection', (socket) => {
       console.error('Error inserting message or saving notification:', err);
     }
   });
+  /*
+    const saveNotifications = async (email_destinataires, message, emailsender) => {
+      try {
+        const sqlQuery = 'INSERT INTO notification (email_destinataire, message, date, email_sender,seen ,unreadCount ) VALUES (?, ?, NOW(), ?,?,1)';
+        const results = [];
+        //const updateQuery = 'UPDATE notification SET unreadCount = unreadCount + 1 WHERE email_destinataire = ?';
+  
+        for (const email of email_destinataires) {
+          // Skip inserting if email is same as sender's email
+          if (email === emailsender) {
+            continue;
+          }
+  
+          const result = await db.query(sqlQuery, [email, message, emailsender, true]);
+          console.log("Notification enregistrée avec succès pour:", email);
+          results.push(result);
+  
+          //  const updateResult = await db.query(updateQuery, [email]);
+          // console.log(`Unread count mis à jour pour ${email}:`, updateResult);
+        }
+  
+        return results;
+      } catch (error) {
+        console.error("Erreur lors de l'enregistrement de la notification:", error);
+        throw error;
+      }
+    };
+  */
+
 
   const saveNotifications = async (email_destinataires, message, emailsender) => {
     try {
-      const sqlQuery = 'INSERT INTO notification (email_destinataire, message, date, email_sender,seen ,unreadCount ) VALUES (?, ?, NOW(), ?,?,1)';
+      const sqlQuery = 'INSERT INTO notification (email_destinataire, message, date, email_sender, seen, unreadCount) VALUES (?, ?, NOW(), ?, ?, 1)';
       const results = [];
-      //const updateQuery = 'UPDATE notification SET unreadCount = unreadCount + 1 WHERE email_destinataire = ?';
+
+      const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
       for (const email of email_destinataires) {
-        // Skip inserting if email is same as sender's email
+        // Skip if email is the same as sender's email
         if (email === emailsender) {
+          console.log(`Skipping notification for sender's email: ${email}`);
           continue;
         }
 
-        const result = await db.query(sqlQuery, [email, message, emailsender, true]);
-        console.log("Notification enregistrée avec succès pour:", email);
-        results.push(result);
+        // Validate email format
+        if (!isValidEmail(email)) {
+          console.log(`Invalid email address: ${email}`);
+          continue;
+        }
 
-        //  const updateResult = await db.query(updateQuery, [email]);
-        // console.log(`Unread count mis à jour pour ${email}:`, updateResult);
+        // Insert notification
+        const result = await db.query(sqlQuery, [email, message, emailsender, true]);
+        console.log(`Notification saved successfully for: ${email}`);
+        results.push(result);
       }
 
       return results;
     } catch (error) {
-      console.error("Erreur lors de l'enregistrement de la notification:", error);
+      console.error("Error saving notification:", error);
       throw error;
     }
   };
+
 
 
   var senderEmail, iduser, role, selectedEmployees;

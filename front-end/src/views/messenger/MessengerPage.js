@@ -46,6 +46,7 @@ function MessengerPage() {
     rolereciever: null,
     sender_id: userId,
   });
+  
   const handleAddFileClick = () => {
     document.getElementById("fileInput").click()
   }
